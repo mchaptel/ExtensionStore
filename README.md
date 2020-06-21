@@ -13,7 +13,7 @@ Harmony brings together a lot of users, all trying to add their own helpful piec
 
 ## Installation
 
-Download the zip from the release page and copy the ``packages`` folder from the zip to the folder [specified here.](https://docs.toonboom.com/help/harmony-17/premium/scripting/import-script.html)
+Download the zip from the [release page](https://github.com/mchaptel/ExtensionStore/releases) and copy the ``packages`` folder from the zip to the folder [specified here.](https://docs.toonboom.com/help/harmony-17/premium/scripting/import-script.html)
 
 Then, from inside Harmony, open the window called **Extension Store** from the new window drop down.
 
