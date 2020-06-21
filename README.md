@@ -70,5 +70,5 @@ For the moment, version numbers are purely indicative and do not allow script ma
 ## Acknowledgements
 
  * [Jonathan Fontaine](https://github.com/jonathan-fontaine/TBScripts/) for his help testing the store and designing the logo.
- * [Chris Fourner](https://github.com/cfourney) for his help writing [openHarmony]() and writing the first install script for this library on which this store is based.
+ * [Chris Fourney](https://github.com/cfourney) for his help writing [openHarmony]() and writing the first install script for this library on which this store is based.
  * All the script makers for their trust using this store.
