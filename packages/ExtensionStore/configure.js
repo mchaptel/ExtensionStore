@@ -72,12 +72,18 @@ function initStoreUI() {
   extensionsList.setColumnWidth(0, 220);
   extensionsList.setColumnWidth(1, 30);
 
+  var logo = storelib.currentFolder+"/logo.png"
+  var logoPixmap = new QPixmap(logo);
+  //logoPixmap = logoPixmap.scaledToWidth(300, Qt.FastTransformation);
+  aboutFrame.storeLabel.setPixmap(logoPixmap)
+
   // check for updates -----------------------------------------------
 
-  if (localList.list.length > 0) {
+  if (localList.list.length > 0 && localList.extensions.hasOwnProperty(store.storeExtension.id)) {
     // we only do this if a local install List exists so as to not load the store until the user has clicked the button 
     var storeExtension = store.storeExtension;
     var installedStore = localList.extensions[storeExtension.id];
+
     var currentVersion = installedStore.version;
     var storeVersion = storeExtension.version;
 
@@ -146,7 +152,7 @@ function initStoreUI() {
   // Subclass TreeWidgetItem 
   function ExtensionItem(extension) {
     var newExtensions = localList.getData("newExtensions", []);
-    var extensionLabel = extension.name + " v" + extension.version;
+    var extensionLabel = extension.name;
     
     if (newExtensions.indexOf(extension.id) != -1) extensionLabel += " ★new!"
 
@@ -159,7 +165,7 @@ function initStoreUI() {
       log.debug(extension.id, localList.checkFiles(localExtension));
       if (localExtension.currentVersionIsOlder(extension.version)) {
         icon = "↺";
-        this.setToolTip(1, "Update available.");
+        this.setToolTip(1, "Update available:\ncurrently installed version : v" + extension.version);
       } else if (!localList.checkFiles(localExtension)) {
         icon = "!";
         this.setToolTip(1, "Some files from this extension are missing.");
