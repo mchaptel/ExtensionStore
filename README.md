@@ -4,7 +4,7 @@
 
 This extension is an open source, user curated extension store to help TB Harmony users exchange the scripts they make.
 
-Harmony brings together a lot of users, all trying to add their own helpful pieces to the experience and help others make the best animations possible. This store makes it easy to share and discover extensions others have made, and to add your own!
+Harmony brings together all kinds of shades of users, all trying to add their own helpful pieces to the experience and help others make the best animations possible. This store makes it easy to share and discover extensions others have made, and to add your own!
 
 ### Compatibility
 ```Harmony Premium 16 and up (requires package support)```
@@ -64,6 +64,12 @@ It is possible to load an existing file in order to make adjustements and additi
 ### **Important information for script makers:**
 
 For the moment, version numbers are purely indicative and do not allow script makers to point users to a specific version of the code (commit). It only allows to notify users about there being a new version available. Be careful when making commits that break your extensions. This will be rectified in the future.
+
+---
+
+## License
+
+This extension is relseased under the Mozilla Public License 2.0.
 
 ---
 
