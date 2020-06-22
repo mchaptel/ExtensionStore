@@ -1,8 +1,8 @@
 {
   "name": "ExtensionStore",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "compatibility": "Harmony Premium 16",
-  "description": "Changelog: Progress bar for downloading, bugfixes in registration window. \nWriting descriptions should now be easier, with line breaks being kept by the html.",
+  "description": "Changelog: new repo, fixes for updates, new logo.",
   "isPackage": "true",
   "repository": "https://github.com/mchaptel/ExtensionStore/",
   "files": [
