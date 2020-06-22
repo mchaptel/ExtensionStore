@@ -173,7 +173,7 @@ function initStoreUI() {
       log.debug(extension.id, localList.checkFiles(localExtension));
       if (localExtension.currentVersionIsOlder(extension.version)) {
         icon = "↺";
-        this.setToolTip(1, "Update available:\ncurrently installed version : v" + extension.version);
+        this.setToolTip(1, "Update available:\ncurrently installed version : v" + localExtension.version);
       } else if (!localList.checkFiles(localExtension)) {
         icon = "!";
         this.setToolTip(1, "Some files from this extension are missing.");
