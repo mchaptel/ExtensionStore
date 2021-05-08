@@ -149,7 +149,7 @@ Object.defineProperty(Store.prototype, "localPackage", {
  * However, each seller has to use a single tbpackage.json file to keep track of them.
  * This file will be used by the store to identify the extensions made by that seller.
  * Note: even though the nomenclature suggests it, there is no money transaction involved.
- * @param {string} repoUrl    the repo thqt contains the file tbpackage.json 
+ * @param {string} repoUrl    the repo thqt contains the file tbpackage.json
  */
 function Seller(repoUrl) {
   this.log = new Logger("Seller");
@@ -718,7 +718,7 @@ Object.defineProperty(Extension.prototype, "files", {
 
 
 /**
- * The id of this extension. Made of the repo name+extension name; 
+ * The id of this extension. Made of the repo name+extension name;
  * @name Extension#id
  * @type {string}
  */
@@ -882,7 +882,7 @@ Object.defineProperty(LocalExtensionList.prototype, "list", {
  * gets the install location for a given extension
  */
 LocalExtensionList.prototype.installLocation = function (extension) {
-  return this.installFolder + (extension.package.isPackage ? "/packages/" + extension.name : "")
+  return this.installFolder + (extension.package.isPackage ? "/packages/" + extension.name.replace(" ", "") : "")
 }
 
 
@@ -1080,8 +1080,8 @@ Object.defineProperty(LocalExtensionList.prototype, "settings", {
 
 /**
  * Saves the specified data to a local file.
- * @param {string} name 
- * @param {string} value 
+ * @param {string} name
+ * @param {string} value
  */
 LocalExtensionList.prototype.saveData = function(name, value){
   this.log.debug("saving data ", JSON.stringify(value, null, "  "), "under name", name)
@@ -1190,15 +1190,14 @@ function NetworkConnexionHandler() {
  * Makes a network request and get the result as a parsed JSON.
  */
 NetworkConnexionHandler.prototype.get = function (command) {
-  if (typeof command == "string") command = [command]
-  var result = this.curl.get(command);
   // handle errors
   try {
+    var result = this.curl.get(command);
     json = JSON.parse(result)
     return json;
   }
   catch (error) {
-    this.curl.log.error("command " + command + " did not return a valid JSON : " + result);
+    this.curl.log.error(error+": command " + command + " did not return a valid JSON : " + result);
     return { error: error, message: result };
   }
 }
@@ -1210,7 +1209,7 @@ NetworkConnexionHandler.prototype.get = function (command) {
 NetworkConnexionHandler.prototype.download = function (url, destinationPath) {
   url = url.replace(/ /g, "%20")
   destinationPath = destinationPath.replace(/[ :\?\*"\<\>\|][^/\\]/g, "")
-  
+
   var command = ["-L", "-o", destinationPath, url];
   var result = this.curl.get(command, 30000); // 30s timeout
   return result
@@ -1244,9 +1243,9 @@ function CURL() {
  */
 CURL.prototype.query = function (query, wait) {
   if (typeof wait === 'undefined') var wait = 5000;
+  var bin = this.bin;
   try {
     var p = new QProcess();
-    var bin = this.bin;
 
     this.log.debug("starting process :" + bin + " " + command);
     var command = ["-H", "Authorization: Bearer YOUR_JWT", "-H", "Content-Type: application/json", "-X", "POST", "-d"];
@@ -1274,31 +1273,35 @@ CURL.prototype.query = function (query, wait) {
  * Queries the REST Github API v3 with a curl process
  */
 CURL.prototype.get = function (command, wait) {
+  if (typeof command == "string") command = [command]
   if (typeof wait === 'undefined') var wait = 5000;
   try {
-    var p = new QProcess();
     var bin = this.bin;
-
-    // The toonboom bundled curl doesn't seem to be equiped for ssh so we have to use unsafe mode
-    if (bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command)
-
-    this.log.debug("starting process :" + bin + " " + command.join(" "));
-    p.start(bin, command);
-
-    p.waitForFinished(wait);
-
-    var readOut = p.readAllStandardOutput();
-    var output = new QTextStream(readOut).readAll();
-    this.log.debug("json: " + output);
-
-    return output;
+    return this.runCommand(bin, command, wait);
   } catch (err) {
-    this.log.error("Error with curl command: \n"+command.join(" ")+"\n"+err);
-    return null;
+    message = "Error with curl command: \n"+command.join(" ")+"\n"+err
+    this.log.error(message);
+    throw new Error (message);
   }
 }
 
 
+CURL.prototype.runCommand = function (bin, command, wait){
+  var p = new QProcess();
+  // The toonboom bundled curl doesn't seem to be equiped for ssh so we have to use unsafe mode
+  if (bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command)
+
+  this.log.debug("starting process :" + bin + " " + command.join(" "));
+  p.start(bin, command);
+
+  p.waitForFinished(wait);
+
+  var readOut = p.readAllStandardOutput();
+  var output = new QTextStream(readOut).readAll();
+  this.log.debug("curl output: " + output);
+
+  return output;
+}
 
 /**
  * find the curl executable
@@ -1320,12 +1323,22 @@ Object.defineProperty(CURL.prototype, "bin", {
 
       for (var i in curl) {
         if ((new File(curl[i])).exists) {
-          CURL.__proto__.bin = curl[i];
-          return curl[i];
+          this.log.log("CURL bin found, using: "+curl[i])
+          // testing connection
+          var bin = curl[i];
+          var test = this.runCommand(bin, ["ifconfig.me"], 500);
+          if (!test){
+            var error = "ExtensionStore: Couldn't establish a connexion.\nCheck that "+bin+" has internet access."
+            this.log.error(error)
+          }else{
+            CURL.__proto__.bin = bin;
+            return bin;
+          }
         }
       }
-
-      throw new Error("cURL wasn't found. Install cURL first.");
+      var error = "ExtensionStore: a valid CURL install wasn't found. Install CURL first.";
+      this.log.error(error)
+      throw new Error(error)
     } else {
       return CURL.__proto__.bin;
     }

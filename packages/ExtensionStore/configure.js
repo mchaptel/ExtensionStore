@@ -30,7 +30,6 @@ function initStoreUI() {
   var log = new storelib.Logger("UI");
   var store = new storelib.Store();
   var localList = new storelib.LocalExtensionList(store);
-
   /////// testing
   /*var extensions = store.extensions
    log(extensions.map(function(x){return JSON.stringify(x.package, null, "  ")}));
@@ -78,56 +77,64 @@ function initStoreUI() {
   aboutFrame.storeLabel.setPixmap(logoPixmap)
 
   // check for updates -----------------------------------------------
+  try{
+    if (localList.list.length > 0) {
+      // we only do this if a local install List exists so as to not load the store until the user has clicked the button
+      var storeExtension = store.storeExtension;
 
-  if (localList.list.length > 0) {
-    // we only do this if a local install List exists so as to not load the store until the user has clicked the button
-    var storeExtension = store.storeExtension;
-
-    if (storeExtension.hasOwnProperty(storeExtension.id)){
-      var installedStore = localList.extensions[storeExtension.id];
-    }else{
-      // in case id changed (repo changed), we search by name
-      for (var i in localList.extensions){
-        if (localList.extensions[i].name == storeExtension.name) var installedStore = localList.extensions[i];
+      if (storeExtension.hasOwnProperty(storeExtension.id)){
+        var installedStore = localList.extensions[storeExtension.id];
+      }else{
+        // in case id changed (repo changed), we search by name
+        for (var i in localList.extensions){
+          if (localList.extensions[i].name == storeExtension.name) var installedStore = localList.extensions[i];
+        }
       }
-    }
 
-    var currentVersion = installedStore.version;
-    var storeVersion = storeExtension.version;
+      var currentVersion = installedStore.version;
+      var storeVersion = storeExtension.version;
 
-    function updateStore() {
-      var success = localList.install(storeExtension);
-      if (success) {
-        MessageBox.information("Store succesfully updated to version v" + storeVersion + ".\n\nPlease restart Harmony for changes to take effect.");
-        aboutFrame.updateRibbon.storeVersion.setText("v" + currentVersion);
-        aboutFrame.updateRibbon.setStyleSheet("");
-        aboutFrame.updateRibbon.updateButton.hide();
+      function updateStore() {
+        var success = localList.install(storeExtension);
+        if (success) {
+          MessageBox.information("Store succesfully updated to version v" + storeVersion + ".\n\nPlease restart Harmony for changes to take effect.");
+          aboutFrame.updateRibbon.storeVersion.setText("v" + currentVersion);
+          aboutFrame.updateRibbon.setStyleSheet("");
+          aboutFrame.updateRibbon.updateButton.hide();
+        } else {
+          MessageBox.information("There was a problem updating to v" + storeVersion + ".\n\n The update was not successful.");
+        }
+      }
+
+      // if a more recent version of the store exists on the repo, activate the update ribbon
+      if (installedStore.currentVersionIsOlder(storeVersion)) {
+        aboutFrame.updateRibbon.storeVersion.setText("v" + currentVersion + "  ⓘ New version available: v" + storeVersion);
+        aboutFrame.updateRibbon.setStyleSheet(updateRibbonStyleSheet);
+        aboutFrame.updateRibbon.updateButton.toolTip = storeExtension.package.description;
+        aboutFrame.updateRibbon.updateButton.clicked.connect(updateStore);
       } else {
-        MessageBox.information("There was a problem updating to v" + storeVersion + ".\n\n The update was not successful.");
+        aboutFrame.updateRibbon.updateButton.hide();
+        aboutFrame.updateRibbon.storeVersion.setText("v" + currentVersion + " ✓ - Store is up to date.");
       }
-    }
 
-    // if a more recent version of the store exists on the repo, activate the update ribbon
-    if (installedStore.currentVersionIsOlder(storeVersion)) {
-      aboutFrame.updateRibbon.storeVersion.setText("v" + currentVersion + "  ⓘ New version available: v" + storeVersion);
-      aboutFrame.updateRibbon.setStyleSheet(updateRibbonStyleSheet);
-      aboutFrame.updateRibbon.updateButton.toolTip = storeExtension.package.description;
-      aboutFrame.updateRibbon.updateButton.clicked.connect(updateStore);
-    } else {
-      aboutFrame.updateRibbon.updateButton.hide();
-      aboutFrame.updateRibbon.storeVersion.setText("v" + currentVersion + " ✓ - Store is up to date.");
-    }
-
-    storeFrame.storeVersionLabel.setText("v" + currentVersion);
-  } else {
-    // in case of missing list file, we find out the current version by parsing the json ?
-    var json = store.localPackage;
-    if (json != null) {
-      var currentVersion = json.version;
-      aboutFrame.updateRibbon.storeVersion.setText("v" + currentVersion);
       storeFrame.storeVersionLabel.setText("v" + currentVersion);
+    } else {
+      // in case of missing list file, we find out the current version by parsing the json ?
+      var json = store.localPackage;
+      if (json != null) {
+        var currentVersion = json.version;
+        aboutFrame.updateRibbon.storeVersion.setText("v" + currentVersion);
+        storeFrame.storeVersionLabel.setText("v" + currentVersion);
+      }
+      aboutFrame.updateRibbon.updateButton.hide();
     }
+  }catch(err){
+    // couldn't check updates, probably we don't have an internet access.
+    // We set up an error message and disable load button.
+    log.error(err)
+    aboutFrame.loadStoreButton.enabled = false;
     aboutFrame.updateRibbon.updateButton.hide();
+    aboutFrame.updateRibbon.storeVersion.setText("Could not connect to GitHub. Store disabled, check internet access.");
   }
 
   // Setup description panel -----------------------------------------
@@ -173,7 +180,7 @@ function initStoreUI() {
       log.debug(extension.id, localList.checkFiles(localExtension));
       if (localExtension.currentVersionIsOlder(extension.version)) {
         icon = "↺";
-        this.setToolTip(1, "Update available:\ncurrently installed version : v" + localExtension.version);
+        this.setToolTip(1, "Update available:\ncurrently installed version : v" + extension.version);
       } else if (!localList.checkFiles(localExtension)) {
         icon = "!";
         this.setToolTip(1, "Some files from this extension are missing.");
