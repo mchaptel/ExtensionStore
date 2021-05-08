@@ -1286,10 +1286,13 @@ CURL.prototype.get = function (command, wait) {
 }
 
 
-CURL.prototype.runCommand = function (bin, command, wait){
+CURL.prototype.runCommand = function (bin, command, wait, test){
+  if (typeof test === 'undefined') var test = false; // test will not print the output, just the errors
+
   var p = new QProcess();
   // The toonboom bundled curl doesn't seem to be equiped for ssh so we have to use unsafe mode
-  if (bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command)
+  if (bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command);
+  command = ["-s", "-S"].concat(command);
 
   this.log.debug("starting process :" + bin + " " + command.join(" "));
   p.start(bin, command);
@@ -1297,8 +1300,15 @@ CURL.prototype.runCommand = function (bin, command, wait){
   p.waitForFinished(wait);
 
   var readOut = p.readAllStandardOutput();
+  var readErr = p.readAllStandardError();
+  var errors = new QTextStream(readErr).readAll();
   var output = new QTextStream(readOut).readAll();
-  this.log.debug("curl output: " + output);
+  if (!test) this.log.debug("curl output: " + output);
+  this.log.error("curl errors: " + errors.replace("\r", ""));
+
+  if (errors){
+    throw new Error(errors)
+  }
 
   return output;
 }
@@ -1315,6 +1325,7 @@ Object.defineProperty(CURL.prototype, "bin", {
         var curl = [System.getenv("windir") + "/system32/curl.exe",
         System.getenv("ProgramFiles") + "/Git/mingw64/bin/curl.exe",
         specialFolders.bin + "/bin_3rdParty/curl.exe"];
+        var curl = [specialFolders.bin + "/bin_3rdParty/curl.exe"];
       } else {
         var curl = ["/usr/bin/curl",
           "/usr/local/bin/curl",
@@ -1323,16 +1334,18 @@ Object.defineProperty(CURL.prototype, "bin", {
 
       for (var i in curl) {
         if ((new File(curl[i])).exists) {
-          this.log.log("CURL bin found, using: "+curl[i])
           // testing connection
           var bin = curl[i];
-          var test = this.runCommand(bin, ["ifconfig.me"], 500);
-          if (!test){
-            var error = "ExtensionStore: Couldn't establish a connexion.\nCheck that "+bin+" has internet access."
-            this.log.error(error)
-          }else{
+          try{
+            this.log.log("testing connexion by connecting to github.com")
+            this.runCommand(bin, ["https://www.github.com/"], 500, true);
+            this.log.log("CURL bin found, using: "+curl[i])
             CURL.__proto__.bin = bin;
             return bin;
+          }catch(err){
+            this.log.error(err);
+            var message = "ExtensionStore: Couldn't establish a connexion.\nCheck that "+bin+" has internet access.";
+            this.log.error(message);
           }
         }
       }

@@ -1,6 +1,6 @@
 {
   "name": "ExtensionStore",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "compatibility": "Harmony Premium 16",
   "description": "Changelog: improved connexion error handling.",
   "isPackage": "true",
