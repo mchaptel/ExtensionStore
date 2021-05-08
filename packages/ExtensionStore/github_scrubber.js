@@ -1280,7 +1280,7 @@ CURL.prototype.get = function (command, wait) {
     var bin = this.bin;
 
     // The toonboom bundled curl doesn't seem to be equiped for ssh so we have to use unsafe mode
-    if (bin.indexOf("ToonBoom") != -1) command = ["-k"].concat(command)
+    if (bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command)
 
     this.log.debug("starting process :" + bin + " " + command.join(" "));
     p.start(bin, command);
