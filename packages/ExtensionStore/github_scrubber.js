@@ -950,7 +950,7 @@ LocalExtensionList.prototype.uninstall = function (extension) {
     if (listFiles(folder).length == 0) (new Dir(folder)).rmdirs();
   }
   if (extension.package.isPackage) {
-    var folder = new Dir(this.installFolder + "packages/" + extension.name);
+    var folder = new Dir(this.installFolder + "packages/" + extension.name.replace(" ", ""));
     this.log.debug("removing folder " + folder.path)
     if (folder.exists) folder.rmdirs();
   }
@@ -1131,7 +1131,6 @@ ExtensionDownloader.prototype.downloadFiles = function () {
   var dlFiles = [this.destFolder];
 
   // log ("destPaths: "+destPaths)
-
   var files = this.extension.files;
 
   this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
@@ -1182,7 +1181,7 @@ ExtensionDownloader.prototype.getDownloadUrl = function (filePath) {
  * @extends QObject
  */
 function NetworkConnexionHandler() {
-  this.curl = new CURL()
+  this.curl = new CURL();
 }
 
 
@@ -1191,14 +1190,15 @@ function NetworkConnexionHandler() {
  */
 NetworkConnexionHandler.prototype.get = function (command) {
   // handle errors
+  var result = this.curl.get(command);
   try {
-    var result = this.curl.get(command);
-    json = JSON.parse(result)
+    json = JSON.parse(result);
     return json;
   }
   catch (error) {
-    this.curl.log.error(error+": command " + command + " did not return a valid JSON : " + result);
-    return { error: error, message: result };
+    var message = ("command " + command + " did not return a valid JSON : " + result);
+    this.curl.log.error(error + " : " + message);
+    throw new Error(message);
   }
 }
 
@@ -1207,12 +1207,12 @@ NetworkConnexionHandler.prototype.get = function (command) {
  * Makes a download request for the given file url, and downloads it to the chosen location
  */
 NetworkConnexionHandler.prototype.download = function (url, destinationPath) {
-  url = url.replace(/ /g, "%20")
-  destinationPath = destinationPath.replace(/[ :\?\*"\<\>\|][^/\\]/g, "")
+  url = url.replace(/ /g, "%20");
+  destinationPath = destinationPath.replace(/[ :\?\*"\<\>\|][^/\\]/g, "");
 
   var command = ["-L", "-o", destinationPath, url];
   var result = this.curl.get(command, 30000); // 30s timeout
-  return result
+  return result;
 }
 
 
@@ -1224,7 +1224,7 @@ NetworkConnexionHandler.prototype.download = function (url, destinationPath) {
  * @param {string[]} command
  */
 function CURL() {
-  this.log = new Logger("CURL")
+  this.log = new Logger("CURL");
 }
 
 
@@ -1300,13 +1300,13 @@ CURL.prototype.runCommand = function (bin, command, wait, test){
   p.waitForFinished(wait);
 
   var readOut = p.readAllStandardOutput();
-  var readErr = p.readAllStandardError();
-  var errors = new QTextStream(readErr).readAll();
   var output = new QTextStream(readOut).readAll();
   if (!test) this.log.debug("curl output: " + output);
-  this.log.error("curl errors: " + errors.replace("\r", ""));
 
+  var readErr = p.readAllStandardError();
+  var errors = new QTextStream(readErr).readAll();
   if (errors){
+    this.log.error("curl errors: " + errors.replace("\r", ""));
     throw new Error(errors)
   }
 
@@ -1492,7 +1492,7 @@ function recursiveFileCopy(folder, destination) {
       var command = ["/E", "/TEE", "/MOV", folder, destination];
     } else {
       var bin = "cp";
-      var command = ["-Rv", folder, destination];
+      var command = ["-Rv", folder + "/.", destination];
     }
 
     // log ("starting process :"+bin+" "+command);
