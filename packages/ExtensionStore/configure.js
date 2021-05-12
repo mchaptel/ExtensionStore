@@ -51,9 +51,10 @@ function initStoreUI() {
 
   // set ui and ui responses
   var webPreviewsFontFamily = "Arial";
-  var webPreviewsFontSize = 12;
+  var webPreviewsFontSize = UiLoader.dpiScale(12);
   var webPreviewsStyleSheet = "QWebView { background-color: lightGrey; }";
 
+  var noConnexionRibbonStyleSheet = "QWidget { background-color: red; }";
   var updateRibbonStyleSheet = "QWidget { background-color: blue; }";
 
   var folderIcon = specialFolders.resource + "/icons/old/oldfolder.png";
@@ -68,8 +69,8 @@ function initStoreUI() {
   var storeListPanel = storeFrame.storeSplitter.widget(0);
   var storeDescriptionPanel = storeFrame.storeSplitter.widget(1);
   var extensionsList = storeListPanel.extensionsList;
-  extensionsList.setColumnWidth(0, 220);
-  extensionsList.setColumnWidth(1, 30);
+  extensionsList.setColumnWidth(0, UiLoader.dpiScale(220));
+  extensionsList.setColumnWidth(1, UiLoader.dpiScale(30));
 
   var logo = storelib.currentFolder+"/logo.png"
   var logoPixmap = new QPixmap(logo);
@@ -92,6 +93,8 @@ function initStoreUI() {
       }
 
       var currentVersion = installedStore.version;
+      log.log("Store version: "+ currentVersion)
+
       var storeVersion = storeExtension.version;
 
       function updateStore() {
@@ -134,6 +137,7 @@ function initStoreUI() {
     log.error(err)
     aboutFrame.loadStoreButton.enabled = false;
     aboutFrame.updateRibbon.updateButton.hide();
+    aboutFrame.updateRibbon.setStyleSheet(noConnexionRibbonStyleSheet);
     aboutFrame.updateRibbon.storeVersion.setText("Could not connect to GitHub. Store disabled, check internet access.");
   }
 
