@@ -13,7 +13,7 @@ function test() {
 
   for (var i in extensions) {
     log.debug(JSON.stringify(extensions[i].package, null, "  "))
-    log.log("is extension " + store.extensions[i].name + " installed? " + localList.isInstalled(store.extensions[i]))
+    log.info("is extension " + store.extensions[i].name + " installed? " + localList.isInstalled(store.extensions[i]))
     //log(store.extensions[i].install());
   }
 }
@@ -27,7 +27,7 @@ function test() {
  */
 function Store() {
   this.log = new Logger("Store")
-  this.log.log("init store")
+  this.log.info("init store")
 
 }
 
@@ -266,8 +266,8 @@ Object.defineProperty(Seller.prototype, "iconUrl", {
  */
 Object.defineProperty(Seller.prototype, "repositories", {
   get: function () {
-    this.log.debug("getting seller repositories for seller " + this._url);
     if (typeof this._repositories === 'undefined') {
+      this.log.debug("getting seller repositories for seller " + this._url);
       this._repositories = [];
       var tbpackage = this.package;
       if (tbpackage == null) return this._repositories;
@@ -492,8 +492,8 @@ Object.defineProperty(Repository.prototype, "contents", {
  */
 Object.defineProperty(Repository.prototype, "extensions", {
   get: function () {
-    this.log.debug("getting repos extensions for repo " + this.apiUrl);
     if (typeof this._extensions === 'undefined') {
+      this.log.debug("getting repos extensions for repo " + this.apiUrl);
       this._extensions = [];
 
       // read package file from repository
@@ -1098,7 +1098,7 @@ LocalExtensionList.prototype.saveData = function(name, value){
  */
 LocalExtensionList.prototype.getData = function(name, defaultValue){
   if (typeof defaultValue === 'undefined') defaultValue = "";
-  this.log.debug("getting data", name, "defaultvalue:", (typeof defaultValue))
+  this.log.debug("getting data", name, "defaultvalue (type:", (typeof defaultValue), ")")
   var prefs = this.settings;
   if (typeof prefs[name] === 'undefined') return defaultValue;
   return prefs[name];
@@ -1124,7 +1124,7 @@ function ExtensionDownloader(extension) {
  * @returns [string[]]    an array of paths of the downloaded files location, as well as the destination folder at index 0 of the array.
  */
 ExtensionDownloader.prototype.downloadFiles = function () {
-  this.log.log("starting download of files from extension " + this.extension.name);
+  this.log.info("starting download of files from extension " + this.extension.name);
   var destFolder = this.destFolder;
   this.log.debug(this.extension instanceof Extension)
   var destPaths = this.extension.localPaths.map(function (x) { return destFolder + x });
@@ -1337,9 +1337,9 @@ Object.defineProperty(CURL.prototype, "bin", {
           // testing connection
           var bin = curl[i];
           try{
-            this.log.log("testing connexion by connecting to github.com")
+            this.log.info("testing connexion by connecting to github.com")
             this.runCommand(bin, ["https://www.github.com/"], 500, true);
-            this.log.log("CURL bin found, using: "+curl[i])
+            this.log.info("CURL bin found, using: "+curl[i])
             CURL.__proto__.bin = bin;
             return bin;
           }catch(err){
@@ -1380,7 +1380,7 @@ function Logger(name) {
 /**
  * Outputs a message only if the logger is set to output a level of verbosity equal to LOG
  */
-Logger.prototype.log = function () {
+Logger.prototype.info = function () {
   if (Logger.level >= this.LEVEL.LOG) this.trace([].slice.call(arguments));
 }
 
@@ -1410,7 +1410,11 @@ Logger.prototype.trace = function (message) {
     System.println(message);
   } catch (err) {
     for (var i in message) {
-      this.trace(message)
+      try{
+        MessageLog.trace(message);
+      }catch(err){
+        MessageLog.trace(i);
+      }
     }
   }
 }
@@ -1492,10 +1496,10 @@ function recursiveFileCopy(folder, destination) {
       var command = ["/E", "/TEE", "/MOV", folder, destination];
     } else {
       var bin = "cp";
-      var command = ["-Rv", folder + "/.", destination];
+      var command = ["-Rv", folder + "/*", destination];
     }
 
-    // log ("starting process :"+bin+" "+command);
+    log.debug("starting process :"+bin+" "+command);
     p.start(bin, command);
 
     p.waitForFinished(-1);
