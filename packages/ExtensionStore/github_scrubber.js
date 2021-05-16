@@ -1404,6 +1404,13 @@ Logger.prototype.error = function () {
  * Outputs the given message. Used internally.
  */
 Logger.prototype.trace = function (message) {
+  // handling printing out errors properly
+  for (var m in message){
+    if (message[m] instanceof Error){
+      var error = message[m];
+      message[m] = "Error: "+error.message+" (line " + error.lineNumber + " in file '" + error.fileName + "')";
+    }
+  }
   if (this.name) var message = this.name + ": " + message.join(" ");
   try {
     MessageLog.trace(message);
