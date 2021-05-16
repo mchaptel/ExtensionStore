@@ -162,7 +162,7 @@ StoreUI.prototype.getInstalledVersion = function(){
     var currentVersion = installedStore.version;
   }else{
     // in case of missing list file, we find out the current version by parsing the json ?
-    var json = store.localPackage;
+    var json = this.store.localPackage;
     if (!json) throw new Error("Invalid store tbpackage.json")
 
     var currentVersion = json.version;
