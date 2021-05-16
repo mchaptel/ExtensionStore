@@ -1,8 +1,8 @@
 {
   "name": "ExtensionStore",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "compatibility": "Harmony Premium 16",
-  "description": "Changelog: complete refactor of ui code.",
+  "description": "Changelog: fix bug when checking for updates during the first connexion.",
   "isPackage": "true",
   "repository": "https://github.com/mchaptel/ExtensionStore/",
   "files": [
