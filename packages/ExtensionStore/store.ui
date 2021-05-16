@@ -685,7 +685,7 @@
              <x>0</x>
              <y>0</y>
              <width>513</width>
-             <height>303</height>
+             <height>266</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -769,23 +769,50 @@
          </spacer>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <layout class="QVBoxLayout" name="verticalLayout_8">
           <item>
-           <widget class="QPushButton" name="loadStoreButton">
-            <property name="minimumSize">
-             <size>
-              <width>80</width>
-              <height>30</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>150</width>
-              <height>16777215</height>
-             </size>
-            </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <item>
+             <widget class="QPushButton" name="loadStoreButton">
+              <property name="minimumSize">
+               <size>
+                <width>80</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>150</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Load Store</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="updateLabel">
             <property name="text">
-             <string>Load Store</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Please Wait - Updating Extension List...&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="margin">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QProgressBar" name="updateProgress">
+            <property name="maximum">
+             <number>0</number>
+            </property>
+            <property name="value">
+             <number>-1</number>
             </property>
            </widget>
           </item>

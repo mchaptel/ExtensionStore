@@ -30,8 +30,9 @@ function StoreUI(){
   this.storeDescriptionPanel = this.storeFrame.storeSplitter.widget(1);
   this.extensionsList = this.storeListPanel.extensionsList;
 
-  // disable store frame until store is loaded
+  // Hide the store and the loading UI elements.
   this.storeFrame.hide();
+  this.setUpdateProgressUIState(false);
 
   var logo = storelib.currentFolder+"/logo.png"
   var logoPixmap = new QPixmap(logo);
@@ -94,13 +95,29 @@ StoreUI.prototype.show = function(){
   this.ui.show()
 }
 
+/**
+ * Show widgets responsible for showing progress to the user when loading the
+ * store and retrieving extensions.
+ * @param {boolean} visible - Determine whether the progress state should be enabled or disabled. 
+ */
+StoreUI.prototype.setUpdateProgressUIState = function(visible){
+  if (visible === true) {
+    this.aboutFrame.loadStoreButton.hide();
+    this.aboutFrame.updateLabel.show();
+    this.aboutFrame.updateProgress.show();
+  }
+  else{
+    this.aboutFrame.loadStoreButton.show();
+    this.aboutFrame.updateLabel.hide();
+    this.aboutFrame.updateProgress.hide();
+  }
+}
+
 
 /**
  * Loads the store
  */
 StoreUI.prototype.loadStore = function(){
-  this.storeFrame.show();
-  this.aboutFrame.hide();
 
   // setup the store widget sizes
   this.extensionsList.setColumnWidth(0, UiLoader.dpiScale(220));
@@ -118,9 +135,12 @@ StoreUI.prototype.loadStore = function(){
   storeFrame.storeSplitter.setSizes([storeFrame.width / 2, storeFrame.width / 2]);
   this.storeFrameState = storeFrame.storeSplitter.saveState();
   storeFrame.storeSplitter.setSizes([storeFrame.storeSplitter.width, 0]);
-
-  // expensive loading operation, maybe we could show a progress bar here somehow
-  // (instead of doing it one line, do it seller by seller then extension by extension and update progress?)
+ 
+  // Show progress dialog to give user indication that the list of extensions is being
+  // updated.
+  this.setUpdateProgressUIState(true);
+  
+  // Update list of available operations.
   var extensions = this.store.extensions;
 
   // saving the list of extensions so we can pinpoint the new ones at next startup and highlight them
@@ -137,6 +157,10 @@ StoreUI.prototype.loadStore = function(){
   this.localList.saveData("newExtensions", newExtensions);
 
   this.updateExtensionsList();
+
+  // Show the fully loaded store.
+  this.storeFrame.show();
+  this.aboutFrame.hide();
 }
 
 

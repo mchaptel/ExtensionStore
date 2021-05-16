@@ -1289,15 +1289,33 @@ CURL.prototype.get = function (command, wait) {
 CURL.prototype.runCommand = function (bin, command, wait, test){
   if (typeof test === 'undefined') var test = false; // test will not print the output, just the errors
 
+  var loop = new QEventLoop();
+
   var p = new QProcess();
+  p["finished(int,QProcess::ExitStatus)"].connect(this, function () {
+    loop.exit();
+  });
+
+  // Use a timer to kill the QProcess after the wait period. 
+  var timer = new QTimer();
+  timer.singleShot = true;
+  timer["timeout"].connect(this, function() {
+    if (loop.isRunning()) {
+      p.kill();
+      loop.exit();
+      throw new Error("Timeout updating extension.");
+    }
+  });
+
   // The toonboom bundled curl doesn't seem to be equiped for ssh so we have to use unsafe mode
   if (bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command);
   command = ["-s", "-S"].concat(command);
 
+  // Start the process and enter an event loop until the QProcessx exits.
   this.log.debug("starting process :" + bin + " " + command.join(" "));
   p.start(bin, command);
-
-  p.waitForFinished(wait);
+  timer.start(wait);
+  loop.exec();
 
   var readOut = p.readAllStandardOutput();
   var output = new QTextStream(readOut).readAll();
