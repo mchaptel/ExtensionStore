@@ -1140,6 +1140,7 @@ ExtensionDownloader.prototype.downloadFiles = function () {
   progress.title = "Installing extension "+this.extension.name;
   progress.setLabelText( "Downloading files..." );
   progress.setRange( 0, files.length );
+  progress.modal = true;
 
   progress.show();
 
