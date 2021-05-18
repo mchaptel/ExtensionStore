@@ -1204,9 +1204,10 @@ ExtensionDownloader.prototype.downloadFiles = function () {
 
   // cbb : how to connect this to any progress window?
   var progress = new QProgressDialog();
-  progress.title = "Installing extension " + this.extension.name;
-  progress.setLabelText("Downloading files...");
-  progress.setRange(0, files.length);
+  progress.title = "Installing extension "+this.extension.name;
+  progress.setLabelText( "Downloading files..." );
+  progress.setRange( 0, files.length );
+  progress.modal = true;
 
   progress.show();
 
