@@ -934,26 +934,30 @@ LocalExtensionList.prototype.install = function (extension) {
 
 /**
  * Remove the installation from the hard drive
+ * @param {Extension} extension - The extension to be removed locally.
+ * @returns {boolean} the success of the uninstallation.
  */
 LocalExtensionList.prototype.uninstall = function (extension) {
   if (!this.isInstalled(extension)) return true    // extension isn't installed
   var localExtension = this.extensions[extension.id];
 
-  var files = localExtension.package.localFiles;
-  for (var i in files) {
-    this.log.debug("removing file " + files[i])
-    var file = new File(files[i])
-    if (file.exists) file.remove();
-
-    // remove containing folder if all files were removed
-    var folder = files[i].slice(0, files[i].lastIndexOf("/") + 1);
-    if (listFiles(folder).length == 0) (new Dir(folder)).rmdirs();
-  }
+  // Remove packages recursively as they have a parent directory.
   if (extension.package.isPackage) {
     var folder = new Dir(this.installFolder + "packages/" + extension.name.replace(" ", ""));
-    this.log.debug("removing folder " + folder.path)
+    this.log.debug("removing folder " + folder.path);
     if (folder.exists) folder.rmdirs();
   }
+  // Otherwise remove all script files (.js, .ui, .png etc.)
+  else {
+    var files = localExtension.package.localFiles;
+    for (var i in files) {
+      this.log.debug("removing file " + files[i]);
+      var file = new File(files[i]);
+      if (file.exists) file.remove();
+    }
+  }
+
+  // Update the extension list accordingly.
   this.removeFromList(extension);
 
   return true;
@@ -1140,6 +1144,7 @@ ExtensionDownloader.prototype.downloadFiles = function () {
   progress.title = "Installing extension "+this.extension.name;
   progress.setLabelText( "Downloading files..." );
   progress.setRange( 0, files.length );
+  progress.modal = true;
 
   progress.show();
 
@@ -1289,15 +1294,33 @@ CURL.prototype.get = function (command, wait) {
 CURL.prototype.runCommand = function (bin, command, wait, test){
   if (typeof test === 'undefined') var test = false; // test will not print the output, just the errors
 
+  var loop = new QEventLoop();
+
   var p = new QProcess();
+  p["finished(int,QProcess::ExitStatus)"].connect(this, function () {
+    loop.exit();
+  });
+
+  // Use a timer to kill the QProcess after the wait period. 
+  var timer = new QTimer();
+  timer.singleShot = true;
+  timer["timeout"].connect(this, function() {
+    if (loop.isRunning()) {
+      p.kill();
+      loop.exit();
+      throw new Error("Timeout updating extension.");
+    }
+  });
+
   // The toonboom bundled curl doesn't seem to be equiped for ssh so we have to use unsafe mode
   if (bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command);
   command = ["-s", "-S"].concat(command);
 
+  // Start the process and enter an event loop until the QProcessx exits.
   this.log.debug("starting process :" + bin + " " + command.join(" "));
   p.start(bin, command);
-
-  p.waitForFinished(wait);
+  timer.start(wait);
+  loop.exec();
 
   var readOut = p.readAllStandardOutput();
   var output = new QTextStream(readOut).readAll();
@@ -1374,6 +1397,7 @@ function Logger(name) {
   // by default will only output errors and log
   this.LEVEL = { "ERROR": 0, "LOG": 1, "DEBUG": 2 };
   if (typeof Logger.level === 'undefined') Logger.level = this.LEVEL.LOG;
+  if (MessageLog.isDebug()) Logger.level = this.LEVEL.DEBUG;
 }
 
 
@@ -1503,7 +1527,7 @@ function recursiveFileCopy(folder, destination) {
       var command = ["/E", "/TEE", "/MOV", folder, destination];
     } else {
       var bin = "cp";
-      var command = ["-Rv", folder + "/*", destination];
+      var command = ["-Rv", folder + "/.", destination];
     }
 
     log.debug("starting process :"+bin+" "+command);
