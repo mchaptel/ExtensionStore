@@ -1392,6 +1392,7 @@ function Logger(name) {
   // by default will only output errors and log
   this.LEVEL = { "ERROR": 0, "LOG": 1, "DEBUG": 2 };
   if (typeof Logger.level === 'undefined') Logger.level = this.LEVEL.LOG;
+  if (MessageLog.isDebug()) Logger.level = this.LEVEL.DEBUG;
 }
 
 
