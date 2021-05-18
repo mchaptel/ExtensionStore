@@ -1522,7 +1522,7 @@ function recursiveFileCopy(folder, destination) {
       var command = ["/E", "/TEE", "/MOV", folder, destination];
     } else {
       var bin = "cp";
-      var command = ["-Rv", folder + "/*", destination];
+      var command = ["-Rv", folder + "/.", destination];
     }
 
     log.debug("starting process :"+bin+" "+command);
