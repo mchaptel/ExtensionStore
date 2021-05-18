@@ -934,26 +934,30 @@ LocalExtensionList.prototype.install = function (extension) {
 
 /**
  * Remove the installation from the hard drive
+ * @param {Extension} extension - The extension to be removed locally.
+ * @returns {boolean} the success of the uninstallation.
  */
 LocalExtensionList.prototype.uninstall = function (extension) {
   if (!this.isInstalled(extension)) return true    // extension isn't installed
   var localExtension = this.extensions[extension.id];
 
-  var files = localExtension.package.localFiles;
-  for (var i in files) {
-    this.log.debug("removing file " + files[i])
-    var file = new File(files[i])
-    if (file.exists) file.remove();
-
-    // remove containing folder if all files were removed
-    var folder = files[i].slice(0, files[i].lastIndexOf("/") + 1);
-    if (listFiles(folder).length == 0) (new Dir(folder)).rmdirs();
-  }
+  // Remove packages recursively as they have a parent directory.
   if (extension.package.isPackage) {
     var folder = new Dir(this.installFolder + "packages/" + extension.name.replace(" ", ""));
-    this.log.debug("removing folder " + folder.path)
+    this.log.debug("removing folder " + folder.path);
     if (folder.exists) folder.rmdirs();
   }
+  // Otherwise remove all script files (.js, .ui, .png etc.)
+  else {
+    var files = localExtension.package.localFiles;
+    for (var i in files) {
+      this.log.debug("removing file " + files[i]);
+      var file = new File(files[i]);
+      if (file.exists) file.remove();
+    }
+  }
+
+  // Update the extension list accordingly.
   this.removeFromList(extension);
 
   return true;
