@@ -1,4 +1,10 @@
+var NetworkConnexionHandler = require("./network.js").NetworkConnexionHandler;
 var webQuery = new NetworkConnexionHandler();
+var Logger = require("./logger.js").Logger;
+var io = require("./io.js");
+var readFile = io.readFile;
+var writeFile = io.writeFile;
+var recursiveFileCopy = io.recursiveFileCopy;
 
 Logger.level = 2;
 
@@ -131,7 +137,7 @@ Object.defineProperty(Store.prototype, "localPackage", {
     if (typeof this._localPackage === 'undefined') {
       this._localPackage == {}
 
-      var packageFile = currentFolder + "/tbpackage.json";
+      var packageFile = appFolder + "/tbpackage.json";
       var storePackage = readFile(packageFile);
       if (storePackage == null) return null;
       this._localPackage = JSON.parse(storePackage);
@@ -946,9 +952,8 @@ LocalExtensionList.prototype.uninstall = function (extension) {
     var folder = new Dir(this.installFolder + "packages/" + extension.name.replace(" ", ""));
     this.log.debug("removing folder " + folder.path);
     if (folder.exists) folder.rmdirs();
-  }
-  // Otherwise remove all script files (.js, .ui, .png etc.)
-  else {
+  } else {
+    // Otherwise remove all script files (.js, .ui, .png etc.)
     var files = localExtension.package.localFiles;
     for (var i in files) {
       this.log.debug("removing file " + files[i]);
@@ -1177,336 +1182,11 @@ ExtensionDownloader.prototype.getDownloadUrl = function (filePath) {
 }
 
 
-// NetworkConnexionHandler Class --------------------------------------
-/**
- * @constructor
- * @classdesc
- * The NetworkConnexionHandler class handles web queries and downloads. It uses curl for communicating with the remote apis. <br>
- * This class extends QObject so it can broadcast signals and be threaded.
- * @extends QObject
- */
-function NetworkConnexionHandler() {
-  this.curl = new CURL();
-}
-
-
-/**
- * Makes a network request and get the result as a parsed JSON.
- */
-NetworkConnexionHandler.prototype.get = function (command) {
-  // handle errors
-  var result = this.curl.get(command);
-  try {
-    json = JSON.parse(result);
-    return json;
-  }
-  catch (error) {
-    var message = ("command " + command + " did not return a valid JSON : " + result);
-    this.curl.log.error(error + " : " + message);
-    throw new Error(message);
-  }
-}
-
-
-/**
- * Makes a download request for the given file url, and downloads it to the chosen location
- */
-NetworkConnexionHandler.prototype.download = function (url, destinationPath) {
-  url = url.replace(/ /g, "%20");
-  destinationPath = destinationPath.replace(/[ :\?\*"\<\>\|][^/\\]/g, "");
-
-  var command = ["-L", "-o", destinationPath, url];
-  var result = this.curl.get(command, 30000); // 30s timeout
-  return result;
-}
-
-
-// CURL Class --------------------------------------------------------
-/**
- * Curl class to launch curl queries
- * @classdesc
- * @constructor
- * @param {string[]} command
- */
-function CURL() {
-  this.log = new Logger("CURL");
-}
-
-
-/**
- * Queries the GraphQL Github API V4 with a curl process (requires authentication)
- * @param {string}  query     a query object that will be wrapped in an object and converted to JSON.
- * @example
- * // query the files list
- *  var query = "\"query\" : \"{ repository(name: $repoName) { commit(rev: \"HEAD\") { tree(path: \"$folder\", recursive: true) { entries { path isDirectory url } } } } }\""
- *
- * // query a file content
- *  var query = query "{ repository(name: $repoName) { defaultBranch { target { commit { blob(path: "$path") { content } } } } } }"
- *
- * // more : https://docs.sourcegraph.com/api/graphql/examples
- * // more info about authentication : https://developer.github.com/apps/building-github-apps/authenticating-with-github-apps/
- */
-CURL.prototype.query = function (query, wait) {
-  if (typeof wait === 'undefined') var wait = 5000;
-  var bin = this.bin;
-  try {
-    var p = new QProcess();
-
-    this.log.debug("starting process :" + bin + " " + command);
-    var command = ["-H", "Authorization: Bearer YOUR_JWT", "-H", "Content-Type: application/json", "-X", "POST", "-d"];
-    query = query.replace(/\n/gm, "\\\\n").replace(/"/gm, '\\"');
-    command.push('" \\\\n' + query + '"');
-    command.push("https://api.github.com/graphql");
-
-    p.start(bin, command);
-
-    p.waitForFinished(wait);
-
-    var readOut = p.readAllStandardOutput();
-    var output = new QTextStream(readOut).readAll();
-    //log ("json: "+output);
-
-    return output;
-  } catch (err) {
-    this.log.error("Error with curl command: \n"+command.join(" ")+"\n"+err);
-    return null;
-  }
-}
-
-
-/**
- * Queries the REST Github API v3 with a curl process
- */
-CURL.prototype.get = function (command, wait) {
-  if (typeof command == "string") command = [command]
-  if (typeof wait === 'undefined') var wait = 5000;
-  try {
-    var bin = this.bin;
-    return this.runCommand(bin, command, wait);
-  } catch (err) {
-    message = "Error with curl command: \n"+command.join(" ")+"\n"+err
-    this.log.error(message);
-    throw new Error (message);
-  }
-}
-
-
-CURL.prototype.runCommand = function (bin, command, wait, test){
-  if (typeof test === 'undefined') var test = false; // test will not print the output, just the errors
-
-  var loop = new QEventLoop();
-
-  var p = new QProcess();
-  p["finished(int,QProcess::ExitStatus)"].connect(this, function () {
-    loop.exit();
-  });
-
-  // Use a timer to kill the QProcess after the wait period. 
-  var timer = new QTimer();
-  timer.singleShot = true;
-  timer["timeout"].connect(this, function() {
-    if (loop.isRunning()) {
-      p.kill();
-      loop.exit();
-      throw new Error("Timeout updating extension.");
-    }
-  });
-
-  // The toonboom bundled curl doesn't seem to be equiped for ssh so we have to use unsafe mode
-  if (bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command);
-  command = ["-s", "-S"].concat(command);
-
-  // Start the process and enter an event loop until the QProcessx exits.
-  this.log.debug("starting process :" + bin + " " + command.join(" "));
-  p.start(bin, command);
-  timer.start(wait);
-  loop.exec();
-
-  var readOut = p.readAllStandardOutput();
-  var output = new QTextStream(readOut).readAll();
-  if (!test) this.log.debug("curl output: " + output);
-
-  var readErr = p.readAllStandardError();
-  var errors = new QTextStream(readErr).readAll();
-  if (errors){
-    this.log.error("curl errors: " + errors.replace("\r", ""));
-    throw new Error(errors)
-  }
-
-  return output;
-}
-
-/**
- * find the curl executable
- */
-Object.defineProperty(CURL.prototype, "bin", {
-  get: function () {
-    this.log.debug("getting curl bin")
-
-    if (typeof CURL.__proto__.bin === 'undefined') {
-      if (about.isWindowsArch()) {
-        var curl = [System.getenv("windir") + "/system32/curl.exe",
-        System.getenv("ProgramFiles") + "/Git/mingw64/bin/curl.exe",
-        specialFolders.bin + "/bin_3rdParty/curl.exe"];
-        // var curl = [specialFolders.bin + "/bin_3rdParty/curl.exe"]; // testing Harmony curl bin
-      } else {
-        var curl = ["/usr/bin/curl",
-          "/usr/local/bin/curl",
-          specialFolders.bin + "/bin_3rdParty/curl"];
-      }
-
-      for (var i in curl) {
-        if ((new File(curl[i])).exists) {
-          // testing connection
-          var bin = curl[i];
-          try{
-            this.log.info("testing connexion by connecting to github.com")
-            this.runCommand(bin, ["https://www.github.com/"], 500, true);
-            this.log.info("CURL bin found, using: "+curl[i])
-            CURL.__proto__.bin = bin;
-            return bin;
-          }catch(err){
-            this.log.error(err);
-            var message = "ExtensionStore: Couldn't establish a connexion.\nCheck that "+bin+" has internet access.";
-            this.log.error(message);
-          }
-        }
-      }
-      var error = "ExtensionStore: a valid CURL install wasn't found. Install CURL first.";
-      this.log.error(error)
-      throw new Error(error)
-    } else {
-      return CURL.__proto__.bin;
-    }
-  }
-})
-
-
-// log a series of values to the messageLog and command line window. Can pass as many arguments as necessary.
-
-// Logger class -------------------------------------------------------
-/**
- * @constructor
- * @classdesc
- * The Logger class allows to output messages to the log with different levels
- * @param {string} [name]
- */
-function Logger(name) {
-  if (typeof name === 'undefined') var name = "";
-  this.name = name;
-  // by default will only output errors and log
-  this.LEVEL = { "ERROR": 0, "LOG": 1, "DEBUG": 2 };
-  if (typeof Logger.level === 'undefined') Logger.level = this.LEVEL.LOG;
-  if (MessageLog.isDebug()) Logger.level = this.LEVEL.DEBUG;
-}
-
-
-/**
- * Outputs a message only if the logger is set to output a level of verbosity equal to LOG
- */
-Logger.prototype.info = function () {
-  if (Logger.level >= this.LEVEL.LOG) this.trace([].slice.call(arguments));
-}
-
-/**
- * Outputs a message only if the logger is set to output a level of verbosity equal to DEBUG
- */
-Logger.prototype.debug = function () {
-  if (Logger.level >= this.LEVEL.DEBUG) this.trace([].slice.call(arguments));
-}
-
-
-/**
- * Outputs a message only if the logger is set to output a level of verbosity equal to ERROR
- */
-Logger.prototype.error = function () {
-  if (Logger.level >= this.LEVEL.ERROR) this.trace([].slice.call(arguments));
-}
-
-
-/**
- * Outputs the given message. Used internally.
- */
-Logger.prototype.trace = function (message) {
-  // handling printing out errors properly
-  for (var m in message){
-    if (message[m] instanceof Error){
-      var error = message[m];
-      message[m] = "Error: "+error.message+" (line " + error.lineNumber + " in file '" + error.fileName + "')";
-    }
-  }
-  if (this.name) var message = this.name + ": " + message.join(" ");
-  try {
-    MessageLog.trace(message);
-    System.println(message);
-  } catch (err) {
-    for (var i in message) {
-      try{
-        MessageLog.trace(message);
-      }catch(err){
-        MessageLog.trace(i);
-      }
-    }
-  }
-}
-
-
 // Helper functions ---------------------------------------------------
 
-// reads a local file and return the contents
-function readFile(filename) {
-  var file = new File(filename);
-
-  try {
-    if (file.exists) {
-      file.open(FileAccess.ReadOnly);
-      var string = file.read();
-      file.close();
-      return string;
-    }
-  } catch (err) { }
-  return null;
-}
-
-
-// writes the contents to the specified filename.
-function writeFile(filename, content, append) {
-  var log = new Logger("helpers");
-  if (typeof append === 'undefined') var append = false;
-
-  log.debug("writing file " + filename);
-
-  var file = new File(filename);
-  try {
-    if (append) {
-      file.open(FileAccess.Append);
-    } else {
-      file.open(FileAccess.WriteOnly);
-    }
-    file.write(content);
-    file.close();
-    return true;
-  } catch (err) { return false; }
-}
-
-
-// gets the list of files in the folder that match the filter
-function listFiles(folder, filter) {
-  if (typeof filter === 'undefined') var filter = "*"
-
-  var dir = new QDir;
-  dir.setPath(folder);
-  dir.setNameFilters([filter]);
-  dir.setFilter(QDir.Files);
-  var files = dir.entryList();
-
-  return files;
-}
-
 // returns the folder of this file
-var currentFolder = __file__.split("/").slice(0, -1).join("/");
-if (currentFolder.indexOf("repo") == -1) Logger.level = 1;   // disable logging if extension isn't in a repository
-
+var appFolder = __file__.split("/").slice(0, -2).join("/");
+if (appFolder.indexOf("repo") == -1) Logger.level = 1;   // disable logging if extension isn't in a repository
 
 // make a deep copy of an object
 function deepCopy(object) {
@@ -1515,41 +1195,8 @@ function deepCopy(object) {
 }
 
 
-// recursive copy of folders content
-function recursiveFileCopy(folder, destination) {
-  var log = new Logger("helpers")
-  log.debug("copying files from folder " + folder + " to destination " + destination);
-  try {
-    var p = new QProcess();
-
-    if (about.isWindowsArch()) {
-      var bin = "robocopy";
-      var command = ["/E", "/TEE", "/MOV", folder, destination];
-    } else {
-      var bin = "cp";
-      var command = ["-Rv", folder + "/.", destination];
-    }
-
-    log.debug("starting process :"+bin+" "+command);
-    p.start(bin, command);
-
-    p.waitForFinished(-1);
-
-    var readOut = p.readAllStandardOutput();
-    var output = new QTextStream(readOut).readAll();
-    log.debug("copy results: " + output);
-
-    return output;
-  } catch (err) {
-    log.error("error on line "+err.lineNumber+" of file "+err.fileName+": \n"+err);
-    return null;
-  }
-}
-
-
 exports.Store = Store;
 exports.LocalExtensionList = LocalExtensionList;
 exports.Seller = Seller;
 exports.Repository = Repository;
-exports.Logger = Logger;
-exports.currentFolder = currentFolder;
+exports.appFolder = appFolder;

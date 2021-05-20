@@ -27,7 +27,7 @@ function configure(packageFolder, packageName) {
 
 
 function initStoreUI() {
-  var StoreUI = require("./storeui.js").StoreUI;
+  var StoreUI = require("./app.js").StoreUI;
   var ui = new StoreUI();
   ui.show();
 }
