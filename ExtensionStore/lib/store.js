@@ -119,7 +119,7 @@ Object.defineProperty(Store.prototype, "extensions", {
 Object.defineProperty(Store.prototype, "storeExtension", {
   get: function () {
     if (typeof this._storeExtension === 'undefined') {
-      var storePackage = webQuery.get("https://raw.githubusercontent.com/mchaptel/ExtensionStore/master/packages/ExtensionStore/tbpackage.json")
+      var storePackage = webQuery.get("https://raw.githubusercontent.com/mchaptel/ExtensionStore/master/ExtensionStore/tbpackage.json")
       this._storeRepository = new Repository(storePackage.repository)
       this._storeExtension = new Extension(this._storeRepository, storePackage);
     }
