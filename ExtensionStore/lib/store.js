@@ -944,7 +944,7 @@ Object.defineProperty(LocalExtensionList.prototype, "list", {
  * gets the install location for a given extension
  */
 LocalExtensionList.prototype.installLocation = function (extension) {
-  return this.installFolder + (extension.package.isPackage ? "/packages/" + extension.name.replace(" ", "") : "")
+  return this.installFolder + (extension.package.isPackage ? "/packages/" + extension.safeName : "")
 }
 
 
@@ -1005,7 +1005,7 @@ LocalExtensionList.prototype.uninstall = function (extension) {
 
   // Remove packages recursively as they have a parent directory.
   if (extension.package.isPackage) {
-    var folder = new Dir(this.installFolder + "packages/" + extension.name.replace(" ", ""));
+    var folder = new Dir(this.installFolder + "packages/" + extension.safeName);
     this.log.debug("removing folder " + folder.path);
     if (folder.exists) folder.rmdirs();
   } else {
@@ -1181,7 +1181,7 @@ function ExtensionDownloader(extension) {
   this.log.level = this.log.LEVEL.LOG;
   this.repository = extension.repository;
   this.extension = extension;
-  this.destFolder = specialFolders.temp + "/" + extension.name.replace(/[ :\?]/g, "") + "_" + extension.version;
+  this.destFolder = specialFolders.temp + "/" + extension.safeName + "_" + extension.version;
   this.cacheFolder = specialFolders.temp + "/hues_icons_cache";
 }
 
