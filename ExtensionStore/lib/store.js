@@ -1181,7 +1181,7 @@ function ExtensionDownloader(extension) {
   this.log.level = this.log.LEVEL.LOG;
   this.repository = extension.repository;
   this.extension = extension;
-  this.destFolder = specialFolders.temp + "/" + extension.safeName+"_"+extension.version;
+  this.destFolder = specialFolders.temp + "/" + extension.name.replace(/[ :\?]/g, "") + "_" + extension.version;
   this.cacheFolder = specialFolders.temp + "/hues_icons_cache";
 }
 
