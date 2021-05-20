@@ -1,6 +1,6 @@
-var storelib = require("./github_scrubber.js");
-
-var log = new storelib.Logger("UI")
+var storelib = require("./lib/store.js");
+var Logger = require("./lib/logger.js").Logger;
+var log = new Logger("UI")
 
 
 /**
@@ -8,7 +8,6 @@ var log = new storelib.Logger("UI")
  */
 function StoreUI(){
   this.store = new storelib.Store();
-  this.log = new storelib.Logger("StoreUI");
   log.debug("loading UI")
 
   // the list of installed extensions
@@ -19,7 +18,7 @@ function StoreUI(){
 
   // setting up UI ---------------------------------------------------
   var packageView = ScriptManager.getView("Extension Store");
-  this.ui = ScriptManager.loadViewUI(packageView, "./store.ui");
+  this.ui = ScriptManager.loadViewUI(packageView, "./resources/store.ui");
   this.ui.minimumWidth = UiLoader.dpiScale(350);
   this.ui.minimumHeight = UiLoader.dpiScale(200);
 
@@ -34,7 +33,7 @@ function StoreUI(){
   this.storeFrame.hide();
   this.setUpdateProgressUIState(false);
 
-  var logo = storelib.currentFolder+"/logo.png"
+  var logo = storelib.appFolder+"/resources/logo.png"
   var logoPixmap = new QPixmap(logo);
   this.aboutFrame.storeLabel.setPixmap(logoPixmap)
 
@@ -85,7 +84,7 @@ function StoreUI(){
  * Brings up the register extension dialog for script makers
  */
 StoreUI.prototype.registerExtension = function(){
-  var RegisterExtensionDialog = require("./register.js").RegisterExtensionDialog;
+  var RegisterExtensionDialog = require("./lib/register.js").RegisterExtensionDialog;
   var registerDialog = new RegisterExtensionDialog(this.store, this.localList);
   registerDialog.show();
 }
@@ -98,19 +97,12 @@ StoreUI.prototype.show = function(){
 /**
  * Show widgets responsible for showing progress to the user when loading the
  * store and retrieving extensions.
- * @param {boolean} visible - Determine whether the progress state should be enabled or disabled. 
+ * @param {boolean} visible - Determine whether the progress state should be enabled or disabled.
  */
 StoreUI.prototype.setUpdateProgressUIState = function(visible){
-  if (visible === true) {
-    this.aboutFrame.loadStoreButton.hide();
-    this.aboutFrame.updateLabel.show();
-    this.aboutFrame.updateProgress.show();
-  }
-  else{
-    this.aboutFrame.loadStoreButton.show();
-    this.aboutFrame.updateLabel.hide();
-    this.aboutFrame.updateProgress.hide();
-  }
+  this.aboutFrame.loadStoreButton.visible = !visible;
+  this.aboutFrame.updateLabel.visible = visible;
+  this.aboutFrame.updateProgress.visible = visible;
 }
 
 
@@ -135,11 +127,11 @@ StoreUI.prototype.loadStore = function(){
   storeFrame.storeSplitter.setSizes([storeFrame.width / 2, storeFrame.width / 2]);
   this.storeFrameState = storeFrame.storeSplitter.saveState();
   storeFrame.storeSplitter.setSizes([storeFrame.storeSplitter.width, 0]);
- 
+
   // Show progress dialog to give user indication that the list of extensions is being
   // updated.
   this.setUpdateProgressUIState(true);
-  
+
   // Update list of available operations.
   var extensions = this.store.extensions;
 
