@@ -1,0 +1,18 @@
+{
+  "name": "ExtensionStore",
+  "version": "0.2.3",
+  "compatibility": "Harmony Premium 16",
+  "description": "Changelog: further refactoring of files.",
+  "isPackage": "true",
+  "repository": "https://github.com/mchaptel/ExtensionStore/",
+  "files": [
+    "/ExtensionStore/"
+  ],
+  "keywords": [
+    "store",
+    "package"
+  ],
+  "author": "Mathieu Chaptel",
+  "license": "MPL-2.0",
+  "website": "https://github.com/mchaptel/"
+}
