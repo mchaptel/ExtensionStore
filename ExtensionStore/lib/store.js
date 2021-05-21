@@ -519,7 +519,6 @@ Object.defineProperty(Repository.prototype, "extensions", {
 });
 
 
-
 /**
  * The git tree url for the master branch of this repository
  * @type {string} The url of the tree file representing the contents of a repository
@@ -527,9 +526,26 @@ Object.defineProperty(Repository.prototype, "extensions", {
 Object.defineProperty(Repository.prototype, "masterBranchTree", {
   get: function () {
     if (typeof this._tree === 'undefined') {
-      this.log.debug(this.apiUrl + "branches/master")
+      // Try to get the master branch.
       var tree = webQuery.get(this.apiUrl + "branches/master");
-      if (tree) this._tree = tree.commit.commit.tree.url;   // the query returns a big object in which this is the address of the contents tree
+
+      // Return doesn't contain a commit - indicating it's likely an error
+      // or a redirect.
+      if (tree && !tree.commit) {
+        // Redirect provided, so get from the provided url instead.
+        if (tree.url && tree.message === "Moved Permanently") {
+          // Github redirect returns invalid url, fix with a replace.
+          tree = webQuery.get(tree.url.replace("repositories", "repos"));
+        }
+      }
+
+      // Assign url or throw error if no valid branch could be detected.
+      if (tree && tree.commit) {
+        this._tree = tree.commit.commit.tree.url;   // the query returns a big object in which this is the address of the contents tree
+      }
+      else {
+        throw new Error("Unable to find a valid branch.");
+      }
     }
     return this._tree
   }
