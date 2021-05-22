@@ -38,7 +38,6 @@ function Store() {
 }
 
 
-
 /**
  * The list of repositories urls scrubbed by the scrubber, defined in the REPOSLIST file.
  */
@@ -46,15 +45,35 @@ Object.defineProperty(Store.prototype, "sellers", {
   get: function () {
     if (typeof this._sellers === 'undefined') {
       this.log.debug("getting sellers");
-      var sellersFile = "https://raw.githubusercontent.com/mchaptel/ExtensionStore/master/SELLERSLIST";
+      // the sellers list can be overriden with an environment variable for local studio installs
+      var sellersFile = System.getenv("HUES_SELLERS_PATH");
+      if (!sellersFile) sellersFile = "https://raw.githubusercontent.com/mchaptel/ExtensionStore/master/SELLERSLIST";
+      this.log.debug(sellersFile)
       try {
-        var sellersList = webQuery.get(sellersFile);
+        if (sellersFile.indexOf("http") == -1){
+          // using a local file
+          var fileContents = readFile(sellersFile)
+          var sellersList = JSON.parse(fileContents)
+        }else{
+          var sellersList = webQuery.get(sellersFile);
+        }
         this.log.debug(sellersList)
       } catch (err) {
-        throw new Error("invalid SELLERSLIST file");
+        throw new Error("invalid SELLERSLIST file : " + err);
       }
 
-      this._sellers = sellersList.map(function (x) { return new Seller(x) });
+      // handle wrong packages found in sellers list
+      var validSellers = [];
+      for (var i in sellersList) {
+        try{
+          var seller = new Seller(sellersList[i]);
+          var package = seller.package;
+          validSellers.push(seller)
+        }catch(error){
+          this.log.error("problem getting package for seller "+sellersList[i], error);
+        }
+      }
+      this._sellers = validSellers;
     }
     return this._sellers;
   }
@@ -72,7 +91,8 @@ Object.defineProperty(Store.prototype, "repositories", {
       var repositories = [];
 
       for (var i in sellers) {
-        repositories = repositories.concat(sellers[i].repositories)
+        var sellersRepos = sellers[i].repositories;
+        repositories = repositories.concat(sellersRepos)
       }
 
       this._repositories = repositories;
@@ -147,6 +167,7 @@ Object.defineProperty(Store.prototype, "localPackage", {
 })
 
 
+
 // Seller Class ------------------------------------------------
 /**
  * @constructor
@@ -161,6 +182,7 @@ function Seller(repoUrl) {
   this.log = new Logger("Seller");
   this.log.debug("init seller " + repoUrl)
   this._url = repoUrl;
+  this._tbpackage = null;
   this.masterRepositoryName = repoUrl.replace("https://github.com/", "");
 }
 
@@ -183,23 +205,14 @@ Object.defineProperty(Seller.prototype, "dlUrl", {
 Object.defineProperty(Seller.prototype, "package", {
   get: function () {
     this.log.debug("getting package for " + this.masterRepositoryName);
-    if (typeof this._tbpackage === 'undefined') {
-      this._tbpackage = {};
-      var tbpackage = webQuery.get(this.dlUrl + "/tbpackage.json");
-
-      if (tbpackage.hasOwnProperty("message")) {
-        if (tbpackage.message == "Not Found") {
-          this.log.error("Package file not present in repository : " + this._url);
-          return null;
-        }
-        if (tbpackage.message == "400: Invalid request") {
-          this.log.error("Couldn't reach repository : " + this._url + ". Make sure it is a valid github address.");
-          return null;
-        }
+    if (!this._tbpackage) {
+      var response = webQuery.get(this.dlUrl + "/tbpackage.json");
+      if (!response || response.message){
+        var message = "No valid package found in repository " + this._url + ": " + response.message;
+        throw new Error(message)
       }
-
-      this.log.debug(JSON.stringify(tbpackage, null, "  "));
-      this._tbpackage = tbpackage;
+      this.log.debug(JSON.stringify(response, null, "  "));
+      this._tbpackage = response;
     }
     return this._tbpackage;
   },
@@ -442,20 +455,12 @@ Object.defineProperty(Repository.prototype, "package", {
   get: function () {
     this.log.debug("getting repos package for repo " + this.apiUrl);
     if (typeof this._package === 'undefined') {
-      var tbpackage = webQuery.get(this.dlUrl + "/tbpackage.json");
-
-      if (tbpackage.hasOwnProperty("message")) {
-        if (tbpackage.message == "Not Found") {
-          this.log.error("Package file not present in repository : " + this._url);
-          return null;
-        }
-        if (tbpackage.message == "400: Invalid request") {
-          this.log.error("Couldn't reach repository : " + this._url + ". Make sure it is a valid github address.")
-          return null;
-        }
+      var response = webQuery.get(this.dlUrl + "/tbpackage.json");
+      if (!response || response.message){
+        this.log.error("No valid package found in repository " + this._url + ": " + response.message)
+        return null
       }
-
-      this._package = tbpackage;
+      this._package = response;
     }
     return this._package;
   }
@@ -527,23 +532,19 @@ Object.defineProperty(Repository.prototype, "masterBranchTree", {
   get: function () {
     if (typeof this._tree === 'undefined') {
       // Try to get the master branch.
-      var tree = webQuery.get(this.apiUrl + "branches/master");
+      var response = webQuery.get(this.apiUrl + "branches/master");
 
       // Return doesn't contain a commit - indicating it's likely an error
       // or a redirect.
-      if (tree && !tree.commit) {
+      if (response && response.message === "Moved Permanently") {
         // Redirect provided, so get from the provided url instead.
-        if (tree.url && tree.message === "Moved Permanently") {
-          // Github redirect returns invalid url, fix with a replace.
-          tree = webQuery.get(tree.url.replace("repositories", "repos"));
-        }
+        response = webQuery.get(response.url.replace("repositories", "repos"));
       }
 
       // Assign url or throw error if no valid branch could be detected.
-      if (tree && tree.commit) {
-        this._tree = tree.commit.commit.tree.url;   // the query returns a big object in which this is the address of the contents tree
-      }
-      else {
+      if (response && response.commit) {
+        this._tree = response.commit.commit.tree.url;   // the query returns a big object in which this is the address of the contents tree
+      } else {
         throw new Error("Unable to find a valid branch.");
       }
     }
