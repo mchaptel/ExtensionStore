@@ -1,6 +1,7 @@
 var storelib = require("./lib/store.js");
 var Logger = require("./lib/logger.js").Logger;
 var log = new Logger("UI")
+var WebIcon = require("./lib/network.js").WebIcon
 
 
 /**
@@ -79,6 +80,8 @@ function StoreUI(){
 
   this.uninstallAction = new QAction("Uninstall", this);
   this.uninstallAction.triggered.connect(this, this.performUninstall);
+
+  new WebIcon("https://raw.githubusercontent.com/mchaptel/ExtensionStore/master/ExtensionStore/resources/logo.png", this.loadStoreButton)
 }
 
 /**
