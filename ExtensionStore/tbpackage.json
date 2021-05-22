@@ -1,8 +1,8 @@
 {
   "name": "ExtensionStore",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "compatibility": "Harmony Premium 16",
-  "description": "Changelog: Additional support for branches not named master.",
+  "description": "Changelog: Improved error handling during loading.",
   "isPackage": "true",
   "repository": "https://github.com/mchaptel/ExtensionStore/",
   "files": [
