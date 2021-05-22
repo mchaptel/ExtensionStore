@@ -9,7 +9,7 @@ var log = new Logger("CURL")
  * This class extends QObject so it can broadcast signals and be threaded.
  * @extends QObject
  */
- function NetworkConnexionHandler() {
+function NetworkConnexionHandler() {
   this.curl = new CURL();
 }
 
@@ -62,6 +62,89 @@ NetworkConnexionHandler.prototype.download = function (url, destinationPath) {
 }
 
 
+
+// WebIcon Class -----------------------------------------------------
+function WebIcon(url, widget) {
+  log.debug("new icon : "+url)
+  this.url = url;
+  this.widget = widget;
+
+  // start the download
+  this.download(this.setIcon);
+}
+
+WebIcon.prototype.download = function (callback) {
+  log.debug("starting download of icon "+this.url)
+  var curl = new CURLProcess(this.url)
+  curl.launchAndRead(callback, null, false);
+}
+
+
+WebIcon.prototype.setIcon = function (byteArray) {
+  log.debug("download finished, setting icon")
+  // log.debug(new QTextStream(byteArray).readAll())
+  var image = QImage.load(byteArray)
+  var pixmap = QPixmap.convertFromImage(image)
+  var icon = new QIcon(pixmap);
+  this.widget.setIcon(icon);
+}
+
+
+// CURLProcess Class -------------------------------------------------
+
+function CURLProcess (command) {
+  this.curl = new CURL()
+  this.log = new Logger("CURL")
+
+  if (typeof command == "string") var command = [command];
+  if (this.curl.bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command);
+  this.command = ["-s", "-S"].concat(command);
+
+  var bin = this.curl.bin.split("/");
+	this.app = bin.pop();
+	var directory = bin.join("\\");
+
+  this.process = new QProcess();
+	this.process.setWorkingDirectory(directory);
+}
+
+
+CURLProcess.prototype.launchAndRead = function (readCallback, finishedCallback, asText){
+  this.log.debug("Executing Process with arguments : "+this.app+" "+this.command.join(" "));
+  if (typeof asText=== 'undefined') var asText = true;
+
+  this.process.start(this.app, this.command);
+  if (typeof readCallback !== 'undefined' && readCallback){
+    var onRead = function(){
+      var stdout = this.read(asText);
+      readCallback(stdout);
+    }
+    this.process.readyRead.connect(this, onRead);
+  }
+  if (typeof finishedCallback !== 'undefined' && finishedCallback) this.process["finished(int)"].connect(this, finishedCallback);
+}
+
+
+CURLProcess.prototype.read = function (asText){
+  this.log.debug("readyread")
+  var readOut = this.process.readAllStandardOutput();
+  if (asText){
+    var output = new QTextStream(readOut).readAll();
+  }else{
+    var output = readOut;
+  }
+  this.log.debug("output:" + output)
+
+  var readErr = this.process.readAllStandardError();
+  var errors = new QTextStream(readErr).readAll();
+  if (errors) {
+    this.log.error("curl errors: " + errors.replace("\r", ""));
+    throw new Error(errors)
+  }
+  return output;
+}
+
+
 // CURL Class --------------------------------------------------------
 /**
  * Curl class to launch curl queries
@@ -70,7 +153,6 @@ NetworkConnexionHandler.prototype.download = function (url, destinationPath) {
  * @param {string[]} command
  */
 function CURL() {
-  this.log = new Logger("CURL");
 }
 
 
@@ -93,7 +175,7 @@ CURL.prototype.query = function (query, wait) {
   try {
     var p = new QProcess();
 
-    this.log.debug("starting process :" + bin + " " + command);
+    log.debug("starting process :" + bin + " " + command);
     var command = ["-H", "Authorization: Bearer YOUR_JWT", "-H", "Content-Type: application/json", "-X", "POST", "-d"];
     query = query.replace(/\n/gm, "\\\\n").replace(/"/gm, '\\"');
     command.push('" \\\\n' + query + '"');
@@ -109,7 +191,7 @@ CURL.prototype.query = function (query, wait) {
 
     return output;
   } catch (err) {
-    this.log.error("Error with curl command: \n"+command.join(" ")+"\n"+err);
+    log.error("Error with curl command: \n" + command.join(" ") + "\n" + err);
     return null;
   }
 }
@@ -125,16 +207,20 @@ CURL.prototype.get = function (command, wait) {
     var bin = this.bin;
     return this.runCommand(bin, command, wait);
   } catch (err) {
-    message = "Error with curl command: \n"+command.join(" ")+"\n"+err
-    this.log.error(message);
-    throw new Error (message);
+    message = "Error with curl command: \n" + command.join(" ") + "\n" + err
+    log.error(message);
+    throw new Error(message);
   }
 }
 
 
 
-CURL.prototype.runCommand = function (bin, command, wait, test){
+CURL.prototype.runCommand = function (bin, command, wait, test) {
   if (typeof test === 'undefined') var test = false; // test will not print the output, just the errors
+
+  // The toonboom bundled curl doesn't seem to be equiped for ssh so we have to use unsafe mode
+  if (bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command);
+  command = ["-s", "-S"].concat(command);
 
   var loop = new QEventLoop();
 
@@ -146,7 +232,7 @@ CURL.prototype.runCommand = function (bin, command, wait, test){
   // Use a timer to kill the QProcess after the wait period.
   var timer = new QTimer();
   timer.singleShot = true;
-  timer["timeout"].connect(this, function() {
+  timer["timeout"].connect(this, function () {
     if (loop.isRunning()) {
       p.kill();
       loop.exit();
@@ -154,24 +240,21 @@ CURL.prototype.runCommand = function (bin, command, wait, test){
     }
   });
 
-  // The toonboom bundled curl doesn't seem to be equiped for ssh so we have to use unsafe mode
-  if (bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command);
-  command = ["-s", "-S"].concat(command);
 
   // Start the process and enter an event loop until the QProcessx exits.
-  this.log.debug("starting process :" + bin + " " + command.join(" "));
+  log.debug("starting process :" + bin + " " + command.join(" "));
   p.start(bin, command);
   timer.start(wait);
   loop.exec();
 
   var readOut = p.readAllStandardOutput();
   var output = new QTextStream(readOut).readAll();
-  if (!test) this.log.debug("curl output: " + output);
+  if (!test) log.debug("curl output: " + output);
 
   var readErr = p.readAllStandardError();
   var errors = new QTextStream(readErr).readAll();
-  if (errors){
-    this.log.error("curl errors: " + errors.replace("\r", ""));
+  if (errors) {
+    log.error("curl errors: " + errors.replace("\r", ""));
     throw new Error(errors)
   }
 
@@ -183,7 +266,7 @@ CURL.prototype.runCommand = function (bin, command, wait, test){
  */
 Object.defineProperty(CURL.prototype, "bin", {
   get: function () {
-    this.log.debug("getting curl bin")
+    log.debug("getting curl bin")
 
     if (typeof CURL.__proto__.bin === 'undefined') {
       if (about.isWindowsArch()) {
@@ -201,21 +284,21 @@ Object.defineProperty(CURL.prototype, "bin", {
         if ((new File(curl[i])).exists) {
           // testing connection
           var bin = curl[i];
-          try{
-            this.log.info("testing connexion by connecting to github.com")
+          try {
+            log.info("testing connexion by connecting to github.com")
             this.runCommand(bin, ["https://www.github.com/"], 500, true);
-            this.log.info("CURL bin found, using: "+curl[i])
+            log.info("CURL bin found, using: " + curl[i])
             CURL.__proto__.bin = bin;
             return bin;
-          }catch(err){
-            this.log.error(err);
-            var message = "ExtensionStore: Couldn't establish a connexion.\nCheck that "+bin+" has internet access.";
-            this.log.error(message);
+          } catch (err) {
+            log.error(err);
+            var message = "ExtensionStore: Couldn't establish a connexion.\nCheck that " + bin + " has internet access.";
+            log.error(message);
           }
         }
       }
       var error = "ExtensionStore: a valid CURL install wasn't found. Install CURL first.";
-      this.log.error(error)
+      log.error(error)
       throw new Error(error)
     } else {
       return CURL.__proto__.bin;
@@ -223,6 +306,5 @@ Object.defineProperty(CURL.prototype, "bin", {
   }
 })
 
-
-exports.CURL = CURL
+exports.WebIcon = WebIcon
 exports.NetworkConnexionHandler = NetworkConnexionHandler
