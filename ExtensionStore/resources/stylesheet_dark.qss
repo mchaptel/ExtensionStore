@@ -1,0 +1,355 @@
+/*
+======================
+Global
+Overall widget styling.
+======================
+*/
+
+/* Only useful if rounding corners and update label fixed. */
+QWidget#Form {
+	background-color: @00DP;
+}
+
+/* Overall BG color */
+QFrame{
+	background-color: @01DP;
+}
+
+/* Set labels to transparent for text and logos. */
+QLabel{
+	background-color: transparent;
+}
+
+/* Loading/Installing progress bar */
+QProgressBar {
+    border: none;
+    padding: 0px;
+    background: @ACCENT_BG;
+}
+QProgressBar::chunk {
+    background-color: @ACCENT_PRIMARY;
+}
+
+/* Push Buttons */
+QPushButton {
+	background: @08DP;
+	border-radius: 7px;
+	selection-color: @ACCENT_PRIMARY;
+}
+QPushButton:hover {
+	border-color: @ACCENT_LIGHT;
+	border-width: 2px;
+	background: @12DP;
+}
+QPushButton:pressed {
+	background: @02DP;
+	border-color: @ACCENT_PRIMARY;
+	border-width: 2px;
+}
+
+
+/* Scrollbars */
+QScrollBar {
+	image: none;
+    border: none;
+    background: @08DP;
+}
+
+QScrollBar::handle {
+      border: none;
+      background: @08DP;
+	  image: none;
+	  border-color: none;
+}
+QScrollBar::handle:hover{
+      background: @12DP;
+}
+
+/* Scroll bar background (above handle) */
+QScrollBar::add-page {
+	border: none;
+	background: @02DP;
+}
+
+/* Scroll bar background (below handle) */
+QScrollBar::sub-page {
+	border: none;
+	background: @02DP;
+}
+
+/* Up arrow */
+QScrollBar::add-line {
+	border: none;
+	background: none;
+	image: none;
+}
+
+/* Down arrow */
+QScrollBar::sub-line {
+	border: none;
+	background: none;
+	image: none;
+}
+
+/* Line Edits */
+QLineEdit {
+	color: lightGrey;
+	margin: 1px;
+	border-color: @12DP;
+	border-width: 2px;
+    border-radius: 5px;
+    background: @03DP;
+	selection-background-color: @ACCENT_LIGHT;
+}
+
+/* Tooltips */
+QToolTip {	
+	color: lightGrey;
+	background-color: @06DP;
+}
+
+/*
+======================
+EULA Frame
+======================
+*/
+
+QFrame#eulaFrame {
+	background-color: @01DP;
+}
+
+QFrame#innerFrame {
+	background-color: @06DP;
+	border-radius:10px;
+}
+
+/* Scrollable region base widget */
+QScrollArea#scrollArea_2 {
+	margin-left: 5px;
+	margin-right: 5px;
+}
+
+/* About screen scrollable region (text background). */
+QWidget#scrollAreaWidgetContents_2 {
+	background-color: @03DP;
+}
+
+/* About Screen text */
+QLabel#eulaText {
+	background-color: transparent;
+	margin: 5px;
+	font-family: Arial;
+	font-size: 10pt;
+}
+
+/* EULA checkbox */
+QCheckBox#eulaCB {
+	font-family: Arial;
+	font-size: 12pt;
+	border-color: @ACCENT_PRIMARY;
+	background-color: transparent;
+}
+
+/*
+======================
+About Frame
+======================
+*/
+
+
+/* About Screen text */
+QLabel#label_3 {
+	background-color: transparent;
+	margin: 5px;
+	font-family: Arial;
+	font-size: 10pt;
+}
+
+/* About screen scrollable region (text background). */
+QWidget#scrollAreaWidgetContents {
+	background-color: @02DP;
+}
+
+/* Update Ribbon */
+QLabel#storeVersion {
+	font-family: Arial;
+	font-size: 10pt;
+}
+
+/* Update Store Button */
+QPushButton#updateButton {
+	padding: 5px;
+	color: black;
+	background-color: @YELLOW;
+}
+
+QPushButton:hover#updateButton {
+	border-color: @ORANGE;
+}
+
+/*
+======================
+Store Frame
+======================
+*/
+/* Store Frame */
+QFrame#storeFrame {
+	background-color: @12DP;
+}
+
+/*
+======================
+	Store Header
+======================
+*/
+/* Store header */
+QFrame#storeHeader {
+	background-color: @08DP;
+	border-width: 3px;
+	border-style: solid;
+	border-color: transparent transparent @01DP transparent;
+}
+
+/* Top-left Store logo */
+QLabel#headerLogo {
+	margin-right: 5px;
+}
+
+/* Search store */
+QLineEdit#searchStore {
+	background-color: transparent;
+	border-radius: 0px;
+	border-width: 2px;
+	border-style: solid;
+	border-color: transparent transparent @ACCENT_LIGHT transparent;
+}
+QLineEdit:focus#searchStore {
+	background-color: @03DP;
+	border-radius: 10px;
+	border: none;
+}
+
+/* Store search box clear */
+QToolButton#storeClearSearch {
+	border: none;
+	padding: 0px;
+	margin: 0px;
+	background-color: transparent;
+}
+
+/* "show installed only" checkbox */
+QCheckBox#showInstalledCheckbox {
+	background-color: transparent;
+}
+
+/* Sidebar Web View */
+QWebView {
+	background-color: lightGrey;
+}
+
+/*
+======================
+	Store Footer
+======================
+*/
+
+QFrame#storeFooter {
+	background-color: @02DP;
+	padding: 1px;
+	border-width: 3px;
+	border-style: solid;
+	border-color: @01DP transparent transparent transparent;
+}
+
+/* Register button */
+QPushButton#registerButton {
+	border-radius: 2px;
+	border-width: 2px;
+	border-style: solid;
+	border-color: transparent transparent @ACCENT_LIGHT transparent;
+	background-color: @02DP;
+}
+QPushButton:hover#registerButton {
+	background-color: @08DP;
+}
+/*
+======================
+	Store Sellers
+======================
+*/
+
+QTreeView {
+	background-color: @01DP;
+	border: 0px;
+	outline: none;
+}
+QTreeView::item {
+	color: white;
+	background-color: @01DP;
+	margin: 3px;
+	border: none
+}
+
+QTreeView::item:hover {
+	margin:3px;
+	border-radius: 3px;
+	background-color: @02DP;
+}
+
+QTreeView::item:selected {
+	margin:3px;
+	border-radius: 3px;
+	border-color: none;
+	background-color: @04DP;
+}
+
+/*
+======================
+	Store Sidepanel
+======================
+*/
+
+QFrame#sidepanelFrame {
+	background-color: @04DP;
+}
+
+/* Splitter selection handle */
+QSplitter::handle#storeSplitter {
+    background-color: @04DP;
+	border: none;
+}
+
+QSplitter::handle:hover#storeSplitter {
+    background-color: @16DP;
+}
+
+/* Keywords */
+QGroupBox#storeKeywordsGroup {
+	background-color: @06DP;
+}
+
+QLineEdit#authorStoreLabel {
+	background-color: @06DP;
+}
+
+QLineEdit#versionStoreLabel {
+	background-color: @06DP;
+}
+
+/* Sidebar buttons */
+QToolButton {
+	background-color: @12DP;
+	border-radius: 3px;
+	padding: 5px;
+}
+QToolButton:hover {
+	background-color: @16DP;
+}
+
+/* Install button */
+QToolButton#installButton {
+	border-radius: 4px;
+	border-width: 2px;
+	border-style: solid;
+	border-color: transparent transparent @ACCENT_LIGHT transparent;
+}
