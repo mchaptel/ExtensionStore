@@ -34,7 +34,6 @@ function test() {
 function Store() {
   this.log = new Logger("Store")
   this.log.info("init store")
-
 }
 
 
@@ -50,11 +49,11 @@ Object.defineProperty(Store.prototype, "sellers", {
       if (!sellersFile) sellersFile = "https://raw.githubusercontent.com/mchaptel/ExtensionStore/master/SELLERSLIST";
       this.log.debug(sellersFile)
       try {
-        if (sellersFile.indexOf("http") == -1){
+        if (sellersFile.indexOf("http") == -1) {
           // using a local file
           var fileContents = readFile(sellersFile)
           var sellersList = JSON.parse(fileContents)
-        }else{
+        } else {
           var sellersList = webQuery.get(sellersFile);
         }
         this.log.debug(sellersList)
@@ -65,12 +64,12 @@ Object.defineProperty(Store.prototype, "sellers", {
       // handle wrong packages found in sellers list
       var validSellers = [];
       for (var i in sellersList) {
-        try{
+        try {
           var seller = new Seller(sellersList[i]);
           var package = seller.package;
           validSellers.push(seller)
-        }catch(error){
-          this.log.error("problem getting package for seller "+sellersList[i], error);
+        } catch (error) {
+          this.log.error("problem getting package for seller " + sellersList[i], error);
         }
       }
       this._sellers = validSellers;
@@ -207,7 +206,7 @@ Object.defineProperty(Seller.prototype, "package", {
     this.log.debug("getting package for " + this.masterRepositoryName);
     if (!this._tbpackage) {
       var response = webQuery.get(this.dlUrl + "/tbpackage.json");
-      if (!response || response.message){
+      if (!response || response.message) {
         var message = "No valid package found in repository " + this._url + ": " + response.message;
         throw new Error(message)
       }
@@ -456,7 +455,7 @@ Object.defineProperty(Repository.prototype, "package", {
     this.log.debug("getting repos package for repo " + this.apiUrl);
     if (typeof this._package === 'undefined') {
       var response = webQuery.get(this.dlUrl + "/tbpackage.json");
-      if (!response || response.message){
+      if (!response || response.message) {
         this.log.error("No valid package found in repository " + this._url + ": " + response.message)
         return null
       }
@@ -485,8 +484,8 @@ Object.defineProperty(Repository.prototype, "contents", {
       // this._contents = tree;
 
       var files = tree.map(function (file) {
-        if (file.type == "tree") return { path: "/" + file.path + "/", size: file.size };
-        if (file.type == "blob") return { path: "/" + file.path, size: file.size };
+        if (file.type == "tree") return {path:"/" + file.path + "/", size: file.size};
+        if (file.type == "blob") return {path:"/" + file.path, size: file.size};
       })
       this._contents = files;
     }
@@ -572,7 +571,7 @@ Repository.prototype.getFiles = function (filter) {
   if (typeof filter === 'undefined') var filter = /.*/;
 
   var contents = this.contents;
-  var paths = this.contents.map(function (x) { return x.path })
+  var paths = this.contents.map(function(x){return x.path})
 
   this.log.debug(paths.join("\n"))
   var search = this.searchToRe(filter)
@@ -582,7 +581,7 @@ Repository.prototype.getFiles = function (filter) {
   var results = []
   for (var i in paths) {
     // add files that match the filter but not folders
-    if (paths[i].match(search) && paths[i].slice(-1) != "/") results.push(contents[i])
+    if (paths[i].match(search) && paths[i].slice(-1)!="/") results.push(contents[i])
   }
 
   return results;
@@ -598,9 +597,9 @@ Repository.prototype.searchToRe = function (search) {
 
   // sanitize input to prevent broken regex
   search = search.replace(/\./g, "\\.")
-    // .replace(/\*/g, "[^/]*")   // this is to avoid selecting subfolders contents but do we want that?
-    .replace(/\*/g, ".*")
-    .replace(/\?/g, ".");
+                 // .replace(/\*/g, "[^/]*")   // this is to avoid selecting subfolders contents but do we want that?
+                 .replace(/\*/g, ".*")
+                 .replace(/\?/g, ".");
 
   var searchRe = new RegExp("^" + search + "$", "i");
 
@@ -676,14 +675,14 @@ Object.defineProperty(Extension.prototype, "rootFolder", {
     if (typeof this._rootFolder === 'undefined') {
       var files = this.package.files;
       if (files.length == 1) {
-        this._rootFolder = files[0].slice(0, files[0].lastIndexOf("/") + 1);
+        this._rootFolder = files[0].slice(0, files[0].lastIndexOf("/")+1);
       } else {
         var folders = files[0].split("/");
         var rootFolder = "";
 
         mainLoop:
         for (var i = 0; i < folders.length; i++) {
-          var folder = folders.slice(0, i).join("/") + "/";
+          var folder = folders.slice(0, i).join("/")+"/";
           for (var j in files) {
             if (files[j].indexOf(folder) == -1) break mainLoop;
           }
@@ -692,7 +691,7 @@ Object.defineProperty(Extension.prototype, "rootFolder", {
         this._rootFolder = rootFolder;
       }
     }
-    this.log.debug("rootfolder: " + this._rootFolder)
+    this.log.debug("rootfolder: "+this._rootFolder)
     return this._rootFolder;
   }
 });
@@ -728,8 +727,8 @@ Object.defineProperty(Extension.prototype, "files", {
       var files = [];
 
       for (var i in packageFiles) {
-        this.log.debug("getting extension files matching : " + packageFiles[i])
-        var results = this.repository.getFiles("/" + packageFiles[i]);
+        this.log.debug("getting extension files matching : "+packageFiles[i])
+        var results = this.repository.getFiles("/"+ packageFiles[i]);
         if (results.length > 0) files = files.concat(results);
       }
 
@@ -747,7 +746,7 @@ Object.defineProperty(Extension.prototype, "files", {
  */
 Object.defineProperty(Extension.prototype, "id", {
   get: function () {
-    if (typeof this._id === 'undefined') {
+    if (typeof this._id === 'undefined'){
       var repoName = this.package.repository.replace("https://github.com/", "")
       var id = (repoName + this.name).replace(/ /g, "_")
       this._id = id;
@@ -776,40 +775,39 @@ Object.defineProperty(Extension.prototype, "localPaths", {
 
 
 
-/**
- * The ExtensionDownloader instance to handle the downloads for this extension
- */
-Object.defineProperty(Extension.prototype, "downloader", {
-  get: function () {
-    if (typeof this._downloader === 'undefined') {
-      this._downloader = new ExtensionDownloader(this);
-    }
-    return this._downloader
-  }
-})
+// /**
+//  * The ExtensionDownloader instance to handle the downloads for this extension
+//  */
+// Object.defineProperty(Extension.prototype, "downloader", {
+//   get: function () {
+//     if (typeof this._downloader === 'undefined') {
+//       this._downloader = new ExtensionDownloader(this);
+//     }
+//     return this._downloader
+//   }
+// })
 
 
-/**
- * gets the extension icon file. Can provide a callback to execute once the icon has been obtained.
- */
+// /**
+//  * gets the extension icon file. Can provide a callback to execute once the icon has been obtained.
+//  */
 
-Extension.prototype.getIcon = function (callback){
-  get: function () {
-    var icon = listFiles(this.downloader.cacheFolder, this.safeName + "_icon.png")
-    if (icon.length == 0){
-      // look for an icon in the repo
-    }
-  }
-})
+// Extension.prototype.getIcon = function (callback) {
+//   get: function () {
+//     var icon = listFiles(this.downloader.cacheFolder, this.safeName + "_icon.png")
+//     if (icon.length == 0) {
+//       // look for an icon in the repo
+//     }
+//   }
+// })
 
 
 /**
  * Cleans the problematic characters from the name of the extension.
  */
-Object.defineProperty(Extension.prototype, safeName, {
+Object.defineProperty(Extension.prototype, "safeName", {
   get: function () {
-    return this.name.replace(/ /g, "_")
-                    .replace(/[:\?\*\\\/"\|\<\>]/g, "")
+    return this.name.replace(/ /g, "_").replace(/[:\?\*\\\/"\|\<\>]/g, "")
   }
 })
 
@@ -842,8 +840,8 @@ Extension.prototype.matchesSearch = function (search) {
  * @param {string} version    a semantic version string separated by dots.
  */
 Extension.prototype.currentVersionIsOlder = function (version) {
-  version = version.split(".").map(function (x) { return parseInt(x, 10) });
-  var ownVersion = this.version.split(".").map(function (x) { return parseInt(x, 10) });
+  version = version.split(".").map(function(x){return parseInt(x, 10)});
+  var ownVersion = this.version.split(".").map(function(x){return parseInt(x, 10)});
 
   var length = Math.max(version.length > ownVersion.length);
 
@@ -944,7 +942,7 @@ Object.defineProperty(LocalExtensionList.prototype, "list", {
  * gets the install location for a given extension
  */
 LocalExtensionList.prototype.installLocation = function (extension) {
-  return this.installFolder + (extension.package.isPackage ? "/packages/" + extension.safeName : "")
+  return this.installFolder + (extension.package.isPackage ? "/packages/" + extension.name.replace(" ", "") : "")
 }
 
 
@@ -979,7 +977,7 @@ LocalExtensionList.prototype.checkFiles = function (extension) {
  */
 LocalExtensionList.prototype.install = function (extension) {
   // if (this.isInstalled(extension)) return true;         // extension is already installed
-  var downloader = extension.downloader;
+  var downloader = new ExtensionDownloader(extension);  // dedicated object to implement threaded download later
   var installLocation = this.installLocation(extension)
 
   var files = downloader.downloadFiles();
@@ -1005,7 +1003,7 @@ LocalExtensionList.prototype.uninstall = function (extension) {
 
   // Remove packages recursively as they have a parent directory.
   if (extension.package.isPackage) {
-    var folder = new Dir(this.installFolder + "packages/" + extension.safeName);
+    var folder = new Dir(this.installFolder + "packages/" + extension.name.replace(" ", ""));
     this.log.debug("removing folder " + folder.path);
     if (folder.exists) folder.rmdirs();
   } else {
@@ -1126,19 +1124,19 @@ LocalExtensionList.prototype.createListFile = function (store) {
  * Access the custom settings
  */
 Object.defineProperty(LocalExtensionList.prototype, "settings", {
-  get: function () {
-    if (typeof this._settings === 'undefined') {
+  get: function(){
+    if (typeof this._settings === 'undefined'){
       var ini = readFile(this._ini)
-      if (!ini) {
+      if (!ini){
         var prefs = {};
-      } else {
+      }else{
         var prefs = JSON.parse(ini);
       }
       this._settings = prefs;
     }
     return this._settings;
   },
-  set: function (settingsObject) {
+  set: function(settingsObject){
     writeFile(this._ini, JSON.stringify(settingsObject, null, "  "))
   }
 })
@@ -1148,7 +1146,7 @@ Object.defineProperty(LocalExtensionList.prototype, "settings", {
  * @param {string} name
  * @param {string} value
  */
-LocalExtensionList.prototype.saveData = function (name, value) {
+LocalExtensionList.prototype.saveData = function(name, value){
   this.log.debug("saving data ", JSON.stringify(value, null, "  "), "under name", name)
   var prefs = this.settings;
   prefs[name] = value;
@@ -1161,7 +1159,7 @@ LocalExtensionList.prototype.saveData = function (name, value) {
  * @param {string} name           The key to retrieve the local data
  * @param {string} defaultValue   The default value in case the local data doesn't exist
  */
-LocalExtensionList.prototype.getData = function (name, defaultValue) {
+LocalExtensionList.prototype.getData = function(name, defaultValue){
   if (typeof defaultValue === 'undefined') defaultValue = "";
   this.log.debug("getting data", name, "defaultvalue (type:", (typeof defaultValue), ")")
   var prefs = this.settings;
@@ -1170,10 +1168,9 @@ LocalExtensionList.prototype.getData = function (name, defaultValue) {
 }
 
 
-// ExtensionDownloader Class --------------------------------------------
+// ScriptDownloader Class --------------------------------------------
 /**
  * @classdesc
- * A class that handles downloads
  * @constructor
  */
 function ExtensionDownloader(extension) {
@@ -1181,8 +1178,7 @@ function ExtensionDownloader(extension) {
   this.log.level = this.log.LEVEL.LOG;
   this.repository = extension.repository;
   this.extension = extension;
-  this.destFolder = specialFolders.temp + "/" + extension.safeName + "_" + extension.version;
-  this.cacheFolder = specialFolders.temp + "/hues_icons_cache";
+  this.destFolder = specialFolders.temp + "/" + extension.name.replace(/[ :\?]/g, "") + "_" + extension.version;
 }
 
 
@@ -1200,13 +1196,13 @@ ExtensionDownloader.prototype.downloadFiles = function () {
   // log ("destPaths: "+destPaths)
   var files = this.extension.files;
 
-  this.log.debug("downloading files : " + files.map(function (x) { return x.path }).join("\n"))
+  this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
 
   // cbb : how to connect this to any progress window?
   var progress = new QProgressDialog();
-  progress.title = "Installing extension "+this.extension.name;
-  progress.setLabelText( "Downloading files..." );
-  progress.setRange( 0, files.length );
+  progress.title = "Installing extension " + this.extension.name;
+  progress.setLabelText("Downloading files...");
+  progress.setRange(0, files.length);
   progress.modal = true;
 
   progress.show();
@@ -1225,7 +1221,7 @@ ExtensionDownloader.prototype.downloadFiles = function () {
       dlFiles.push(destPaths[i])
       progress.value = i;
     } else {
-      throw new Error("Downloaded file " + destPaths[i] + " size does not match expected size : \n" + dlFile.size + " bytes (expected : " + files[i].size + " bytes)")
+      throw new Error("Downloaded file " + destPaths[i] + " size does not match expected size : \n" + dlFile.size + " bytes (expected : " + files[i].size+" bytes)")
     }
   }
 
