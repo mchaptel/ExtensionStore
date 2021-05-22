@@ -28,6 +28,7 @@ function StoreUI(){
   this.storeListPanel = this.storeFrame.storeSplitter.widget(0);
   this.storeDescriptionPanel = this.storeFrame.storeSplitter.widget(1);
   this.extensionsList = this.storeListPanel.extensionsList;
+  this.updateRibbon = this.aboutFrame.updateRibbon
 
   // Hide the store and the loading UI elements.
   this.storeFrame.hide();
@@ -110,7 +111,6 @@ StoreUI.prototype.setUpdateProgressUIState = function(visible){
  * Loads the store
  */
 StoreUI.prototype.loadStore = function(){
-
   // setup the store widget sizes
   this.extensionsList.setColumnWidth(0, UiLoader.dpiScale(220));
   this.extensionsList.setColumnWidth(1, UiLoader.dpiScale(30));
@@ -132,8 +132,15 @@ StoreUI.prototype.loadStore = function(){
   // updated.
   this.setUpdateProgressUIState(true);
 
-  // Update list of available operations.
-  var extensions = this.store.extensions;
+  // Fetch the list of available extensions.
+  try{
+    this.storeExtensions = this.store.extensions;
+  }catch(err){
+    log.error(err)
+    this.setUpdateProgressUIState(false);
+    this.lockStore("Could not load Extensions list.")
+    return
+  }
 
   // saving the list of extensions so we can pinpoint the new ones at next startup and highlight them
   var oldExtensions = this.localList.getData("extensions", [])
@@ -141,6 +148,7 @@ StoreUI.prototype.loadStore = function(){
   oldExtensions = oldExtensions.concat(newExtensions); // saving the new extensions from last time as old
   newExtensions = [];
 
+  var extensions = this.storeExtensions;
   for (var i in extensions) {
     if (oldExtensions.indexOf(extensions[i].id) == -1) newExtensions.push(extensions[i].id);
   }
@@ -192,10 +200,9 @@ StoreUI.prototype.getInstalledVersion = function(){
  * Checks for a new version and updates the ribbon accordingly
  */
 StoreUI.prototype.checkForUpdates = function(){
-  var updateRibbon = this.aboutFrame.updateRibbon
+  var updateRibbon = this.updateRibbon
 
-  noConnexionRibbonStyleSheet = "QWidget { background-color: darkRed; color: white; }";
-  updateRibbonStyleSheet = "QWidget { background-color: blue; }";
+  var updateRibbonStyleSheet = "QWidget { background-color: blue; }";
   var storeUi = this;
 
   try{
@@ -219,11 +226,22 @@ StoreUI.prototype.checkForUpdates = function(){
     // couldn't check updates, probably we don't have an internet access.
     // We set up an error message and disable load button.
     log.error(err)
-    this.aboutFrame.loadStoreButton.enabled = false;
-    updateRibbon.updateButton.hide();
-    updateRibbon.setStyleSheet(noConnexionRibbonStyleSheet);
-    updateRibbon.storeVersion.setText("Could not connect to GitHub. Store disabled, check internet access.");
+    this.lockStore("Could not connect to GitHub. Store disabled, check internet access.");
   }
+}
+
+
+/**
+ * Disable store load button and display an error message
+ * @param {*} message
+ */
+StoreUI.prototype.lockStore = function(message){
+  var noConnexionRibbonStyleSheet = "QWidget { background-color: darkRed; color: white; }";
+
+  this.aboutFrame.loadStoreButton.enabled = false;
+  this.updateRibbon.updateButton.hide();
+  this.updateRibbon.setStyleSheet(noConnexionRibbonStyleSheet);
+  this.updateRibbon.storeVersion.setText(message);
 }
 
 
@@ -234,9 +252,9 @@ StoreUI.prototype.updateStore = function(currentVersion, storeVersion){
   var success = this.localList.install(this.storeExtension);
   if (success) {
     MessageBox.information("Store succesfully updated to version v" + storeVersion + ".\n\nPlease restart Harmony for changes to take effect.");
-    this.aboutFrame.updateRibbon.storeVersion.setText("v" + currentVersion);
-    this.aboutFrame.updateRibbon.setStyleSheet("");
-    this.aboutFrame.updateRibbon.updateButton.hide();
+    this.updateRibbon.storeVersion.setText("v" + currentVersion);
+    this.updateRibbon.setStyleSheet("");
+    this.updateRibbon.updateButton.hide();
   } else {
     MessageBox.information("There was a problem updating to v" + storeVersion + ".\n\n The update was not successful.");
   }
