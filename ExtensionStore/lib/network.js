@@ -1,4 +1,5 @@
 var Logger = require("logger.js").Logger
+var log = new Logger("CURL")
 
 // NetworkConnexionHandler Class --------------------------------------
 /**
@@ -21,11 +22,28 @@ NetworkConnexionHandler.prototype.get = function (command) {
   var result = this.curl.get(command);
   try {
     json = JSON.parse(result);
+    if (json.hasOwnProperty("message")) {
+      if (json.message == "Not Found") {
+        log.error("File not present in repository : " + this._url);
+        return null;
+      }
+      if (json.message == "Not Found") {
+        log.error("File not present in repository : " + this._url);
+        return null;
+      }
+      if (json.message == "Moved Permanently") {
+        log.error("Repository " + this._url + " has moved to : " + json.url);
+        return json;
+      }
+      if (json.message == "400: Invalid request") {
+        log.error("Couldn't reach repository : " + this._url + ". Make sure it is a valid github address.")
+        return null;
+      }
+    }
     return json;
-  }
-  catch (error) {
+  } catch (error) {
     var message = ("command " + command + " did not return a valid JSON : " + result);
-    this.curl.log.error(error + " : " + message);
+    log.error(message, error);
     throw new Error(message);
   }
 }
@@ -112,6 +130,7 @@ CURL.prototype.get = function (command, wait) {
     throw new Error (message);
   }
 }
+
 
 
 CURL.prototype.runCommand = function (bin, command, wait, test){
