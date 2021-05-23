@@ -63,18 +63,43 @@ NetworkConnexionHandler.prototype.download = function (url, destinationPath) {
 
 // WebIcon Class -----------------------------------------------------
 function WebIcon(url) {
-  this.log = new Logger("Icon")
-  var fileName = url.split("/").pop()
-
-  if (url.indexOf(".png") == -1){
-    // dealing with a website, we'll get the favicon
-    url = "https://www.google.com/s2/favicons?sz=32&domain_url=" + url;
-    fileName = fileName + ".png"
-  }
-
+  this.log = new Logger("Icon");
   this.url = url;
-  this.dlUrl = specialFolders.temp + "/HUES_iconscache/" + fileName
 }
+
+/**
+ * class member: the location of the cache
+ */
+WebIcon.cacheFolder = specialFolders.temp + "/HUES_iconscache/";
+
+
+/**
+ * the url for the download
+ */
+Object.defineProperty(WebIcon.prototype, "dlUrl", {
+  get: function () {
+    if (typeof this._dlUrl === 'undefined') {
+      var fileName = this.url.split("/").pop();
+
+      var idRe = /avatars.githubusercontent.com\/u\/(\d+)\?/
+      var matches = idRe.exec(this.url);
+      if (matches) {
+        this.log.debug(matches);
+        // avatar urls on github are a bit strange
+        var extension = this.getImageFormat();
+        fileName = matches[1] + "." + extension;
+      } else if (this.url.indexOf(".png") == -1) {
+        // dealing with a website, we'll get the favicon
+        this.url = "https://www.google.com/s2/favicons?sz=32&domain_url=" + this.url;
+        fileName = fileName + ".png";
+      }
+
+      this._dlUrl = WebIcon.cacheFolder + fileName;
+    }
+    return this._dlUrl;
+  }
+})
+
 
 /**
  * Downloads the icon file or returns it from cache then runs the callback
@@ -84,22 +109,45 @@ function WebIcon(url) {
 WebIcon.prototype.download = function (callback) {
   //only download if file doesn't exist, otherwise run callback directly
   var icon = new QFile(this.dlUrl);
-  if (icon.exists()){
+  if (icon.exists()) {
     callback.apply(this, []);
   } else {
     var curl = new CURLProcess(this.url);
     var p = curl.asyncDownload(this.dlUrl);
-    p["finished(int)"].connect(this, callback)
+    p["finished(int)"].connect(this, callback);
   }
+}
+
+/**
+ * gets the content type from the file header
+ * @returns {string} the extension for the file
+ */
+WebIcon.prototype.getImageFormat = function () {
+  var curl = new CURLProcess(["-L", "-w", "%{content_type}", this.url]);
+  var response = curl.get(1000);
+  log.debug(response);
+
+  var re = /image\/(\w+)/
+
+  if (response) {
+    var match = re.exec(response);
+    if (match) {
+      var extension = match[1].toLocaleLowerCase();
+      this.log.debug(extension);
+      return extension;
+    }
+  }
+
+  throw new Error("Couldn't get file format for url " + this.url);
 }
 
 /**
  * Call to set the icon to a specific widget.
  * @param {QWidget} widget  a widget that supports icons
  */
-WebIcon.prototype.setToWidget = function(widget){
+WebIcon.prototype.setToWidget = function (widget) {
   this.widget = widget;
-  this.download(this.setIcon)
+  this.download(this.setIcon);
 }
 
 /**
@@ -108,9 +156,24 @@ WebIcon.prototype.setToWidget = function(widget){
  */
 WebIcon.prototype.setIcon = function () {
   var icon = new QIcon(this.dlUrl);
-  this.widget.icon = icon;
+  var size = UiLoader.dpiScale(32)
+  icon.size = new QSize(size, size);
+
+  // handle difference between QWidgets and QTreeWidgetItems
+  if (this.widget instanceof QWidget) {
+    this.widget.icon = icon;
+  } else if (this.widget instanceof QTreeWidgetItem) {
+    this.widget.setIcon(0, icon);
+  }
 }
 
+
+WebIcon.deleteCache = function () {
+  var cache = new QDir(WebIcon.cacheFolder)
+  if (cache.exists()) {
+    cache.rmdirs()
+  }
+}
 
 // CURLProcess Class -------------------------------------------------
 
@@ -119,7 +182,7 @@ WebIcon.prototype.setIcon = function () {
  * Can perform asynchronous or inline operations without blocking the UI.
  * @param {*} command
  */
-function CURLProcess (command) {
+function CURLProcess(command) {
   this.curl = new CURL()
   this.log = new Logger("CURL")
 
@@ -129,11 +192,11 @@ function CURLProcess (command) {
   this.command = ["-s", "-S"].concat(command);
 
   var bin = this.curl.bin.split("/");
-	this.app = bin.pop();
-	var directory = bin.join("\\");
+  this.app = bin.pop();
+  var directory = bin.join("\\");
 
   this.process = new QProcess();
-	this.process.setWorkingDirectory(directory);
+  this.process.setWorkingDirectory(directory);
 }
 
 /**
@@ -144,12 +207,12 @@ function CURLProcess (command) {
  * @param {bool} asText  wether to parse the output as text or QByteArray in the callbacks.
  * @returns {QProcess} the launched process.
  */
-CURLProcess.prototype.asyncRead = function (readCallback, finishedCallback, asText){
-  this.log.debug("Executing Process with arguments : "+this.app+" "+this.command.join(" "));
+CURLProcess.prototype.asyncRead = function (readCallback, finishedCallback, asText) {
+  this.log.debug("Executing Process with arguments : " + this.app + " " + this.command.join(" "));
 
   this.process.start(this.app, this.command);
-  if (typeof readCallback !== 'undefined' && readCallback){
-    var onRead = function(){
+  if (typeof readCallback !== 'undefined' && readCallback) {
+    var onRead = function () {
       this.log.debug("readyread")
       var stdout = this.read(asText);
       readCallback(stdout);
@@ -157,12 +220,12 @@ CURLProcess.prototype.asyncRead = function (readCallback, finishedCallback, asTe
     this.process.readyRead.connect(this, onRead);
   }
 
-  if (typeof finishedCallback !== 'undefined' && finishedCallback){
-    var onFinished = function(returnCode){
+  if (typeof finishedCallback !== 'undefined' && finishedCallback) {
+    var onFinished = function (returnCode) {
       this.log.debug("finished")
       var stdout = this.read(asText);
       finishedCallback(returnCode, stdout);
-      if (returnCode) this.log.error("CURL returned with error code "+returnCode)
+      if (returnCode) this.log.error("CURL returned with error code " + returnCode)
     }
     this.process["finished(int)"].connect(this, onFinished);
   }
@@ -177,12 +240,12 @@ CURLProcess.prototype.asyncRead = function (readCallback, finishedCallback, asTe
  * @param {bool} [asText=true] wether to return the output as text or QByteArray
  * @returns the output from the process, as a string or QByteArray
  */
-CURLProcess.prototype.read = function (asText){
+CURLProcess.prototype.read = function (asText) {
   if (typeof asText === 'undefined' || asText === 'undefined' || asText === null) var asText = true;
   var readOut = this.process.readAllStandardOutput();
-  if (asText){
+  if (asText) {
     var output = new QTextStream(readOut).readAll();
-  }else{
+  } else {
     var output = readOut;
   }
   this.log.debug("output:" + output)
@@ -238,12 +301,12 @@ CURLProcess.prototype.runAndWait = function (wait, runMethod, args) {
     if (loop.isRunning()) {
       this.process.kill();
       loop.exit();
-      throw new Error("Timeout running command "+this.command.join(" "));
+      throw new Error("Timeout running command " + this.command.join(" "));
     }
   });
 
   // Start the process and enter an event loop until the QProcess exits.
-  this.process["finished(int)"].connect(this, function(){loop.exit()})
+  this.process["finished(int)"].connect(this, function () { loop.exit() })
   runMethod.apply(this, args);
   timer.start(wait);
   loop.exec();
@@ -258,7 +321,7 @@ CURLProcess.prototype.runAndWait = function (wait, runMethod, args) {
  * @param {int} [wait=5000]   optional, the timeout for the query.
  * @returns {string}
  */
-CURLProcess.prototype.get = function(wait){
+CURLProcess.prototype.get = function (wait) {
   if (typeof wait === 'undefined') var wait = 5000;
 
   var output = this.runAndWait(wait, this.asyncRead)
@@ -272,7 +335,7 @@ CURLProcess.prototype.get = function(wait){
  * @param {int} [wait=30000]   optional, the timeout for the query (for downloads, 30s by default)
  * @returns
  */
-CURLProcess.prototype.download = function(destinationPath, wait){
+CURLProcess.prototype.download = function (destinationPath, wait) {
   if (typeof wait === 'undefined') var wait = 30000;
 
   var output = this.runAndWait(wait, this.asyncDownload, [destinationPath])
