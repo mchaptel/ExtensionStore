@@ -81,7 +81,8 @@ function StoreUI(){
   this.uninstallAction = new QAction("Uninstall", this);
   this.uninstallAction.triggered.connect(this, this.performUninstall);
 
-  new WebIcon("https://raw.githubusercontent.com/mchaptel/ExtensionStore/master/ExtensionStore/resources/logo.png", this.loadStoreButton)
+  var icon = new WebIcon("https://discord.com")
+  icon.setToWidget(this.aboutFrame.loadStoreButton)
 }
 
 /**
