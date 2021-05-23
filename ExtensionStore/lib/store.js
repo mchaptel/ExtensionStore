@@ -1189,7 +1189,6 @@ function ExtensionDownloader(extension) {
 ExtensionDownloader.prototype.downloadFiles = function () {
   this.log.info("starting download of files from extension " + this.extension.name);
   var destFolder = this.destFolder;
-  this.log.debug(this.extension instanceof Extension)
 
   var progress = new QProgressDialog();
   progress.title = "Installing extension " + this.extension.name;
@@ -1197,7 +1196,7 @@ ExtensionDownloader.prototype.downloadFiles = function () {
   progress.modal = true;
   progress.show();
 
-  // log ("destPaths: "+destPaths)
+  // get the files list (heavy operations)
   var destPaths = this.extension.localPaths.map(function (x) { return destFolder + x });
   var dlFiles = [this.destFolder];
   var files = this.extension.files;
