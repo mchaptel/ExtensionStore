@@ -312,6 +312,10 @@ StoreUI.prototype.updateExtensionsList = function(){
 
     var sellerItem = new QTreeWidgetItem([sellers[i].name], 0);
     this.extensionsList.addTopLevelItem(sellerItem);
+    if (sellers[i].iconUrl){
+      var sellerIcon = new WebIcon(sellers[i].iconUrl);
+      sellerIcon.setToWidget(sellerItem);
+    }
     sellerItem.setExpanded(true);
 
     for (var j in extensions) {
@@ -334,6 +338,13 @@ StoreUI.prototype.updateDescriptionPanel = function(extension) {
   this.storeDescriptionPanel.authorStoreLabel.text = extension.package.author;
   this.storeDescriptionPanel.sourceButton.toolTip = extension.package.repository;
   this.storeDescriptionPanel.websiteButton.toolTip = extension.package.website;
+
+  var websiteIcon = new WebIcon(extension.package.website)
+  websiteIcon.setToWidget(this.storeDescriptionPanel.websiteButton)
+
+  // for some reason, this url is the only one that actually returns an icon
+  var githubIcon = new WebIcon("https://avatars.githubusercontent.com/u")
+  githubIcon.setToWidget(this.storeDescriptionPanel.sourceButton)
 
   // update install button to reflect whether or not the extension is already installed
   if (this.localList.isInstalled(extension)) {
