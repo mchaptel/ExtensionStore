@@ -64,29 +64,46 @@ NetworkConnexionHandler.prototype.download = function (url, destinationPath) {
 
 
 // WebIcon Class -----------------------------------------------------
-function WebIcon(url, widget) {
-  log.debug("new icon : "+url)
-  this.url = url;
-  this.widget = widget;
+function WebIcon(url) {
+  this.log = new Logger("Icon")
+  if (url.indexOf(".png") == -1){
+    // dealing with a website, we'll get the favicon
+    url = "https://www.google.com/s2/favicons?sz=32&domain_url=" + url;
+  }
 
-  // start the download
-  this.download(this.setIcon);
+  this.log.debug("new icon : "+url)
+  this.url = url;
+
+  var fileName = url.split("/").pop()
+  this.dlUrl = specialFolders.temp + "/HUES_iconscache/" + fileName + ".png"
 }
 
 WebIcon.prototype.download = function (callback) {
-  log.debug("starting download of icon "+this.url)
-  var curl = new CURLProcess(this.url)
-  curl.launchAndRead(callback, null, false);
+  this.log.debug(this.dlUrl);
+  var icon = new QFile(this.dlUrl);
+  if (icon.exists()){
+    this.log.debug("file exists")
+    callback.apply(this, []);
+  } else {
+    this.log.debug("starting download of icon "+this.url);
+    var curl = new CURLProcess(this.url);
+    var p = curl.asyncDownload(this.dlUrl);
+    p["finished(int)"].connect(this, callback)
+  }
+}
+
+WebIcon.prototype.setToWidget = function(widget){
+  this.widget = widget;
+  this.log.debug(widget)
+  this.download(this.setIcon)
 }
 
 
-WebIcon.prototype.setIcon = function (byteArray) {
-  log.debug("download finished, setting icon")
-  // log.debug(new QTextStream(byteArray).readAll())
-  var image = QImage.load(byteArray)
-  var pixmap = QPixmap.convertFromImage(image)
-  var icon = new QIcon(pixmap);
-  this.widget.setIcon(icon);
+WebIcon.prototype.setIcon = function () {
+  this.log.debug("download finished, setting icon")
+  this.log.debug("icon url : "+this.dlUrl)
+  var icon = new QIcon(this.dlUrl);
+  this.widget.icon = icon;
 }
 
 
