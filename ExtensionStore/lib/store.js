@@ -1193,25 +1193,20 @@ ExtensionDownloader.prototype.downloadFiles = function () {
   var destPaths = this.extension.localPaths.map(function (x) { return destFolder + x });
   var dlFiles = [this.destFolder];
 
-  // log ("destPaths: "+destPaths)
-  var files = this.extension.files;
-
-  this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
-
-  // cbb : how to connect this to any progress window?
   var progress = new QProgressDialog();
   progress.title = "Installing extension " + this.extension.name;
   progress.setLabelText("Downloading files...");
   progress.setRange(0, files.length);
   progress.modal = true;
 
+  // log ("destPaths: "+destPaths)
+  var files = this.extension.files;
+
+  this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
+
   progress.show();
 
   for (var i = 0; i < files.length; i++) {
-    // make the directory
-    var dest = destPaths[i].split("/").slice(0, -1).join("/")
-    var dir = new QDir(dest);
-    if (!dir.exists()) dir.mkpath(dest);
 
     webQuery.download(this.getDownloadUrl(files[i].path), destPaths[i]);
     var dlFile = new File(destPaths[i]);
