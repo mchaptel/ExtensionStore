@@ -1190,21 +1190,20 @@ ExtensionDownloader.prototype.downloadFiles = function () {
   this.log.info("starting download of files from extension " + this.extension.name);
   var destFolder = this.destFolder;
   this.log.debug(this.extension instanceof Extension)
-  var destPaths = this.extension.localPaths.map(function (x) { return destFolder + x });
-  var dlFiles = [this.destFolder];
 
   var progress = new QProgressDialog();
   progress.title = "Installing extension " + this.extension.name;
   progress.setLabelText("Downloading files...");
-  progress.setRange(0, files.length);
   progress.modal = true;
+  progress.show();
 
   // log ("destPaths: "+destPaths)
+  var destPaths = this.extension.localPaths.map(function (x) { return destFolder + x });
+  var dlFiles = [this.destFolder];
   var files = this.extension.files;
 
+  progress.setRange(0, files.length);
   this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
-
-  progress.show();
 
   for (var i = 0; i < files.length; i++) {
 
