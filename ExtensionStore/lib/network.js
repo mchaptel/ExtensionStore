@@ -92,10 +92,16 @@ WebIcon.prototype.setIcon = function (byteArray) {
 
 // CURLProcess Class -------------------------------------------------
 
+/**
+ * This class wraps a CURL Qprocess and handles the outputs.
+ * Can perform asynchronous or inline operations without blocking the UI.
+ * @param {*} command
+ */
 function CURLProcess (command) {
   this.curl = new CURL()
   this.log = new Logger("CURL")
 
+  // The toonboom bundled curl doesn't seem to be equiped for ssh so we have to use unsafe mode
   if (typeof command == "string") var command = [command];
   if (this.curl.bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command);
   this.command = ["-s", "-S"].concat(command);
@@ -108,25 +114,49 @@ function CURLProcess (command) {
 	this.process.setWorkingDirectory(directory);
 }
 
-
-CURLProcess.prototype.launchAndRead = function (readCallback, finishedCallback, asText){
+/**
+ * Launches a curl process, and optionally connects callbacks to the readyRead and finished signals.
+ * The callbacks will be passed the output from the process, as well as the returncode for finishedCallback.
+ * @param {function} readCallback  the callback attached to the 'readyRead' signal, if valid. Signature must be readCallback(QString/QBytesArray)
+ * @param {function} finishedCallback  the callback attached to the 'finished' signal, if valid. Signature must be finishedCallback(QProcess.ExitCode, QString/QBytesArray)
+ * @param {bool} asText  wether to parse the output as text or QByteArray in the callbacks.
+ * @returns {QProcess} the launched process.
+ */
+CURLProcess.prototype.asyncRead = function (readCallback, finishedCallback, asText){
   this.log.debug("Executing Process with arguments : "+this.app+" "+this.command.join(" "));
-  if (typeof asText=== 'undefined') var asText = true;
 
   this.process.start(this.app, this.command);
   if (typeof readCallback !== 'undefined' && readCallback){
     var onRead = function(){
+      this.log.debug("readyread")
       var stdout = this.read(asText);
       readCallback(stdout);
     }
     this.process.readyRead.connect(this, onRead);
   }
-  if (typeof finishedCallback !== 'undefined' && finishedCallback) this.process["finished(int)"].connect(this, finishedCallback);
+
+  if (typeof finishedCallback !== 'undefined' && finishedCallback){
+    var onFinished = function(returnCode){
+      this.log.debug("finished")
+      var stdout = this.read(asText);
+      finishedCallback(returnCode, stdout);
+      if (returnCode) this.log.error("CURL returned with error code "+returnCode)
+    }
+    this.process["finished(int)"].connect(this, onFinished);
+  }
+
+  return this.process
 }
 
 
+/**
+ * Reads and returns the stdout of a curl process. If there is any stderr, it will be thrown as an error.
+ * Each read call "empties" the stream from the process, so subsequent reads will be empty unless new output was returned.
+ * @param {bool} [asText=true] wether to return the output as text or QByteArray
+ * @returns the output from the process, as a string or QByteArray
+ */
 CURLProcess.prototype.read = function (asText){
-  this.log.debug("readyread")
+  if (typeof asText === 'undefined' || asText === 'undefined' || asText === null) var asText = true;
   var readOut = this.process.readAllStandardOutput();
   if (asText){
     var output = new QTextStream(readOut).readAll();
@@ -145,6 +175,89 @@ CURLProcess.prototype.read = function (asText){
 }
 
 
+/**
+ * Launches a download without waiting for the end.
+ * @param {str} destinationPath  the path to which the download will be saved
+ * @param {function} callback  a function to execute once download has finished. Signature: callback(QProcess.returnCode, QString)
+ * @returns {QProcess}  the process launched.
+ */
+CURLProcess.prototype.asyncDownload = function (destinationPath, callback) {
+  var url = this.command.pop()
+  url = url.replace(/ /g, "%20");
+  destinationPath = destinationPath.replace(/[ :\?\*"\<\>\|][^/\\]/g, "");
+
+  this.command = ["-L", "-o", destinationPath].concat(this.command)
+  this.command.push(url)
+
+  var dest = destinationPath.split("/").slice(0, -1).join("/")
+  var dir = new QDir(dest);
+  if (!dir.exists()) dir.mkpath(dest);
+
+  return this.asyncRead(null, callback)
+}
+
+
+/**
+ * Run the process and wait for result while running the UI event loop to update progress
+ * @param {int} wait The amount of milliseconds before the process will be considered failed.
+ * @param {function} runMethod the CURLProcess method launched (ex: asyncRead, asyncDownload).
+ * @param {Array} [args] optionally, pass some arguments to the runMethod.
+ * @returns the output as text.
+ */
+CURLProcess.prototype.runAndWait = function (wait, runMethod, args) {
+  if (typeof args === 'undefined') var args = [];
+
+  var loop = new QEventLoop();
+
+  // Use a timer to kill the QProcess after the wait period.
+  var timer = new QTimer();
+  timer.singleShot = true;
+  timer["timeout"].connect(this, function () {
+    if (loop.isRunning()) {
+      this.process.kill();
+      loop.exit();
+      throw new Error("Timeout running command "+this.command.join(" "));
+    }
+  });
+
+  // Start the process and enter an event loop until the QProcess exits.
+  this.process["finished(int)"].connect(this, function(){loop.exit()})
+  runMethod.apply(this, args);
+  timer.start(wait);
+  loop.exec();
+
+  var output = this.read();
+  return output;
+}
+
+
+/**
+ * Performs a CURL get query, and returns the result when ready. Blocks execution of the code but not the event loop.
+ * @param {int} [wait=5000]   optional, the timeout for the query.
+ * @returns {string}
+ */
+CURLProcess.prototype.get = function(wait){
+  if (typeof wait === 'undefined') var wait = 5000;
+
+  var output = this.runAndWait(wait, this.asyncRead)
+  return output;
+}
+
+
+/**
+ * Performs a download through curl. The result of the operation will be returned as well.
+ * @param {str} destinationPath  The location to which the download will be saved.
+ * @param {int} [wait=30000]   optional, the timeout for the query (for downloads, 30s by default)
+ * @returns
+ */
+CURLProcess.prototype.download = function(destinationPath, wait){
+  if (typeof wait === 'undefined') var wait = 30000;
+
+  var output = this.runAndWait(wait, this.asyncDownload, [destinationPath])
+  return output;
+}
+
+
 // CURL Class --------------------------------------------------------
 /**
  * Curl class to launch curl queries
@@ -153,6 +266,7 @@ CURLProcess.prototype.read = function (asText){
  * @param {string[]} command
  */
 function CURL() {
+  this.log = new Logger("CURL")
 }
 
 
@@ -202,63 +316,24 @@ CURL.prototype.query = function (query, wait) {
  */
 CURL.prototype.get = function (command, wait) {
   if (typeof command == "string") command = [command]
-  if (typeof wait === 'undefined') var wait = 5000;
-  try {
-    var bin = this.bin;
-    return this.runCommand(bin, command, wait);
-  } catch (err) {
-    message = "Error with curl command: \n" + command.join(" ") + "\n" + err
-    log.error(message);
-    throw new Error(message);
-  }
+  var curl = new CURLProcess(command);
+  return curl.get(wait);
 }
 
 
+CURL.prototype.download = function (url, wait) {
+  var curl = new CURLProcess(url);
+  return curl.download(wait);
+}
 
-CURL.prototype.runCommand = function (bin, command, wait, test) {
+
+CURL.prototype.runCommand = function (command, wait, test) {
   if (typeof test === 'undefined') var test = false; // test will not print the output, just the errors
 
-  // The toonboom bundled curl doesn't seem to be equiped for ssh so we have to use unsafe mode
-  if (bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command);
-  command = ["-s", "-S"].concat(command);
+  var curl = new CURLProcess(command);
+  var output = curl.runAndWait(wait)
 
-  var loop = new QEventLoop();
-
-  var p = new QProcess();
-  p["finished(int,QProcess::ExitStatus)"].connect(this, function () {
-    loop.exit();
-  });
-
-  // Use a timer to kill the QProcess after the wait period.
-  var timer = new QTimer();
-  timer.singleShot = true;
-  timer["timeout"].connect(this, function () {
-    if (loop.isRunning()) {
-      p.kill();
-      loop.exit();
-      throw new Error("Timeout updating extension.");
-    }
-  });
-
-
-  // Start the process and enter an event loop until the QProcessx exits.
-  log.debug("starting process :" + bin + " " + command.join(" "));
-  p.start(bin, command);
-  timer.start(wait);
-  loop.exec();
-
-  var readOut = p.readAllStandardOutput();
-  var output = new QTextStream(readOut).readAll();
-  if (!test) log.debug("curl output: " + output);
-
-  var readErr = p.readAllStandardError();
-  var errors = new QTextStream(readErr).readAll();
-  if (errors) {
-    log.error("curl errors: " + errors.replace("\r", ""));
-    throw new Error(errors)
-  }
-
-  return output;
+  if (!test) return output;
 }
 
 /**
@@ -266,9 +341,8 @@ CURL.prototype.runCommand = function (bin, command, wait, test) {
  */
 Object.defineProperty(CURL.prototype, "bin", {
   get: function () {
-    log.debug("getting curl bin")
-
     if (typeof CURL.__proto__.bin === 'undefined') {
+      log.debug("getting curl bin")
       if (about.isWindowsArch()) {
         var curl = [System.getenv("windir") + "/system32/curl.exe",
         System.getenv("ProgramFiles") + "/Git/mingw64/bin/curl.exe",
@@ -286,7 +360,7 @@ Object.defineProperty(CURL.prototype, "bin", {
           var bin = curl[i];
           try {
             log.info("testing connexion by connecting to github.com")
-            this.runCommand(bin, ["https://www.github.com/"], 500, true);
+            this.get("https://www.github.com/", 500);
             log.info("CURL bin found, using: " + curl[i])
             CURL.__proto__.bin = bin;
             return bin;
