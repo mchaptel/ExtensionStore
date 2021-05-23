@@ -19,7 +19,8 @@ function NetworkConnexionHandler() {
  */
 NetworkConnexionHandler.prototype.get = function (command) {
   // handle errors
-  var result = this.curl.get(command);
+  var curl = new CURLProcess(command)
+  var result = curl.get();
   try {
     json = JSON.parse(result);
     if (json.hasOwnProperty("message")) {
@@ -53,11 +54,8 @@ NetworkConnexionHandler.prototype.get = function (command) {
  * Makes a download request for the given file url, and downloads it to the chosen location
  */
 NetworkConnexionHandler.prototype.download = function (url, destinationPath) {
-  url = url.replace(/ /g, "%20");
-  destinationPath = destinationPath.replace(/[ :\?\*"\<\>\|][^/\\]/g, "");
-
-  var command = ["-L", "-o", destinationPath, url];
-  var result = this.curl.get(command, 30000); // 30s timeout
+  var curl = new CURLProcess(url)
+  var result = curl.download(destinationPath, 30000); // 30s timeout
   return result;
 }
 
@@ -66,42 +64,49 @@ NetworkConnexionHandler.prototype.download = function (url, destinationPath) {
 // WebIcon Class -----------------------------------------------------
 function WebIcon(url) {
   this.log = new Logger("Icon")
+  var fileName = url.split("/").pop()
+
   if (url.indexOf(".png") == -1){
     // dealing with a website, we'll get the favicon
     url = "https://www.google.com/s2/favicons?sz=32&domain_url=" + url;
+    fileName = fileName + ".png"
   }
 
-  this.log.debug("new icon : "+url)
   this.url = url;
-
-  var fileName = url.split("/").pop()
-  this.dlUrl = specialFolders.temp + "/HUES_iconscache/" + fileName + ".png"
+  this.dlUrl = specialFolders.temp + "/HUES_iconscache/" + fileName
 }
 
+/**
+ * Downloads the icon file or returns it from cache then runs the callback
+ * @private
+ * @param {function} callback  an action to execute once download is finished
+ */
 WebIcon.prototype.download = function (callback) {
-  this.log.debug(this.dlUrl);
+  //only download if file doesn't exist, otherwise run callback directly
   var icon = new QFile(this.dlUrl);
   if (icon.exists()){
-    this.log.debug("file exists")
     callback.apply(this, []);
   } else {
-    this.log.debug("starting download of icon "+this.url);
     var curl = new CURLProcess(this.url);
     var p = curl.asyncDownload(this.dlUrl);
     p["finished(int)"].connect(this, callback)
   }
 }
 
+/**
+ * Call to set the icon to a specific widget.
+ * @param {QWidget} widget  a widget that supports icons
+ */
 WebIcon.prototype.setToWidget = function(widget){
   this.widget = widget;
-  this.log.debug(widget)
   this.download(this.setIcon)
 }
 
-
+/**
+ * Sets the icon on the widget once the file is available.
+ * @private
+ */
 WebIcon.prototype.setIcon = function () {
-  this.log.debug("download finished, setting icon")
-  this.log.debug("icon url : "+this.dlUrl)
   var icon = new QIcon(this.dlUrl);
   this.widget.icon = icon;
 }
