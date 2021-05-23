@@ -13,7 +13,7 @@ Harmony brings together all kinds of shades of users, all trying to add their ow
 
 ## Installation
 
-Download the zip from the [release page](https://github.com/mchaptel/ExtensionStore/releases) and copy the ``packages`` folder from the zip to the folder [specified here.](https://docs.toonboom.com/help/harmony-17/premium/scripting/import-script.html)
+Download the zip from the [release page](https://github.com/mchaptel/ExtensionStore/releases), create a subfolder named "packages" in the folder [specified here,](https://docs.toonboom.com/help/harmony-17/premium/scripting/import-script.html) and copy the ``ExtensionStore`` folder from the zip directly into it.
 
 Then, from inside Harmony, open the window called **Extension Store** from the new window drop down.
 
