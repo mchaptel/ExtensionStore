@@ -52,10 +52,10 @@ Logger.prototype.trace = function (message) {
       message[m] = "Error: "+error.message+" (line " + error.lineNumber + " in file '" + error.fileName + "')";
     }
   }
-  if (this.name) var message = this.name + ": " + message.join(" ");
   try {
-    MessageLog.trace(message);
-    System.println(message);
+    if (this.name) var trace = this.name + ": " + message.join(" ");
+    MessageLog.trace(trace);
+    System.println(trace);
   } catch (err) {
     for (var i in message) {
       try{

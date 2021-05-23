@@ -34,7 +34,6 @@ function test() {
 function Store() {
   this.log = new Logger("Store")
   this.log.info("init store")
-
 }
 
 
@@ -50,11 +49,11 @@ Object.defineProperty(Store.prototype, "sellers", {
       if (!sellersFile) sellersFile = "https://raw.githubusercontent.com/mchaptel/ExtensionStore/master/SELLERSLIST";
       this.log.debug(sellersFile)
       try {
-        if (sellersFile.indexOf("http") == -1){
+        if (sellersFile.indexOf("http") == -1) {
           // using a local file
           var fileContents = readFile(sellersFile)
           var sellersList = JSON.parse(fileContents)
-        }else{
+        } else {
           var sellersList = webQuery.get(sellersFile);
         }
         this.log.debug(sellersList)
@@ -65,12 +64,12 @@ Object.defineProperty(Store.prototype, "sellers", {
       // handle wrong packages found in sellers list
       var validSellers = [];
       for (var i in sellersList) {
-        try{
+        try {
           var seller = new Seller(sellersList[i]);
           var package = seller.package;
           validSellers.push(seller)
-        }catch(error){
-          this.log.error("problem getting package for seller "+sellersList[i], error);
+        } catch (error) {
+          this.log.error("problem getting package for seller " + sellersList[i], error);
         }
       }
       this._sellers = validSellers;
@@ -207,7 +206,7 @@ Object.defineProperty(Seller.prototype, "package", {
     this.log.debug("getting package for " + this.masterRepositoryName);
     if (!this._tbpackage) {
       var response = webQuery.get(this.dlUrl + "/tbpackage.json");
-      if (!response || response.message){
+      if (!response || response.message) {
         var message = "No valid package found in repository " + this._url + ": " + response.message;
         throw new Error(message)
       }
@@ -456,7 +455,7 @@ Object.defineProperty(Repository.prototype, "package", {
     this.log.debug("getting repos package for repo " + this.apiUrl);
     if (typeof this._package === 'undefined') {
       var response = webQuery.get(this.dlUrl + "/tbpackage.json");
-      if (!response || response.message){
+      if (!response || response.message) {
         this.log.error("No valid package found in repository " + this._url + ": " + response.message)
         return null
       }
@@ -771,6 +770,44 @@ Object.defineProperty(Extension.prototype, "localPaths", {
       // log ("file paths : "+this._localPaths)
     }
     return this._localPaths;
+  }
+})
+
+
+
+// /**
+//  * The ExtensionDownloader instance to handle the downloads for this extension
+//  */
+// Object.defineProperty(Extension.prototype, "downloader", {
+//   get: function () {
+//     if (typeof this._downloader === 'undefined') {
+//       this._downloader = new ExtensionDownloader(this);
+//     }
+//     return this._downloader
+//   }
+// })
+
+
+// /**
+//  * gets the extension icon file. Can provide a callback to execute once the icon has been obtained.
+//  */
+
+// Extension.prototype.getIcon = function (callback) {
+//   get: function () {
+//     var icon = listFiles(this.downloader.cacheFolder, this.safeName + "_icon.png")
+//     if (icon.length == 0) {
+//       // look for an icon in the repo
+//     }
+//   }
+// })
+
+
+/**
+ * Cleans the problematic characters from the name of the extension.
+ */
+Object.defineProperty(Extension.prototype, "safeName", {
+  get: function () {
+    return this.name.replace(/ /g, "_").replace(/[:\?\*\\\/"\|\<\>]/g, "")
   }
 })
 
@@ -1152,29 +1189,22 @@ function ExtensionDownloader(extension) {
 ExtensionDownloader.prototype.downloadFiles = function () {
   this.log.info("starting download of files from extension " + this.extension.name);
   var destFolder = this.destFolder;
-  this.log.debug(this.extension instanceof Extension)
-  var destPaths = this.extension.localPaths.map(function (x) { return destFolder + x });
-  var dlFiles = [this.destFolder];
 
-  // log ("destPaths: "+destPaths)
-  var files = this.extension.files;
-
-  this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
-
-  // cbb : how to connect this to any progress window?
   var progress = new QProgressDialog();
-  progress.title = "Installing extension "+this.extension.name;
-  progress.setLabelText( "Downloading files..." );
-  progress.setRange( 0, files.length );
+  progress.title = "Installing extension " + this.extension.name;
+  progress.setLabelText("Downloading files...");
   progress.modal = true;
-
   progress.show();
 
+  // get the files list (heavy operations)
+  var destPaths = this.extension.localPaths.map(function (x) { return destFolder + x });
+  var dlFiles = [this.destFolder];
+  var files = this.extension.files;
+
+  progress.setRange(0, files.length);
+  this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
+
   for (var i = 0; i < files.length; i++) {
-    // make the directory
-    var dest = destPaths[i].split("/").slice(0, -1).join("/")
-    var dir = new QDir(dest);
-    if (!dir.exists()) dir.mkpath(dest);
 
     webQuery.download(this.getDownloadUrl(files[i].path), destPaths[i]);
     var dlFile = new File(destPaths[i]);

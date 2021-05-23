@@ -69,7 +69,7 @@ For the moment, version numbers are purely indicative and do not allow script ma
 
 ## License
 
-This extension is relseased under the Mozilla Public License 2.0.
+This extension is released under the Mozilla Public License 2.0.
 
 ---
 
