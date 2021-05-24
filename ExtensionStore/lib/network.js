@@ -1,5 +1,6 @@
 var Logger = require("logger.js").Logger
 var log = new Logger("CURL")
+var readFile = require("io.js").readFile
 
 // NetworkConnexionHandler Class --------------------------------------
 /**
@@ -10,7 +11,6 @@ var log = new Logger("CURL")
  * @extends QObject
  */
 function NetworkConnexionHandler() {
-  this.curl = new CURL();
 }
 
 
@@ -25,19 +25,15 @@ NetworkConnexionHandler.prototype.get = function (command) {
     json = JSON.parse(result);
     if (json.hasOwnProperty("message")) {
       if (json.message == "Not Found") {
-        log.error("File not present in repository : " + this._url);
-        return null;
-      }
-      if (json.message == "Not Found") {
-        log.error("File not present in repository : " + this._url);
+        log.error("File not present in repository : " + command);
         return null;
       }
       if (json.message == "Moved Permanently") {
-        log.error("Repository " + this._url + " has moved to : " + json.url);
+        log.error("Repository " + command + " has moved to : " + json.url);
         return json;
       }
       if (json.message == "400: Invalid request") {
-        log.error("Couldn't reach repository : " + this._url + ". Make sure it is a valid github address.")
+        log.error("Couldn't reach repository : " + command + ". Make sure it is a valid github address.")
         return null;
       }
     }
@@ -65,6 +61,7 @@ NetworkConnexionHandler.prototype.download = function (url, destinationPath) {
 function WebIcon(url) {
   this.log = new Logger("Icon");
   this.url = url;
+  this.readFile = readFile;
 }
 
 /**
@@ -74,29 +71,31 @@ WebIcon.cacheFolder = specialFolders.temp + "/HUES_iconscache/";
 
 
 /**
- * the url for the download
+ * the path for the download
  */
-Object.defineProperty(WebIcon.prototype, "dlUrl", {
+Object.defineProperty(WebIcon.prototype, "dlPath", {
   get: function () {
-    if (typeof this._dlUrl === 'undefined') {
+    if (typeof this._dlPath === 'undefined') {
       var fileName = this.url.split("/").pop();
 
-      var idRe = /avatars.githubusercontent.com\/u\/(\d+)\?/
-      var matches = idRe.exec(this.url);
-      if (matches) {
-        this.log.debug(matches);
-        // avatar urls on github are a bit strange
-        var extension = this.getImageFormat();
-        fileName = matches[1] + "." + extension;
+      var userNameRe = /https:\/\/github.com\/([\w\d]+\.png)/
+      var matches = userNameRe.exec(this.url);
+
+      if (matches){
+        // we have a github avatar url
+        fileName = matches[1];
       } else if (this.url.indexOf(".png") == -1) {
         // dealing with a website, we'll get the favicon
         this.url = "https://www.google.com/s2/favicons?sz=32&domain_url=" + this.url;
         fileName = fileName + ".png";
       }
 
-      this._dlUrl = WebIcon.cacheFolder + fileName;
+      this._dlPath = WebIcon.cacheFolder + fileName;
     }
-    return this._dlUrl;
+    return this._dlPath;
+  },
+  set: function(newPath){
+    this._dlPath = newPath;
   }
 })
 
@@ -108,38 +107,48 @@ Object.defineProperty(WebIcon.prototype, "dlUrl", {
  */
 WebIcon.prototype.download = function (callback) {
   //only download if file doesn't exist, otherwise run callback directly
-  var icon = new QFile(this.dlUrl);
-  if (icon.exists()) {
+  var iconFile = new QFile(this.dlPath);
+  var alternatePath = this.dlPath.replace(".png", ".jpeg")
+  var alternateIcon = new QFile(alternatePath)
+  var fileName = this.dlPath.split("/").pop()
+
+  if (iconFile.exists()) {
+    callback.apply(this, []);
+  } else if (alternateIcon.exists()){
+    // github avatar can be pngs or jpegs
+    this.dlPath = alternatePath;
     callback.apply(this, []);
   } else {
-    var curl = new CURLProcess(this.url);
-    var p = curl.asyncDownload(this.dlUrl);
-    p["finished(int)"].connect(this, callback);
-  }
-}
+    // no cached version, we fetch it
+    // we need to save the header from the download to retrieve file type
+    var headerPath = WebIcon.cacheFolder + fileName + "header.txt"
+    var curl = new CURLProcess(["-D", headerPath, this.url]);
+    var p = curl.asyncDownload(this.dlPath);
 
-/**
- * gets the content type from the file header
- * @returns {string} the extension for the file
- */
-WebIcon.prototype.getImageFormat = function () {
-  var curl = new CURLProcess(["-L", "-w", "%{content_type}", this.url]);
-  var response = curl.get(1000);
-  log.debug(response);
+    // When donwload process completes, find the file type from the downloaded header
+    // and rename the file before calling the callback.
+    var renameFileExtension = function(){
+      var header = this.readFile(headerPath);
 
-  var re = /image\/(\w+)/
+      // detect the file format by looking for image/* value in header
+      var extensionRe = /image\/(\w+)/
+      var match = extensionRe.exec(header);
+      if (match[1] != "png"){
+        // by default, files will be named png, we rename otherwise.
+        iconFile.rename(alternateIcon.fileName());
+        this.dlPath = alternatePath;
+      }
 
-  if (response) {
-    var match = re.exec(response);
-    if (match) {
-      var extension = match[1].toLocaleLowerCase();
-      this.log.debug(extension);
-      return extension;
+      // delete the saved header file.
+      var headerFile = new QFile(headerPath);
+      headerFile.remove()
+
+      callback.apply(this, []);
     }
+    p["finished(int)"].connect(this, renameFileExtension);
   }
-
-  throw new Error("Couldn't get file format for url " + this.url);
 }
+
 
 /**
  * Call to set the icon to a specific widget.
@@ -155,7 +164,7 @@ WebIcon.prototype.setToWidget = function (widget) {
  * @private
  */
 WebIcon.prototype.setIcon = function () {
-  var icon = new QIcon(this.dlUrl);
+  var icon = new QIcon(this.dlPath);
   var size = UiLoader.dpiScale(32)
   icon.size = new QSize(size, size);
 
@@ -180,20 +189,25 @@ WebIcon.deleteCache = function () {
 /**
  * This class wraps a CURL Qprocess and handles the outputs.
  * Can perform asynchronous or inline operations without blocking the UI.
- * @param {*} command
+ * @param {Array} command
+ * @param {string} [bin]   optional, set the bin for this process
  */
-function CURLProcess(command) {
-  this.curl = new CURL()
+function CURLProcess(command, bin) {
   this.log = new Logger("CURL")
+
+  if (typeof bin === 'undefined') {
+    var curl = new CURL()
+    var bin = curl.bin;
+  }
 
   // The toonboom bundled curl doesn't seem to be equiped for ssh so we have to use unsafe mode
   if (typeof command == "string") var command = [command];
-  if (this.curl.bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command);
+  if (bin.indexOf("bin_3rdParty") != -1) command = ["-k"].concat(command);
   this.command = ["-s", "-S"].concat(command);
 
-  var bin = this.curl.bin.split("/");
-  this.app = bin.pop();
-  var directory = bin.join("\\");
+  var binPath = bin.split("/");
+  this.app = binPath.pop();
+  var directory = binPath.join("\\");
 
   this.process = new QProcess();
   this.process.setWorkingDirectory(directory);
@@ -225,12 +239,12 @@ CURLProcess.prototype.asyncRead = function (readCallback, finishedCallback, asTe
       this.log.debug("finished")
       var stdout = this.read(asText);
       finishedCallback(returnCode, stdout);
-      if (returnCode) this.log.error("CURL returned with error code " + returnCode)
+      if (returnCode) this.log.error("CURL returned with error code " + returnCode);
     }
     this.process["finished(int)"].connect(this, onFinished);
   }
 
-  return this.process
+  return this.process;
 }
 
 
@@ -248,7 +262,7 @@ CURLProcess.prototype.read = function (asText) {
   } else {
     var output = readOut;
   }
-  this.log.debug("output:" + output)
+  this.log.debug("output:" + output);
 
   var readErr = this.process.readAllStandardError();
   var errors = new QTextStream(readErr).readAll();
@@ -267,18 +281,18 @@ CURLProcess.prototype.read = function (asText) {
  * @returns {QProcess}  the process launched.
  */
 CURLProcess.prototype.asyncDownload = function (destinationPath, callback) {
-  var url = this.command.pop()
+  var url = this.command.pop();
   url = url.replace(/ /g, "%20");
   destinationPath = destinationPath.replace(/[ :\?\*"\<\>\|][^/\\]/g, "");
 
-  this.command = ["-L", "-o", destinationPath].concat(this.command)
-  this.command.push(url)
+  this.command = ["-L", "-o", destinationPath].concat(this.command);
+  this.command.push(url);
 
-  var dest = destinationPath.split("/").slice(0, -1).join("/")
+  var dest = destinationPath.split("/").slice(0, -1).join("/");
   var dir = new QDir(dest);
   if (!dir.exists()) dir.mkpath(dest);
 
-  return this.asyncRead(null, callback)
+  return this.asyncRead(null, callback);
 }
 
 
@@ -329,19 +343,6 @@ CURLProcess.prototype.get = function (wait) {
 }
 
 
-/**
- * Performs a download through curl. The result of the operation will be returned as well.
- * @param {str} destinationPath  The location to which the download will be saved.
- * @param {int} [wait=30000]   optional, the timeout for the query (for downloads, 30s by default)
- * @returns
- */
-CURLProcess.prototype.download = function (destinationPath, wait) {
-  if (typeof wait === 'undefined') var wait = 30000;
-
-  var output = this.runAndWait(wait, this.asyncDownload, [destinationPath])
-  return output;
-}
-
 
 // CURL Class --------------------------------------------------------
 /**
@@ -368,32 +369,32 @@ function CURL() {
  * // more : https://docs.sourcegraph.com/api/graphql/examples
  * // more info about authentication : https://developer.github.com/apps/building-github-apps/authenticating-with-github-apps/
  */
-CURL.prototype.query = function (query, wait) {
-  if (typeof wait === 'undefined') var wait = 5000;
-  var bin = this.bin;
-  try {
-    var p = new QProcess();
+// CURL.prototype.query = function (query, wait) {
+//   if (typeof wait === 'undefined') var wait = 5000;
+//   var bin = this.bin;
+//   try {
+//     var p = new QProcess();
 
-    log.debug("starting process :" + bin + " " + command);
-    var command = ["-H", "Authorization: Bearer YOUR_JWT", "-H", "Content-Type: application/json", "-X", "POST", "-d"];
-    query = query.replace(/\n/gm, "\\\\n").replace(/"/gm, '\\"');
-    command.push('" \\\\n' + query + '"');
-    command.push("https://api.github.com/graphql");
+//     log.debug("starting process :" + bin + " " + command);
+//     var command = ["-H", "Authorization: Bearer YOUR_JWT", "-H", "Content-Type: application/json", "-X", "POST", "-d"];
+//     query = query.replace(/\n/gm, "\\\\n").replace(/"/gm, '\\"');
+//     command.push('" \\\\n' + query + '"');
+//     command.push("https://api.github.com/graphql");
 
-    p.start(bin, command);
+//     p.start(bin, command);
 
-    p.waitForFinished(wait);
+//     p.waitForFinished(wait);
 
-    var readOut = p.readAllStandardOutput();
-    var output = new QTextStream(readOut).readAll();
-    //log ("json: "+output);
+//     var readOut = p.readAllStandardOutput();
+//     var output = new QTextStream(readOut).readAll();
+//     //log ("json: "+output);
 
-    return output;
-  } catch (err) {
-    log.error("Error with curl command: \n" + command.join(" ") + "\n" + err);
-    return null;
-  }
-}
+//     return output;
+//   } catch (err) {
+//     log.error("Error with curl command: \n" + command.join(" ") + "\n" + err);
+//     return null;
+//   }
+// }
 
 
 /**
@@ -445,7 +446,9 @@ Object.defineProperty(CURL.prototype, "bin", {
           var bin = curl[i];
           try {
             log.info("testing connexion by connecting to github.com")
-            this.get("https://www.github.com/", 500);
+            var p = new CURLProcess("https://github.com/", bin)
+            var response = p.get(500);
+            if (!response) throw new Error ("https://github.com/ unreachable.")
             log.info("CURL bin found, using: " + curl[i])
             CURL.__proto__.bin = bin;
             return bin;

@@ -257,7 +257,18 @@ Object.defineProperty(Seller.prototype, "name", {
  */
 Object.defineProperty(Seller.prototype, "apiUrl", {
   get: function () {
-    return "https://api.github.com/users/" + this.masterRepositoryName.split("/")[0];
+    return "https://api.github.com/users/" + this.githubUserName;
+  }
+});
+
+
+/**
+ * get the github url for the user associated with the master Repository.
+ * @type {string}
+ */
+ Object.defineProperty(Seller.prototype, "githubUserName", {
+  get: function () {
+    return this.masterRepositoryName.split("/")[0];
   }
 });
 
@@ -269,9 +280,10 @@ Object.defineProperty(Seller.prototype, "apiUrl", {
 Object.defineProperty(Seller.prototype, "iconUrl", {
   get: function () {
     if (typeof this._icon === 'undefined') {
-      var userInfo = webQuery.get(this.apiUrl);
-      if (!userInfo.hasOwnProperty("avatar_url")) this._icon = "";
-      this._icon = userInfo.avatar_url;
+      // var userInfo = webQuery.get(this.apiUrl);
+      // if (!userInfo.hasOwnProperty("avatar_url")) this._icon = "";
+      // this._icon = userInfo.avatar_url;
+      return "https://github.com/" + this.githubUserName + ".png"
     }
     return this._icon
   }
