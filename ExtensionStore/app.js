@@ -80,9 +80,6 @@ function StoreUI(){
 
   this.uninstallAction = new QAction("Uninstall", this);
   this.uninstallAction.triggered.connect(this, this.performUninstall);
-
-  var icon = new WebIcon("https://discord.com")
-  icon.setToWidget(this.aboutFrame.loadStoreButton)
 }
 
 /**
