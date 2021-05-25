@@ -5,6 +5,7 @@ var io = require("./io.js");
 var readFile = io.readFile;
 var writeFile = io.writeFile;
 var recursiveFileCopy = io.recursiveFileCopy;
+var recursiveRemoveDir = io.recursiveRemoveDir;
 
 Logger.level = 2;
 
@@ -1013,19 +1014,19 @@ LocalExtensionList.prototype.uninstall = function (extension) {
   if (!this.isInstalled(extension)) return true    // extension isn't installed
   var localExtension = this.extensions[extension.id];
 
+  // Otherwise remove all script files (.js, .ui, .png etc.)
+  var files = localExtension.package.localFiles;
+  for (var i in files) {
+    this.log.debug("removing file " + files[i]);
+    var file = new File(files[i]);
+    if (file.exists) file.remove();
+  }
+
   // Remove packages recursively as they have a parent directory.
   if (extension.package.isPackage) {
-    var folder = new Dir(this.installFolder + "packages/" + extension.name.replace(" ", ""));
+    var folder = this.installFolder + "/packages/" + extension.name.replace(" ", "");
     this.log.debug("removing folder " + folder.path);
-    if (folder.exists) folder.rmdirs();
-  } else {
-    // Otherwise remove all script files (.js, .ui, .png etc.)
-    var files = localExtension.package.localFiles;
-    for (var i in files) {
-      this.log.debug("removing file " + files[i]);
-      var file = new File(files[i]);
-      if (file.exists) file.remove();
-    }
+    recursiveRemoveDir(folder);
   }
 
   // Update the extension list accordingly.
