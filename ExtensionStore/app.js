@@ -497,6 +497,10 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
     log.debug("adding icon to extension "+ extension.name + " from url : "+extension.iconUrl)
     this.extensionIcon = new WebIcon(extension.iconUrl);
     this.extensionIcon.setToWidget(this);
+
+  }else{
+    // fallback to local icon
+    this.setIcon(0, new QIcon(specialFolders.resource + "/icons/old/folder.png"))
   }
 
   // store the extension id in the item

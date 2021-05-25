@@ -65,10 +65,15 @@ function WebIcon(url) {
 }
 
 /**
- * class member: the location of the cache
+ * class member: the location of the cache folder
  */
 WebIcon.cacheFolder = specialFolders.temp + "/HUES_iconscache/";
 
+/**
+ * class memeber : a caching mechanism to avoid using curl
+ * when looking for the same website across several icons
+ */
+WebIcon.iconsCache = {}
 
 /**
  * the path for the download
@@ -76,6 +81,12 @@ WebIcon.cacheFolder = specialFolders.temp + "/HUES_iconscache/";
 Object.defineProperty(WebIcon.prototype, "dlPath", {
   get: function () {
     if (typeof this._dlPath === 'undefined') {
+      // first look in the cache for this url
+      if (WebIcon.iconsCache[this.url]){
+        this._dlPath = WebIcon.iconsCache[this.url];
+        return this._dlPath;
+      }
+
       var fileName = this.url.split("/").pop();
 
       var userNameRe = /https:\/\/github.com\/([\w\d]+\.png)/
@@ -91,6 +102,7 @@ Object.defineProperty(WebIcon.prototype, "dlPath", {
       }
 
       this._dlPath = WebIcon.cacheFolder + fileName;
+      WebIcon.iconsCache[this.url] = this._dlPath
     }
     return this._dlPath;
   },
@@ -178,9 +190,10 @@ WebIcon.prototype.setIcon = function () {
 
 
 WebIcon.deleteCache = function () {
-  var cache = new QDir(WebIcon.cacheFolder)
-  if (cache.exists()) {
-    cache.rmdirs()
+  WebIcon.iconsCache = {};
+  var cache = new Dir(WebIcon.cacheFolder);
+  if (cache.exists) {
+    cache.rmdirs();
   }
 }
 
