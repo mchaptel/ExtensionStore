@@ -65,7 +65,7 @@ function recursiveFileCopy(folder, destination) {
       var command = ["-Rv", folder + "/.", destination];
     }
 
-    log.debug("starting process :" + bin + " " + command);
+    log.debug("starting process :"+bin+" "+command);
     p.start(bin, command);
 
     p.waitForFinished(-1);
@@ -76,38 +76,12 @@ function recursiveFileCopy(folder, destination) {
 
     return output;
   } catch (err) {
-    log.error("error on line " + err.lineNumber + " of file " + err.fileName + ": \n" + err);
+    log.error("error on line "+err.lineNumber+" of file "+err.fileName+": \n"+err);
     return null;
   }
-}
-
-
-function recursiveRemoveDir(folder) {
-  var dir = new QDir();
-  dir.setPath(folder);
-  dir.setFilter(QDir.Dirs);
-  var subfolders = dir.entryList();
-
-  var files = listFiles(folder)
-
-  for (var i in files) {
-    var file = new QFile(folder + "/" + files[i])
-    file.remove()
-  }
-
-  for (var i in subfolders) {
-    if (subfolders[i] != "." && subfolders[i] != "..") {
-      recursiveRemoveDir(folder + "/" + subfolders[i]);
-    }
-  }
-
-  log.debug("removing folder : " + folder)
-  dir = new Dir(folder);
-  dir.rmdirs();
 }
 
 exports.listFiles = listFiles
 exports.writeFile = writeFile
 exports.readFile = readFile
 exports.recursiveFileCopy = recursiveFileCopy
-exports.recursiveRemoveDir = recursiveRemoveDir
