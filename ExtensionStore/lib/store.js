@@ -280,9 +280,6 @@ Object.defineProperty(Seller.prototype, "apiUrl", {
 Object.defineProperty(Seller.prototype, "iconUrl", {
   get: function () {
     if (typeof this._icon === 'undefined') {
-      // var userInfo = webQuery.get(this.apiUrl);
-      // if (!userInfo.hasOwnProperty("avatar_url")) this._icon = "";
-      // this._icon = userInfo.avatar_url;
       return "https://github.com/" + this.githubUserName + ".png"
     }
     return this._icon
@@ -464,8 +461,8 @@ Object.defineProperty(Repository.prototype, "dlUrl", {
  */
 Object.defineProperty(Repository.prototype, "package", {
   get: function () {
-    this.log.debug("getting repos package for repo " + this.apiUrl);
     if (typeof this._package === 'undefined') {
+      this.log.debug("getting repos package for repo " + this.apiUrl);
       var response = webQuery.get(this.dlUrl + "/tbpackage.json");
       if (!response || response.message) {
         this.log.error("No valid package found in repository " + this._url + ": " + response.message)
@@ -485,15 +482,20 @@ Object.defineProperty(Repository.prototype, "package", {
  */
 Object.defineProperty(Repository.prototype, "contents", {
   get: function () {
-    this.log.debug("getting repos contents for repo " + this.apiUrl);
     if (typeof this._contents === 'undefined') {
-      var contents = webQuery.get(this.masterBranchTree + "?recursive=true");
-      if (!contents) return null;
+      this.log.debug("getting repos contents for repo " + this.apiUrl);
+      try{
+        var contents = webQuery.get(this.masterBranchTree + "?recursive=true");
+      }catch(error){
+        // in case of bad query, we avoid pulling it over and over, and consider it empty
+        this.log.error(error);
+        this._contents = [];
+        return this._contents;
+      }
 
       var tree = contents.tree;
 
-      this.log.debug(JSON.stringify(tree, null, " "));
-      // this._contents = tree;
+      // this.log.debug(JSON.stringify(tree, null, " "));
 
       var files = tree.map(function (file) {
         if (file.type == "tree") return {path:"/" + file.path + "/", size: file.size};
@@ -585,7 +587,7 @@ Repository.prototype.getFiles = function (filter) {
   var contents = this.contents;
   var paths = this.contents.map(function(x){return x.path})
 
-  this.log.debug(paths.join("\n"))
+  // this.log.debug(paths.join("\n"))
   var search = this.searchToRe(filter)
 
   this.log.debug("getting files in repository that match search " + search)
@@ -662,6 +664,7 @@ Object.defineProperty(Extension.prototype, "package", {
       "repository": this.repository._url,
       "isPackage": false,
       "files": [],
+      "icon": "",
       "keywords": [],
       "author": "",
       "license": "",
@@ -678,7 +681,55 @@ Object.defineProperty(Extension.prototype, "package", {
 
 
 /**
+ * Get the icon url for the extension
+ * @type {string}
+ */
+ Object.defineProperty(Extension.prototype, "iconUrl", {
+  get: function () {
+    if (typeof this._icon === 'undefined') {
+
+      var automaticSearchEnabled = false
+
+      this.log.debug("getting icon url for "+this.name)
+      this._icon = "";
+      if (this.package.icon){
+        this._icon = this.package.icon;
+      }else if (automaticSearchEnabled){
+        // try to guess the icon by looking for it in the files
+        // heavier since it requires polling github for the files
+        // CBB: cache the fact that a given extension has one/no icon?
+        // since this lets us search the HUES icons cache
+        var files = this.files.map(function(x){return x.path});
+        this.log.debug(files);
+
+        var pngs = [];
+        for (var i in files){
+          var file = files[i];
+          // this.log.debug("file:" + file)
+          if (file.indexOf(".png") != -1) pngs.push(file);
+
+          // if it's named like the extension with a png suffix
+          if (file == this.name + ".png"){
+            this._icon = file;
+            break
+          }
+        }
+        // if only 1 png is available in the list, we return it
+        if (pngs.length == 1) this._icon = pngs[0];
+      }
+      if (this._icon) {
+        this.log.debug("found icon "+this._icon)
+        this._icon = this.repository.dlUrl + "/" + this._icon;
+      }
+    }
+    return this._icon;
+  }
+})
+
+
+/**
  * The highest level folder on the repository that includes files included in this extension
+ * Doesn't poll github, since it only looks at the files listed in the package
  * @name Extension#rootFolder
  * @type {object}
  */

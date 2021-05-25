@@ -133,7 +133,7 @@ WebIcon.prototype.download = function (callback) {
       // detect the file format by looking for image/* value in header
       var extensionRe = /image\/(\w+)/
       var match = extensionRe.exec(header);
-      if (match[1] != "png"){
+      if (match && match[1] != "png"){
         // by default, files will be named png, we rename otherwise.
         iconFile.rename(alternateIcon.fileName());
         this.dlPath = alternatePath;
@@ -284,6 +284,8 @@ CURLProcess.prototype.asyncDownload = function (destinationPath, callback) {
   var url = this.command.pop();
   url = url.replace(/ /g, "%20");
   destinationPath = destinationPath.replace(/[ :\?\*"\<\>\|][^/\\]/g, "");
+
+  this.log.debug("starting async download of url "+url)
 
   this.command = ["-L", "-o", destinationPath].concat(this.command);
   this.command.push(url);
@@ -440,7 +442,7 @@ Object.defineProperty(CURL.prototype, "bin", {
         var curl = [System.getenv("windir") + "/system32/curl.exe",
         System.getenv("ProgramFiles") + "/Git/mingw64/bin/curl.exe",
         specialFolders.bin + "/bin_3rdParty/curl.exe"];
-        var curl = [specialFolders.bin + "/bin_3rdParty/curl.exe"]; // testing Harmony curl bin
+        // var curl = [specialFolders.bin + "/bin_3rdParty/curl.exe"]; // testing Harmony curl bin
       } else {
         var curl = ["/usr/bin/curl",
           "/usr/local/bin/curl",

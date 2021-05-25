@@ -479,7 +479,7 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
     var icon = "✓";
     this.setToolTip(1, "Extension is installed correctly.");
     var localExtension = localList.extensions[extension.id];
-    log.debug(extension.id, localList.checkFiles(localExtension));
+    // log.debug("checking files from "+extension.id, localList.checkFiles(localExtension));
     if (localExtension.currentVersionIsOlder(extension.version)) {
       icon = "↺";
       this.setToolTip(1, "Update available:\ncurrently installed version : v" + extension.version);
@@ -491,6 +491,13 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
     var icon = "✗";
   }
   this.setText(1, icon);
+
+  if (extension.iconUrl){
+    // set up an icon if one is available
+    log.debug("adding icon to extension "+ extension.name + " from url : "+extension.iconUrl)
+    this.extensionIcon = new WebIcon(extension.iconUrl);
+    this.extensionIcon.setToWidget(this);
+  }
 
   // store the extension id in the item
   this.setData(0, Qt.UserRole, extension.id);
