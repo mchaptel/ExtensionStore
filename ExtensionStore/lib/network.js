@@ -343,6 +343,13 @@ CURLProcess.prototype.get = function (wait) {
 }
 
 
+CURLProcess.prototype.download = function (destinationPath, wait) {
+  if (typeof wait === 'undefined') var wait = 30000;
+
+  var output = this.runAndWait(wait, this.asyncDownload, [destinationPath])
+  return output;
+}
+
 
 // CURL Class --------------------------------------------------------
 /**
@@ -433,7 +440,7 @@ Object.defineProperty(CURL.prototype, "bin", {
         var curl = [System.getenv("windir") + "/system32/curl.exe",
         System.getenv("ProgramFiles") + "/Git/mingw64/bin/curl.exe",
         specialFolders.bin + "/bin_3rdParty/curl.exe"];
-        // var curl = [specialFolders.bin + "/bin_3rdParty/curl.exe"]; // testing Harmony curl bin
+        var curl = [specialFolders.bin + "/bin_3rdParty/curl.exe"]; // testing Harmony curl bin
       } else {
         var curl = ["/usr/bin/curl",
           "/usr/local/bin/curl",
