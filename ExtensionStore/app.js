@@ -2,7 +2,7 @@ var storelib = require("./lib/store.js");
 var Logger = require("./lib/logger.js").Logger;
 var log = new Logger("UI")
 var WebIcon = require("./lib/network.js").WebIcon
-
+var style = require("./lib/style.js");
 
 /**
  * The main extension store widget class
@@ -23,37 +23,72 @@ function StoreUI(){
   this.ui.minimumWidth = UiLoader.dpiScale(350);
   this.ui.minimumHeight = UiLoader.dpiScale(200);
 
+  // Set the global application stylesheet
+  this.ui.setStyleSheet(style.getSyleSheet());
+
   // create shorthand references to some of the main widgets of the ui
+  this.eulaFrame = this.ui.eulaFrame;
   this.storeFrame = this.ui.storeFrame;
   this.aboutFrame = this.ui.aboutFrame;
-  this.storeListPanel = this.storeFrame.storeSplitter.widget(0);
-  this.storeDescriptionPanel = this.storeFrame.storeSplitter.widget(1);
+  this.storeListPanel = this.storeFrame.storeSplitter.extensionFrame;
+  this.storeDescriptionPanel = this.storeFrame.storeSplitter.sidepanelFrame;
   this.extensionsList = this.storeListPanel.extensionsList;
   this.updateRibbon = this.aboutFrame.updateRibbon
+  this.storeHeader = this.storeFrame.storeHeader;
+  this.storeFooter = this.storeFrame.storeFooter;
 
   // Hide the store and the loading UI elements.
   this.storeFrame.hide();
   this.setUpdateProgressUIState(false);
 
-  var logo = storelib.appFolder+"/resources/logo.png"
-  var logoPixmap = new QPixmap(logo);
-  this.aboutFrame.storeLabel.setPixmap(logoPixmap)
+  if (!preferences.getBool("HUES_EULA_ACCEPTED", "")) {
+    this.aboutFrame.hide();
 
+    // EULA logo
+    var eulaLogo = storelib.appFolder + "/resources/logo.png"
+    eulaLogo = style.getImage(eulaLogo);
+    var eulaLogoPixmap = new QPixmap(eulaLogo);
+    this.eulaFrame.innerFrame.eulaLogo.setPixmap(eulaLogoPixmap);
+
+    this.eulaFrame.innerFrame.eulaCB.stateChanged.connect(this, function() {
+      preferences.setBool("HUES_EULA_ACCEPTED", true);
+      this.eulaFrame.hide();
+      this.aboutFrame.show();
+    });
+  }
+  else {
+    this.eulaFrame.hide();
+  }
+
+  // About logo
+  var logo = storelib.appFolder+"/resources/logo.png";
+  logo = style.getImage(logo);
+  var logoPixmap = new QPixmap(logo);
+  this.aboutFrame.storeLabel.setPixmap(logoPixmap);
+
+  // Header logo
+  var headerLogo = storelib.appFolder+"/resources/logo_header.png";
+  headerLogo = style.getImage(headerLogo);
+  var headerLogoPixmap = new QPixmap(headerLogo);
+  this.storeHeader.headerLogo.setPixmap(headerLogoPixmap);
+  
   this.checkForUpdates()
 
   // connect UI signals
   this.aboutFrame.loadStoreButton.clicked.connect(this, this.loadStore)
 
   // filter the store list --------------------------------------------
-  this.storeFrame.searchStore.textChanged.connect(this, this.updateExtensionsList)
+  this.storeHeader.searchStore.textChanged.connect(this, this.updateExtensionsList)
 
   // filter by installed only -----------------------------------------
-  this.storeFrame.showInstalledCheckbox.toggled.connect(this, this.updateExtensionsList)
+  this.storeHeader.showInstalledCheckbox.toggled.connect(this, this.updateExtensionsList)
 
   // Clear search button ----------------------------------------------
-  UiLoader.setSvgIcon(this.storeFrame.storeClearSearch, specialFolders.resource + "/icons/old/edit_delete.png");
-  this.storeFrame.storeClearSearch.clicked.connect(this, function () {
-    this.storeFrame.searchStore.text = "";
+  var clearSearchIcon = storelib.appFolder+"/resources/cancel_icon.png";
+  clearSearchIcon = style.getImage(clearSearchIcon);
+  UiLoader.setSvgIcon(this.storeHeader.storeClearSearch, clearSearchIcon);
+  this.storeHeader.storeClearSearch.clicked.connect(this, function () {
+    this.storeHeader.searchStore.text = "";
   })
 
   // update and display the description panel when selection changes --
@@ -69,7 +104,7 @@ function StoreUI(){
     QDesktopServices.openUrl(new QUrl(this.storeDescriptionPanel.websiteButton.toolTip));
   });
 
-  this.storeFrame.registerButton.clicked.connect(this, this.registerExtension);
+  this.storeFooter.registerButton.clicked.connect(this, this.registerExtension);
 
   // Install Button Actions -------------------------------------------
   this.installAction = new QAction("Install", this);
@@ -102,6 +137,7 @@ StoreUI.prototype.show = function(){
  * @param {boolean} visible - Determine whether the progress state should be enabled or disabled.
  */
 StoreUI.prototype.setUpdateProgressUIState = function(visible){
+  this.aboutFrame.updateButton.visible = !visible;
   this.aboutFrame.loadStoreButton.visible = !visible;
   this.aboutFrame.updateLabel.visible = visible;
   this.aboutFrame.updateProgress.visible = visible;
@@ -203,7 +239,8 @@ StoreUI.prototype.getInstalledVersion = function(){
 StoreUI.prototype.checkForUpdates = function(){
   var updateRibbon = this.updateRibbon
 
-  var updateRibbonStyleSheet = "QWidget { background-color: blue; }";
+  var defaultRibbonStyleSheet = "QWidget { background-color: " + style.COLORS["03DP"] + "; color: white; bottom-right-radius: 10px; bottom-left-radius: 10px }";
+  var updateRibbonStyleSheet = "QWidget { background-color: " + style.COLORS.YELLOW + "; color: black }";
   var storeUi = this;
 
   try{
@@ -215,12 +252,13 @@ StoreUI.prototype.checkForUpdates = function(){
     if (!storeExtension.currentVersionIsOlder(currentVersion) && (currentVersion != storeVersion)) {
       updateRibbon.storeVersion.setText("v" + currentVersion + "  ⓘ New version available: v" + storeVersion);
       updateRibbon.setStyleSheet(updateRibbonStyleSheet);
-      updateRibbon.updateButton.toolTip = storeExtension.package.description;
-      updateRibbon.updateButton.clicked.connect(this, function(){storeUi.updateStore(currentVersion, storeVersion)});
+      this.aboutFrame.updateButton.toolTip = storeExtension.package.description;
+      this.aboutFrame.updateButton.clicked.connect(this, function(){storeUi.updateStore(currentVersion, storeVersion)});
     } else {
-      updateRibbon.updateButton.hide();
+      this.aboutFrame.updateButton.hide();
       updateRibbon.storeVersion.setText("v" + currentVersion + " ✓ - Store is up to date.");
-      this.storeFrame.storeVersionLabel.setText("v" + currentVersion );
+      updateRibbon.setStyleSheet(defaultRibbonStyleSheet);
+      this.storeFooter.storeVersionLabel.setText("v" + currentVersion );
     }
 
   }catch(err){
@@ -237,10 +275,10 @@ StoreUI.prototype.checkForUpdates = function(){
  * @param {*} message
  */
 StoreUI.prototype.lockStore = function(message){
-  var noConnexionRibbonStyleSheet = "QWidget { background-color: darkRed; color: white; }";
+  var noConnexionRibbonStyleSheet = "QWidget { background-color: " + style.COLORS.RED + "; color: white; }";
 
-  this.aboutFrame.loadStoreButton.enabled = false;
-  this.updateRibbon.updateButton.hide();
+  this.ui.aboutFrame.loadStoreButton.enabled = false;
+  this.ui.aboutFrame.updateButton.hide();
   this.updateRibbon.setStyleSheet(noConnexionRibbonStyleSheet);
   this.updateRibbon.storeVersion.setText(message);
 }
@@ -272,7 +310,7 @@ StoreUI.prototype.updateExtensionsList = function(){
     return a.name.toLowerCase() < b.name.toLowerCase()?-1:1
   }
 
-  var filter = this.storeFrame.searchStore.text;
+  var filter = this.storeHeader.searchStore.text;
   var sellers = this.store.sellers;
   // sort sellers alphabetically
   sellers.sort(nameSort)
@@ -301,7 +339,7 @@ StoreUI.prototype.updateExtensionsList = function(){
 
     for (var j in extensionList) {
       var extension = extensionList[j];
-      if (this.storeFrame.showInstalledCheckbox.checked && !this.localList.isInstalled(extension)) continue;
+      if (this.storeHeader.showInstalledCheckbox.checked && !this.localList.isInstalled(extension)) continue;
       if (extension.matchesSearch(filter)) extensions.push(extension);
     }
 
@@ -347,17 +385,21 @@ StoreUI.prototype.updateDescriptionPanel = function(extension) {
   if (this.localList.isInstalled(extension)) {
     var localExtension = this.localList.extensions[extension.id];
     if (!localExtension.currentVersionIsOlder(extension.version) && this.localList.checkFiles(extension)) {
+      // Extension installed and up-to-date.
+      this.storeDescriptionPanel.installButton.setStyleSheet("QToolButton { border-color: transparent transparent " + style.COLORS.ORANGE + " transparent; }");
       this.storeDescriptionPanel.installButton.removeAction(this.installAction);
       this.storeDescriptionPanel.installButton.removeAction(this.updateAction);
       this.storeDescriptionPanel.installButton.setDefaultAction(this.uninstallAction);
     } else {
-      //change to update
+      // Extension installed and update available.
+      this.storeDescriptionPanel.installButton.setStyleSheet("QToolButton { border-color: transparent transparent " + style.COLORS.YELLOW + " transparent; }");
       this.storeDescriptionPanel.installButton.removeAction(this.installAction);
       this.storeDescriptionPanel.installButton.removeAction(this.uninstallAction);
       this.storeDescriptionPanel.installButton.setDefaultAction(this.updateAction);
     }
   } else {
-    // installAction.setText("Install")
+    // Extension not installed.
+    this.storeDescriptionPanel.installButton.setStyleSheet("QToolButton { border-color: transparent transparent " + style.COLORS.GREEN + " transparent; }");
     this.storeDescriptionPanel.installButton.removeAction(this.uninstallAction);
     this.storeDescriptionPanel.installButton.removeAction(this.updateAction);
     this.storeDescriptionPanel.installButton.setDefaultAction(this.installAction);
@@ -443,14 +485,12 @@ StoreUI.prototype.performUninstall = function(){
  * A QWebView to display the description
  * @param {QWidget} parent
  */
- function DescriptionView(parent){
+function DescriptionView(parent){
   var webPreviewsFontFamily = "Arial";
   var webPreviewsFontSize = UiLoader.dpiScale(12);
-  var webPreviewsStyleSheet = "QWebView { background-color: lightGrey; }";
 
   QWebView.call(this, parent)
 
-  this.setStyleSheet(webPreviewsStyleSheet);
   this.setMinimumSize(0, 0);
   this.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum);
   var settings = this.settings();
@@ -476,21 +516,21 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
   QTreeWidgetItem.call(this, [extensionLabel, icon], 1024);
   // add an icon in the middle column showing if installed and if update present
   if (localList.isInstalled(extension)) {
-    var icon = "✓";
+    var icon = style.ICONS["installed"];
     this.setToolTip(1, "Extension is installed correctly.");
     var localExtension = localList.extensions[extension.id];
     // log.debug("checking files from "+extension.id, localList.checkFiles(localExtension));
     if (localExtension.currentVersionIsOlder(extension.version)) {
-      icon = "↺";
+      icon = style.ICONS["update"];
       this.setToolTip(1, "Update available:\ncurrently installed version : v" + extension.version);
     } else if (!localList.checkFiles(localExtension)) {
-      icon = "!";
+      icon = style.ICONS["error"];
       this.setToolTip(1, "Some files from this extension are missing.");
     }
   } else {
-    var icon = "✗";
+    icon = style.ICONS["not installed"];
   }
-  this.setText(1, icon);
+  this.setIcon(1, new QIcon(icon));
 
   if (extension.iconUrl){
     // set up an icon if one is available
@@ -500,7 +540,9 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
 
   }else{
     // fallback to local icon
-    this.setIcon(0, new QIcon(specialFolders.resource + "/icons/old/folder.png"))
+    var extensionIcon = storelib.appFolder + "/resources/default_extension_icon.png";
+    extensionIcon = style.getImage(extensionIcon);
+    this.setIcon(0, new QIcon(extensionIcon));
   }
 
   // store the extension id in the item
