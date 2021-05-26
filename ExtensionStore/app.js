@@ -288,7 +288,7 @@ StoreUI.prototype.lockStore = function(message){
  * installs the version of the store found on the repo.
  */
 StoreUI.prototype.updateStore = function(currentVersion, storeVersion){
-  var success = this.localList.install(this.storeExtension);
+  var success = this.localList.install(this.storeExtension, this.ui.aboutFrame.updateButton);
   if (success) {
     MessageBox.information("Store succesfully updated to version v" + storeVersion + ".\n\nPlease restart Harmony for changes to take effect.");
     this.updateRibbon.storeVersion.setText("v" + currentVersion);
@@ -447,7 +447,7 @@ StoreUI.prototype.performInstall = function() {
   log.info("installing extension : " + extension.repository.name + extension.name);
   // log(JSON.stringify(extension.package, null, "  "))
   try {
-    this.localList.install(extension);
+    this.localList.install(extension, this.storeDescriptionPanel.installButton);
     MessageBox.information("Extension " + extension.name + " v" + extension.version + "\nwas installed correctly.");
   } catch (err) {
     log.error(err);
