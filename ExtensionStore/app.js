@@ -64,45 +64,36 @@ function StoreUI(){
   this.aboutFrame.storeLabel.setPixmap(logo.pixmap);
 
   // Social media buttons
-  socialIconSize = UiLoader.dpiScale(24);
-
   // Twitter
-  var twitterLogo = storelib.appFolder + "/resources/twitter_logo.png";
-  twitterIcon = new QIcon(style.getImage(twitterLogo));
-  twitterIcon.size = new QSize(socialIconSize, socialIconSize);
-  this.aboutFrame.twitterButton.icon = twitterIcon;
-  this.aboutFrame.twitterButton.clicked.connect(this, function () {
-    QDesktopServices.openUrl(new QUrl(this.aboutFrame.twitterButton.toolTip));
-  });
+  var twitterIcon = new StyledImage(style.ICONS.twitter);
+  twitterIcon.setAsIcon(this.aboutFrame.twitterButton);
 
+  // Github
+  var githubIcon = new StyledImage(style.ICONS.github);
+  githubIcon.setAsIcon(this.aboutFrame.githubButton);
 
-  // // Github
-  var githubLogo = storelib.appFolder + "/resources/github_logo.png";
-  githubIcon = new QIcon(style.getImage(githubLogo));
-  githubIcon.size = new QSize(socialIconSize, socialIconSize);
-  this.aboutFrame.githubButton.icon = githubIcon;
-  this.aboutFrame.githubButton.clicked.connect(this, function () {
-    QDesktopServices.openUrl(new QUrl(this.aboutFrame.githubButton.toolTip));
-  });
-
-
-  // // Discord
-  var discordLogo = storelib.appFolder + "/resources/discord_logo.png";
-  discordIcon = new QIcon(style.getImage(discordLogo));
-  discordIcon.size = new QSize(socialIconSize, socialIconSize);
-  this.aboutFrame.discordButton.icon = discordIcon;
-  this.aboutFrame.discordButton.clicked.connect(this, function () {
-    QDesktopServices.openUrl(new QUrl(this.aboutFrame.discordButton.toolTip));
-  });
+  // Discord
+  var discordIcon = new StyledImage(style.ICONS.discord);
+  discordIcon.setAsIcon(this.aboutFrame.discordButton);
 
   // Header logo
-  var headerLogo = new StyledImage(storelib.appFolder+"/resources/icon.png", 24, 24);
+  var headerLogo = new StyledImage(style.ICONS.headerLogo, 24, 24);
   this.storeHeader.headerLogo.setPixmap(headerLogo.pixmap);
 
   this.checkForUpdates()
 
   // connect UI signals
   this.aboutFrame.loadStoreButton.clicked.connect(this, this.loadStore)
+  // Social media UI signals
+  this.aboutFrame.twitterButton.clicked.connect(this, function () {
+    QDesktopServices.openUrl(new QUrl(this.aboutFrame.twitterButton.toolTip));
+  });
+  this.aboutFrame.discordButton.clicked.connect(this, function () {
+    QDesktopServices.openUrl(new QUrl(this.aboutFrame.discordButton.toolTip));
+  });
+  this.aboutFrame.githubButton.clicked.connect(this, function () {
+    QDesktopServices.openUrl(new QUrl(this.aboutFrame.githubButton.toolTip));
+  });
 
   // filter the store list --------------------------------------------
   this.storeHeader.searchStore.textChanged.connect(this, this.updateExtensionsList)
@@ -111,7 +102,7 @@ function StoreUI(){
   this.storeHeader.showInstalledCheckbox.toggled.connect(this, this.updateExtensionsList)
 
   // Clear search button ----------------------------------------------
-  var clearSearchIcon = new StyledImage(storelib.appFolder+"/resources/cancel_icon.png");
+  var clearSearchIcon = new StyledImage(style.ICONS.cancelSearch);
   clearSearchIcon.setAsIcon(this.storeHeader.storeClearSearch)
 
   var searchField = this.storeHeader.searchStore
@@ -576,7 +567,7 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
 
   }else{
     // fallback to local icon
-    var extensionIcon = new StyledImage(storelib.appFolder + "/resources/default_extension_icon.png");
+    var extensionIcon = new StyledImage(style.ICONS.defaultExtension);
     extensionIcon.setAsIcon(this, 0);
   }
 
