@@ -3,6 +3,7 @@ var Logger = require("./lib/logger.js").Logger;
 var log = new Logger("UI")
 var WebIcon = require("./lib/network.js").WebIcon
 var style = require("./lib/style.js");
+var StyledImage = style.StyledImage
 
 /**
  * The main extension store widget class
@@ -41,17 +42,15 @@ function StoreUI(){
   this.storeFrame.hide();
   this.setUpdateProgressUIState(false);
 
-  if (!preferences.getBool("HUES_EULA_ACCEPTED", "")) {
+  if (!this.localList.getData("HUES_EULA_ACCEPTED", false)) {
     this.aboutFrame.hide();
 
     // EULA logo
-    var eulaLogo = storelib.appFolder + "/resources/logo.png"
-    eulaLogo = style.getImage(eulaLogo);
-    var eulaLogoPixmap = new QPixmap(eulaLogo);
-    this.eulaFrame.innerFrame.eulaLogo.setPixmap(eulaLogoPixmap);
+    var eulaLogo = new StyledImage(storelib.appFolder + "/resources/logo.png", 600, 150)
+    this.eulaFrame.innerFrame.eulaLogo.setPixmap(eulaLogo.pixmap);
 
     this.eulaFrame.innerFrame.eulaCB.stateChanged.connect(this, function() {
-      preferences.setBool("HUES_EULA_ACCEPTED", true);
+      this.localList.saveData("HUES_EULA_ACCEPTED", true);
       this.eulaFrame.hide();
       this.aboutFrame.show();
     });
@@ -61,10 +60,8 @@ function StoreUI(){
   }
 
   // About logo
-  var logo = storelib.appFolder+"/resources/logo.png";
-  logo = style.getImage(logo);
-  var logoPixmap = new QPixmap(logo);
-  this.aboutFrame.storeLabel.setPixmap(logoPixmap);
+  var logo = new StyledImage(storelib.appFolder+"/resources/logo.png", 600, 150);
+  this.aboutFrame.storeLabel.setPixmap(logo.pixmap);
 
   // Social media buttons
   socialIconSize = UiLoader.dpiScale(24);
@@ -99,11 +96,9 @@ function StoreUI(){
   });
 
   // Header logo
-  var headerLogo = storelib.appFolder+"/resources/logo_header.png";
-  headerLogo = style.getImage(headerLogo);
-  var headerLogoPixmap = new QPixmap(headerLogo);
-  this.storeHeader.headerLogo.setPixmap(headerLogoPixmap);
-  
+  var headerLogo = new StyledImage(storelib.appFolder+"/resources/icon.png", 24, 24);
+  this.storeHeader.headerLogo.setPixmap(headerLogo.pixmap);
+
   this.checkForUpdates()
 
   // connect UI signals
@@ -116,9 +111,20 @@ function StoreUI(){
   this.storeHeader.showInstalledCheckbox.toggled.connect(this, this.updateExtensionsList)
 
   // Clear search button ----------------------------------------------
-  var clearSearchIcon = storelib.appFolder+"/resources/cancel_icon.png";
-  clearSearchIcon = style.getImage(clearSearchIcon);
-  UiLoader.setSvgIcon(this.storeHeader.storeClearSearch, clearSearchIcon);
+  var clearSearchIcon = new StyledImage(storelib.appFolder+"/resources/cancel_icon.png");
+  clearSearchIcon.setAsIcon(this.storeHeader.storeClearSearch)
+
+  var searchField = this.storeHeader.searchStore
+  var searchClear = this.storeHeader.storeClearSearch
+  var searchFieldSize = searchField.maximumWidth
+
+  searchField.textChanged.connect(this, function () {
+    var visible = !!searchField.text;
+    searchClear.visible = visible;
+    searchField.maximumWidth = searchFieldSize - searchClear.width * visible;
+  })
+  searchClear.hide()
+
   this.storeHeader.storeClearSearch.clicked.connect(this, function () {
     this.storeHeader.searchStore.text = "";
   })
@@ -271,14 +277,15 @@ StoreUI.prototype.getInstalledVersion = function(){
 StoreUI.prototype.checkForUpdates = function(){
   var updateRibbon = this.updateRibbon
 
-  var defaultRibbonStyleSheet = "QWidget { background-color: transparent; color: gray;}";
-  var updateRibbonStyleSheet = "QWidget { background-color: " + style.COLORS.YELLOW + "; color: black }";
+  var defaultRibbonStyleSheet = style.STYLESHEETS.defaultRibbon;
+  var updateRibbonStyleSheet = style.STYLESHEETS.updateRibbon;
   var storeUi = this;
 
   try{
     var storeExtension = this.storeExtension;
     var storeVersion = storeExtension.version;
     var currentVersion = this.getInstalledVersion();
+    this.storeFooter.storeVersionLabel.setText("v" + currentVersion );
 
     // if a more recent version of the store exists on the repo, activate the update ribbon
     if (!storeExtension.currentVersionIsOlder(currentVersion) && (currentVersion != storeVersion)) {
@@ -290,9 +297,7 @@ StoreUI.prototype.checkForUpdates = function(){
       this.aboutFrame.updateButton.hide();
       updateRibbon.storeVersion.setText("v" + currentVersion + " ✓ - Store is up to date.");
       updateRibbon.setStyleSheet(defaultRibbonStyleSheet);
-      this.storeFooter.storeVersionLabel.setText("v" + currentVersion );
     }
-
   }catch(err){
     // couldn't check updates, probably we don't have an internet access.
     // We set up an error message and disable load button.
@@ -307,7 +312,7 @@ StoreUI.prototype.checkForUpdates = function(){
  * @param {*} message
  */
 StoreUI.prototype.lockStore = function(message){
-  var noConnexionRibbonStyleSheet = "QWidget { background-color: " + style.COLORS.RED + "; color: white; }";
+  var noConnexionRibbonStyleSheet = style.STYLESHEETS.noConnexionRibbon;
 
   this.ui.aboutFrame.loadStoreButton.enabled = false;
   this.ui.aboutFrame.updateButton.hide();
@@ -409,35 +414,33 @@ StoreUI.prototype.updateDescriptionPanel = function(extension) {
   var websiteIcon = new WebIcon(extension.package.website)
   websiteIcon.setToWidget(this.storeDescriptionPanel.websiteButton)
 
-  // for some reason, this url is the only one that actually returns an icon
-  var githubIcon = new WebIcon("https://avatars.githubusercontent.com/u")
-  githubIcon.setToWidget(this.storeDescriptionPanel.sourceButton)
+  var githubIcon = new StyledImage(style.ICONS.github)
+  githubIcon.setAsIcon(this.storeDescriptionPanel.sourceButton)
 
   // update install button to reflect whether or not the extension is already installed
   if (this.localList.isInstalled(extension)) {
     var localExtension = this.localList.extensions[extension.id];
     if (!localExtension.currentVersionIsOlder(extension.version) && this.localList.checkFiles(extension)) {
       // Extension installed and up-to-date.
-      this.storeDescriptionPanel.installButton.setStyleSheet("QToolButton { border-color: transparent transparent " + style.COLORS.ORANGE + " transparent; }");
+      this.storeDescriptionPanel.installButton.setStyleSheet(style.STYLESHEETS.uninstallButton);
       this.storeDescriptionPanel.installButton.removeAction(this.installAction);
       this.storeDescriptionPanel.installButton.removeAction(this.updateAction);
       this.storeDescriptionPanel.installButton.setDefaultAction(this.uninstallAction);
     } else {
       // Extension installed and update available.
-      this.storeDescriptionPanel.installButton.setStyleSheet("QToolButton { border-color: transparent transparent " + style.COLORS.YELLOW + " transparent; }");
+      this.storeDescriptionPanel.installButton.setStyleSheet(style.STYLESHEETS.updateButton);
       this.storeDescriptionPanel.installButton.removeAction(this.installAction);
       this.storeDescriptionPanel.installButton.removeAction(this.uninstallAction);
       this.storeDescriptionPanel.installButton.setDefaultAction(this.updateAction);
     }
   } else {
     // Extension not installed.
-    this.storeDescriptionPanel.installButton.setStyleSheet("QToolButton { border-color: transparent transparent " + style.COLORS.GREEN + " transparent; }");
+    this.storeDescriptionPanel.installButton.setStyleSheet(style.STYLESHEETS.installButton);
     this.storeDescriptionPanel.installButton.removeAction(this.uninstallAction);
     this.storeDescriptionPanel.installButton.removeAction(this.updateAction);
     this.storeDescriptionPanel.installButton.setDefaultAction(this.installAction);
   }
   this.storeDescriptionPanel.installButton.enabled = (extension.package.files.length > 0)
-
 }
 
 
@@ -548,21 +551,22 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
   QTreeWidgetItem.call(this, [extensionLabel, icon], 1024);
   // add an icon in the middle column showing if installed and if update present
   if (localList.isInstalled(extension)) {
-    var icon = style.ICONS["installed"];
+    var iconPath = style.ICONS.installed;
     this.setToolTip(1, "Extension is installed correctly.");
     var localExtension = localList.extensions[extension.id];
     // log.debug("checking files from "+extension.id, localList.checkFiles(localExtension));
     if (localExtension.currentVersionIsOlder(extension.version)) {
-      icon = style.ICONS["update"];
+      iconPath = style.ICONS.update;
       this.setToolTip(1, "Update available:\ncurrently installed version : v" + extension.version);
     } else if (!localList.checkFiles(localExtension)) {
-      icon = style.ICONS["error"];
+      iconPath = style.ICONS.error;
       this.setToolTip(1, "Some files from this extension are missing.");
     }
   } else {
-    icon = style.ICONS["not installed"];
+    iconPath = style.ICONS.notInstalled;
   }
-  this.setIcon(1, new QIcon(icon));
+  var icon = new StyledImage(iconPath);
+  icon.setAsIcon(this, 1);
 
   if (extension.iconUrl){
     // set up an icon if one is available
@@ -572,9 +576,8 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
 
   }else{
     // fallback to local icon
-    var extensionIcon = storelib.appFolder + "/resources/default_extension_icon.png";
-    extensionIcon = style.getImage(extensionIcon);
-    this.setIcon(0, new QIcon(extensionIcon));
+    var extensionIcon = new StyledImage(storelib.appFolder + "/resources/default_extension_icon.png");
+    extensionIcon.setAsIcon(this, 0);
   }
 
   // store the extension id in the item

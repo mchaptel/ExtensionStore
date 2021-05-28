@@ -34,12 +34,27 @@ const ColorsLight = ColorsDark;
 
 const COLORS = isDarkStyle() ? ColorsDark : ColorsLight;
 
+const styleSheetsDark = {
+  defaultRibbon : "QWidget { background-color: " + COLORS["03DP"] + "; color: white; bottom-right-radius: 10px; bottom-left-radius: 10px }",
+  updateRibbon : "QWidget { background-color: " + COLORS.YELLOW + "; color: black }",
+  noConnexionRibbon : "QWidget { background-color: " + COLORS.RED + "; color: white; }",
+  installButton : "QToolButton { border-color: transparent transparent " + COLORS.GREEN + " transparent; }",
+  uninstallButton : "QToolButton { border-color: transparent transparent " + COLORS.ORANGE + " transparent; }",
+  updateButton : "QToolButton { border-color: transparent transparent " + COLORS.YELLOW + " transparent; }"
+}
+
+const styleSheetsLight = styleSheetsDark;
+
+const STYLESHEETS = isDarkStyle() ? styleSheetsDark : styleSheetsLight;
+
+
 var iconFolder = appFolder + "/resources";
 const ICONS = {
     "installed": getImage(iconFolder + "/installed_icon.png"),
     "update": getImage(iconFolder + "/update_icon.png"),
     "error": getImage(iconFolder + "/error_icon.png"),
-    "not installed": getImage(iconFolder + "/not_installed_icon.png"),
+    "notInstalled": getImage(iconFolder + "/not_installed_icon.png"),
+    "github": getImage(iconFolder + "/GitHub-Mark-Light-32px.png"),
 }
 
 /**
@@ -101,7 +116,56 @@ function getImage(imagePath) {
     return imagePath;
 }
 
+
+function StyledImage(imagePath, width, height, uniformScaling) {
+  if (typeof uniformScaling === 'undefined') var uniformScaling = true;
+  if (typeof width === 'undefined') var width = 0;
+  if (typeof height === 'undefined') var height = 0;
+
+  this.width = UiLoader.dpiScale(width);
+  this.height = UiLoader.dpiScale(height);
+
+  this.uniformScaling = uniformScaling;
+  this.basePath = imagePath;
+  this.getImage = getImage;
+}
+
+
+Object.defineProperty(StyledImage.prototype, "path", {
+  get: function(){
+    return this.getImage(this.basePath);
+  }
+})
+
+
+Object.defineProperty(StyledImage.prototype, "pixmap", {
+  get: function(){
+    if (typeof this._pixmap === 'undefined') {
+      log.debug("new pixmap for image : " + this.path)
+      var pixmap = new QPixmap(this.path);
+      var aspectRatioFlag = this.uniformScaling?Qt.KeepAspectRatio:Qt.IgnoreAspectRatio;
+      var pixmap = pixmap.scaled(this.width, this.height, aspectRatioFlag, Qt.SmoothTransformation);
+
+      this._pixmap = pixmap
+    }
+    return this._pixmap
+  }
+})
+
+
+StyledImage.prototype.setAsIcon = function(widget, itemColumn){
+  if (widget instanceof QTreeWidgetItem){
+    if (typeof itemColumn === 'undefined') var itemColumn = 0;
+    var icon = new QIcon(this.path);
+    widget.setIcon(itemColumn, icon);
+  }else{
+    log.debug("setting icon "+this.path)
+    UiLoader.setSvgIcon(widget, this.path);
+  }
+}
+
+exports.getSyleSheet = getSyleSheet;
+exports.StyledImage = StyledImage;
+exports.STYLESHEETS = STYLESHEETS;
 exports.ICONS = ICONS;
 exports.COLORS = COLORS;
-exports.getImage = getImage;
-exports.getSyleSheet = getSyleSheet;
