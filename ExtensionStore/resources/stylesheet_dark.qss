@@ -30,24 +30,6 @@ QProgressBar::chunk {
     background-color: @ACCENT_PRIMARY;
 }
 
-/* Push Buttons */
-QPushButton {
-	background: @08DP;
-	border-radius: 7px;
-	selection-color: @ACCENT_PRIMARY;
-}
-QPushButton:hover {
-	border-color: @ACCENT_LIGHT;
-	border-width: 2px;
-	background: @12DP;
-}
-QPushButton:pressed {
-	background: @02DP;
-	border-color: @ACCENT_PRIMARY;
-	border-width: 2px;
-}
-
-
 /* Scrollbars */
 QScrollBar {
 	image: none;
@@ -139,13 +121,13 @@ QLabel#eulaText {
 	background-color: transparent;
 	margin: 5px;
 	font-family: Arial;
-	font-size: 10pt;
+	font-size: 11pt;
 }
 
 /* EULA checkbox */
 QCheckBox#eulaCB {
 	font-family: Arial;
-	font-size: 12pt;
+	font-size: 13pt;
 	border-color: @ACCENT_PRIMARY;
 	background-color: transparent;
 }
@@ -156,19 +138,68 @@ About Frame
 ======================
 */
 
-
 /* About Screen text */
 QLabel#label_3 {
 	background-color: transparent;
-	margin: 5px;
 	font-family: Arial;
-	font-size: 10pt;
+	font-size: 12pt;
+	margin-top: 15px;
 }
 
-/* About screen scrollable region (text background). */
-QWidget#scrollAreaWidgetContents {
-	background-color: @02DP;
+/* Social Media */
+
+/* Twitter */
+QToolButton#twitterButton {
+	background-color: transparent;
 }
+QToolButton:hover#twitterButton {
+	border-width: 2px;
+	border-radius: 4px;
+	border-style: solid;
+	border-color: @ACCENT_LIGHT;
+}
+
+/* Github */
+QToolButton#githubButton {
+	background-color: transparent;
+}
+QToolButton:hover#githubButton {
+	border-width: 2px;
+	border-radius: 4px;
+	border-style: solid;
+	border-color: @ACCENT_LIGHT;
+}
+
+/* Discord */
+QToolButton#discordButton {
+	background-color: transparent;
+}
+QToolButton:hover#discordButton {
+	border-width: 2px;
+	border-radius: 4px;
+	border-style: solid;
+	border-color: @ACCENT_LIGHT;
+}
+
+
+/* Push Buttons */
+QPushButton#loadStoreButton {
+	background: @08DP;
+	border-width: 2px;
+	border-style: solid;
+	border-color: transparent transparent @ACCENT_LIGHT transparent;
+	border-radius: 7px;
+}
+
+QPushButton:hover#loadStoreButton {
+	border-color: @ACCENT_LIGHT;
+	background: @12DP;
+}
+QPushButton:pressed#loadStoreButton {
+	background: @02DP;
+	border-color: @ACCENT_PRIMARY;
+}
+
 
 /* Update Ribbon */
 QLabel#storeVersion {

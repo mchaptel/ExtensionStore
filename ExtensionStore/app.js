@@ -66,6 +66,38 @@ function StoreUI(){
   var logoPixmap = new QPixmap(logo);
   this.aboutFrame.storeLabel.setPixmap(logoPixmap);
 
+  // Social media buttons
+  socialIconSize = UiLoader.dpiScale(24);
+
+  // Twitter
+  var twitterLogo = storelib.appFolder + "/resources/twitter_logo.png";
+  twitterIcon = new QIcon(style.getImage(twitterLogo));
+  twitterIcon.size = new QSize(socialIconSize, socialIconSize);
+  this.aboutFrame.twitterButton.icon = twitterIcon;
+  this.aboutFrame.twitterButton.clicked.connect(this, function () {
+    QDesktopServices.openUrl(new QUrl(this.aboutFrame.twitterButton.toolTip));
+  });
+
+
+  // // Github
+  var githubLogo = storelib.appFolder + "/resources/github_logo.png";
+  githubIcon = new QIcon(style.getImage(githubLogo));
+  githubIcon.size = new QSize(socialIconSize, socialIconSize);
+  this.aboutFrame.githubButton.icon = githubIcon;
+  this.aboutFrame.githubButton.clicked.connect(this, function () {
+    QDesktopServices.openUrl(new QUrl(this.aboutFrame.githubButton.toolTip));
+  });
+
+
+  // // Discord
+  var discordLogo = storelib.appFolder + "/resources/discord_logo.png";
+  discordIcon = new QIcon(style.getImage(discordLogo));
+  discordIcon.size = new QSize(socialIconSize, socialIconSize);
+  this.aboutFrame.discordButton.icon = discordIcon;
+  this.aboutFrame.discordButton.clicked.connect(this, function () {
+    QDesktopServices.openUrl(new QUrl(this.aboutFrame.discordButton.toolTip));
+  });
+
   // Header logo
   var headerLogo = storelib.appFolder+"/resources/logo_header.png";
   headerLogo = style.getImage(headerLogo);
@@ -239,7 +271,7 @@ StoreUI.prototype.getInstalledVersion = function(){
 StoreUI.prototype.checkForUpdates = function(){
   var updateRibbon = this.updateRibbon
 
-  var defaultRibbonStyleSheet = "QWidget { background-color: " + style.COLORS["03DP"] + "; color: white; bottom-right-radius: 10px; bottom-left-radius: 10px }";
+  var defaultRibbonStyleSheet = "QWidget { background-color: transparent; color: gray;}";
   var updateRibbonStyleSheet = "QWidget { background-color: " + style.COLORS.YELLOW + "; color: black }";
   var storeUi = this;
 
