@@ -34,14 +34,19 @@ const ColorsLight = ColorsDark;
 
 const COLORS = isDarkStyle() ? ColorsDark : ColorsLight;
 
-const STYLESHEETS = {
-  defaultRibbonStyleSheet : "QWidget { background-color: " + COLORS["03DP"] + "; color: white; bottom-right-radius: 10px; bottom-left-radius: 10px }",
-  updateRibbonStyleSheet : "QWidget { background-color: " + COLORS.YELLOW + "; color: black }",
-  noConnexionRibbonStyleSheet : "QWidget { background-color: " + COLORS.RED + "; color: white; }",
+const styleSheetsDark = {
+  defaultRibbon : "QWidget { background-color: " + COLORS["03DP"] + "; color: white; bottom-right-radius: 10px; bottom-left-radius: 10px }",
+  updateRibbon : "QWidget { background-color: " + COLORS.YELLOW + "; color: black }",
+  noConnexionRibbon : "QWidget { background-color: " + COLORS.RED + "; color: white; }",
   installButton : "QToolButton { border-color: transparent transparent " + COLORS.GREEN + " transparent; }",
   uninstallButton : "QToolButton { border-color: transparent transparent " + COLORS.ORANGE + " transparent; }",
   updateButton : "QToolButton { border-color: transparent transparent " + COLORS.YELLOW + " transparent; }"
 }
+
+const styleSheetsLight = styleSheetsDark;
+
+const STYLESHEETS = isDarkStyle() ? styleSheetsDark : styleSheetsLight;
+
 
 var iconFolder = appFolder + "/resources";
 const ICONS = {
@@ -159,10 +164,8 @@ StyledImage.prototype.setAsIcon = function(widget, itemColumn){
   }
 }
 
-
-exports.ICONS = ICONS;
-exports.COLORS = COLORS;
-exports.getImage = getImage;
 exports.getSyleSheet = getSyleSheet;
 exports.StyledImage = StyledImage;
 exports.STYLESHEETS = STYLESHEETS;
+exports.ICONS = ICONS;
+exports.COLORS = COLORS;

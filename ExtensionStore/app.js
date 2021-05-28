@@ -82,9 +82,16 @@ function StoreUI(){
   var clearSearchIcon = new StyledImage(storelib.appFolder+"/resources/cancel_icon.png");
   clearSearchIcon.setAsIcon(this.storeHeader.storeClearSearch)
 
-  this.storeHeader.storeClearSearch.clicked.connect(this, function () {
-    this.storeHeader.searchStore.text = "";
+  var searchField = this.storeHeader.searchStore
+  var searchClear = this.storeHeader.storeClearSearch
+  var searchFieldSize = searchField.maximumWidth
+
+  searchField.textChanged.connect(this, function () {
+    var visible = !!searchField.text;
+    searchClear.visible = visible;
+    searchField.maximumWidth = searchFieldSize - searchClear.width * visible;
   })
+  searchClear.hide()
 
   this.storeHeader.storeClearSearch.clicked.connect(this, function () {
     this.storeHeader.searchStore.text = "";
@@ -238,8 +245,8 @@ StoreUI.prototype.getInstalledVersion = function(){
 StoreUI.prototype.checkForUpdates = function(){
   var updateRibbon = this.updateRibbon
 
-  var defaultRibbonStyleSheet = style.STYLESHEETS.defaultRibbonStyleSheet;
-  var updateRibbonStyleSheet = style.STYLESHEETS.updateRibbonStyleSheet;
+  var defaultRibbonStyleSheet = style.STYLESHEETS.defaultRibbon;
+  var updateRibbonStyleSheet = style.STYLESHEETS.updateRibbon;
   var storeUi = this;
 
   try{
@@ -273,7 +280,7 @@ StoreUI.prototype.checkForUpdates = function(){
  * @param {*} message
  */
 StoreUI.prototype.lockStore = function(message){
-  var noConnexionRibbonStyleSheet = style.STYLESHEETS.noConnexionRibbonStyleSheet;
+  var noConnexionRibbonStyleSheet = style.STYLESHEETS.noConnexionRibbon;
 
   this.ui.aboutFrame.loadStoreButton.enabled = false;
   this.ui.aboutFrame.updateButton.hide();
@@ -375,7 +382,6 @@ StoreUI.prototype.updateDescriptionPanel = function(extension) {
   var websiteIcon = new WebIcon(extension.package.website)
   websiteIcon.setToWidget(this.storeDescriptionPanel.websiteButton)
 
-  // for some reason, this url is the only one that actually returns an icon
   var githubIcon = new StyledImage(style.ICONS.github)
   githubIcon.setAsIcon(this.storeDescriptionPanel.sourceButton)
 
