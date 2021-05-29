@@ -1,16 +1,21 @@
 var storelib = require("./lib/store.js");
 var Logger = require("./lib/logger.js").Logger;
-var log = new Logger("UI")
-var WebIcon = require("./lib/network.js").WebIcon
+var WebIcon = require("./lib/network.js").WebIcon;
 var style = require("./lib/style.js");
-var StyledImage = style.StyledImage
+var widgets = require("./lib/widgets.js");
+var DescriptionView = widgets.DescriptionView;
+var ExtensionItem = widgets.ExtensionItem;
+var ProgressButton = widgets.ProgressButton;
+var StyledImage = style.StyledImage;
+
+var log = new Logger("UI");
 
 /**
  * The main extension store widget class
  */
-function StoreUI(){
+function StoreUI() {
   this.store = new storelib.Store();
-  log.debug("loading UI")
+  log.debug("loading UI");
 
   // the list of installed extensions
   this.localList = new storelib.LocalExtensionList(this.store);
@@ -46,10 +51,10 @@ function StoreUI(){
     this.aboutFrame.hide();
 
     // EULA logo
-    var eulaLogo = new StyledImage(storelib.appFolder + "/resources/logo.png", 600, 150)
+    var eulaLogo = new StyledImage(storelib.appFolder + "/resources/logo.png", 800, 140)
     this.eulaFrame.innerFrame.eulaLogo.setPixmap(eulaLogo.pixmap);
 
-    this.eulaFrame.innerFrame.eulaCB.stateChanged.connect(this, function() {
+    this.eulaFrame.innerFrame.eulaCB.stateChanged.connect(this, function () {
       this.localList.saveData("HUES_EULA_ACCEPTED", true);
       this.eulaFrame.hide();
       this.aboutFrame.show();
@@ -60,7 +65,7 @@ function StoreUI(){
   }
 
   // About logo
-  var logo = new StyledImage(storelib.appFolder+"/resources/logo.png", 600, 150);
+  var logo = new StyledImage(storelib.appFolder + "/resources/logo.png", 800, 140);
   this.aboutFrame.storeLabel.setPixmap(logo.pixmap);
 
   // Social media buttons
@@ -77,7 +82,7 @@ function StoreUI(){
   discordIcon.setAsIcon(this.aboutFrame.discordButton);
 
   // Header logo
-  var headerLogo = new StyledImage(style.ICONS.headerLogo, 24, 24);
+  var headerLogo = new StyledImage(style.ICONS.headerLogo, 22, 22);
   this.storeHeader.headerLogo.setPixmap(headerLogo.pixmap);
 
   this.checkForUpdates()
@@ -136,6 +141,9 @@ function StoreUI(){
   this.storeFooter.registerButton.clicked.connect(this, this.registerExtension);
 
   // Install Button Actions -------------------------------------------
+  this.installButton = new ProgressButton();
+  this.storeDescriptionPanel.installButtonPlaceHolder.layout().addWidget(this.installButton, 1, Qt.AlignCenter);
+
   this.installAction = new QAction("Install", this);
   this.installAction.triggered.connect(this, this.performInstall);
 
@@ -149,14 +157,14 @@ function StoreUI(){
 /**
  * Brings up the register extension dialog for script makers
  */
-StoreUI.prototype.registerExtension = function(){
+StoreUI.prototype.registerExtension = function () {
   var RegisterExtensionDialog = require("./lib/register.js").RegisterExtensionDialog;
   var registerDialog = new RegisterExtensionDialog(this.store, this.localList);
   registerDialog.show();
 }
 
 
-StoreUI.prototype.show = function(){
+StoreUI.prototype.show = function () {
   this.ui.show()
 }
 
@@ -165,7 +173,7 @@ StoreUI.prototype.show = function(){
  * store and retrieving extensions.
  * @param {boolean} visible - Determine whether the progress state should be enabled or disabled.
  */
-StoreUI.prototype.setUpdateProgressUIState = function(visible){
+StoreUI.prototype.setUpdateProgressUIState = function (visible) {
   this.aboutFrame.updateButton.visible = !visible;
   this.aboutFrame.loadStoreButton.visible = !visible;
   this.aboutFrame.updateLabel.visible = visible;
@@ -176,7 +184,7 @@ StoreUI.prototype.setUpdateProgressUIState = function(visible){
 /**
  * Loads the store
  */
-StoreUI.prototype.loadStore = function(){
+StoreUI.prototype.loadStore = function () {
   // setup the store widget sizes
   this.extensionsList.setColumnWidth(0, UiLoader.dpiScale(220));
   this.extensionsList.setColumnWidth(1, UiLoader.dpiScale(30));
@@ -199,9 +207,9 @@ StoreUI.prototype.loadStore = function(){
   this.setUpdateProgressUIState(true);
 
   // Fetch the list of available extensions.
-  try{
+  try {
     this.storeExtensions = this.store.extensions;
-  }catch(err){
+  } catch (err) {
     log.error(err)
     this.setUpdateProgressUIState(false);
     this.lockStore("Could not load Extensions list.")
@@ -235,14 +243,14 @@ StoreUI.prototype.loadStore = function(){
  * Looks for the version in the local list, first by id, then by name in case ID changed.
  * @returns {string}  the current version of the installed store
  */
-StoreUI.prototype.getInstalledVersion = function(){
+StoreUI.prototype.getInstalledVersion = function () {
   if (this.localList.list.length > 0) {
-    if (this.localList.hasOwnProperty(this.storeExtension.id)){
+    if (this.localList.hasOwnProperty(this.storeExtension.id)) {
       var installedStore = this.localList.extensions[this.storeExtension.id];
-    }else{
+    } else {
       // in case id changed (repo changed), we search by name
-      for (var i in this.localList.extensions){
-        if (this.localList.extensions[i].name == this.storeExtension.name){
+      for (var i in this.localList.extensions) {
+        if (this.localList.extensions[i].name == this.storeExtension.name) {
           var installedStore = this.localList.extensions[i];
           break;
         }
@@ -250,7 +258,7 @@ StoreUI.prototype.getInstalledVersion = function(){
     }
 
     var currentVersion = installedStore.version;
-  }else{
+  } else {
     // in case of missing list file, we find out the current version by parsing the json ?
     var json = this.store.localPackage;
     if (!json) throw new Error("Invalid store tbpackage.json")
@@ -265,31 +273,31 @@ StoreUI.prototype.getInstalledVersion = function(){
 /**
  * Checks for a new version and updates the ribbon accordingly
  */
-StoreUI.prototype.checkForUpdates = function(){
+StoreUI.prototype.checkForUpdates = function () {
   var updateRibbon = this.updateRibbon
 
   var defaultRibbonStyleSheet = style.STYLESHEETS.defaultRibbon;
   var updateRibbonStyleSheet = style.STYLESHEETS.updateRibbon;
   var storeUi = this;
 
-  try{
+  try {
     var storeExtension = this.storeExtension;
     var storeVersion = storeExtension.version;
     var currentVersion = this.getInstalledVersion();
-    this.storeFooter.storeVersionLabel.setText("v" + currentVersion );
+    this.storeFooter.storeVersionLabel.setText("v" + currentVersion);
 
     // if a more recent version of the store exists on the repo, activate the update ribbon
     if (!storeExtension.currentVersionIsOlder(currentVersion) && (currentVersion != storeVersion)) {
       updateRibbon.storeVersion.setText("v" + currentVersion + "  ⓘ New version available: v" + storeVersion);
       updateRibbon.setStyleSheet(updateRibbonStyleSheet);
       this.aboutFrame.updateButton.toolTip = storeExtension.package.description;
-      this.aboutFrame.updateButton.clicked.connect(this, function(){storeUi.updateStore(currentVersion, storeVersion)});
+      this.aboutFrame.updateButton.clicked.connect(this, function () { storeUi.updateStore(currentVersion, storeVersion) });
     } else {
       this.aboutFrame.updateButton.hide();
       updateRibbon.storeVersion.setText("v" + currentVersion + " ✓ - Store is up to date.");
       updateRibbon.setStyleSheet(defaultRibbonStyleSheet);
     }
-  }catch(err){
+  } catch (err) {
     // couldn't check updates, probably we don't have an internet access.
     // We set up an error message and disable load button.
     log.error(err)
@@ -302,7 +310,7 @@ StoreUI.prototype.checkForUpdates = function(){
  * Disable store load button and display an error message
  * @param {*} message
  */
-StoreUI.prototype.lockStore = function(message){
+StoreUI.prototype.lockStore = function (message) {
   var noConnexionRibbonStyleSheet = style.STYLESHEETS.noConnexionRibbon;
 
   this.ui.aboutFrame.loadStoreButton.enabled = false;
@@ -315,7 +323,7 @@ StoreUI.prototype.lockStore = function(message){
 /**
  * installs the version of the store found on the repo.
  */
-StoreUI.prototype.updateStore = function(currentVersion, storeVersion){
+StoreUI.prototype.updateStore = function (currentVersion, storeVersion) {
   var success = this.localList.install(this.storeExtension, this.ui.aboutFrame.updateButton);
   if (success) {
     MessageBox.information("Store succesfully updated to version v" + storeVersion + ".\n\nPlease restart Harmony for changes to take effect.");
@@ -331,11 +339,11 @@ StoreUI.prototype.updateStore = function(currentVersion, storeVersion){
 /**
  * Updates the list widget displaying the extensions
  */
-StoreUI.prototype.updateExtensionsList = function(){
+StoreUI.prototype.updateExtensionsList = function () {
   if (this.localList.list.length == 0) this.localList.createListFile(this.store);
 
-  function nameSort(a, b){
-    return a.name.toLowerCase() < b.name.toLowerCase()?-1:1
+  function nameSort(a, b) {
+    return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1
   }
 
   var filter = this.storeHeader.searchStore.text;
@@ -360,7 +368,7 @@ StoreUI.prototype.updateExtensionsList = function(){
 
     // get extensions as a list to sort it alphabetically
     var extensionList = []
-    for (var j in sellerExtensions){
+    for (var j in sellerExtensions) {
       extensionList.push(sellerExtensions[j])
     }
     extensionList.sort(nameSort);
@@ -375,7 +383,7 @@ StoreUI.prototype.updateExtensionsList = function(){
 
     var sellerItem = new QTreeWidgetItem([sellers[i].name], 0);
     this.extensionsList.addTopLevelItem(sellerItem);
-    if (sellers[i].iconUrl){
+    if (sellers[i].iconUrl) {
       var sellerIcon = new WebIcon(sellers[i].iconUrl);
       sellerIcon.setToWidget(sellerItem);
     }
@@ -394,7 +402,7 @@ StoreUI.prototype.updateExtensionsList = function(){
  * Updates the info in the slideout description panel for the given extension
  * @param {storeLib.Extension} extension
  */
-StoreUI.prototype.updateDescriptionPanel = function(extension) {
+StoreUI.prototype.updateDescriptionPanel = function (extension) {
   this.storeDescriptionPanel.versionStoreLabel.text = extension.version;
   this.descriptionText.setHtml(extension.package.description);
   this.storeDescriptionPanel.storeKeywordsGroup.storeKeywordsLabel.text = extension.package.keywords.join(", ");
@@ -413,32 +421,32 @@ StoreUI.prototype.updateDescriptionPanel = function(extension) {
     var localExtension = this.localList.extensions[extension.id];
     if (!localExtension.currentVersionIsOlder(extension.version) && this.localList.checkFiles(extension)) {
       // Extension installed and up-to-date.
-      this.storeDescriptionPanel.installButton.setStyleSheet(style.STYLESHEETS.uninstallButton);
-      this.storeDescriptionPanel.installButton.removeAction(this.installAction);
-      this.storeDescriptionPanel.installButton.removeAction(this.updateAction);
-      this.storeDescriptionPanel.installButton.setDefaultAction(this.uninstallAction);
+      this.installButton.setStyleSheet(style.STYLESHEETS.uninstallButton);
+      this.installButton.removeAction(this.installAction);
+      this.installButton.removeAction(this.updateAction);
+      this.installButton.setDefaultAction(this.uninstallAction);
     } else {
       // Extension installed and update available.
-      this.storeDescriptionPanel.installButton.setStyleSheet(style.STYLESHEETS.updateButton);
-      this.storeDescriptionPanel.installButton.removeAction(this.installAction);
-      this.storeDescriptionPanel.installButton.removeAction(this.uninstallAction);
-      this.storeDescriptionPanel.installButton.setDefaultAction(this.updateAction);
+      this.installButton.setStyleSheet(style.STYLESHEETS.updateButton);
+      this.installButton.removeAction(this.installAction);
+      this.installButton.removeAction(this.uninstallAction);
+      this.installButton.setDefaultAction(this.updateAction);
     }
   } else {
     // Extension not installed.
-    this.storeDescriptionPanel.installButton.setStyleSheet(style.STYLESHEETS.installButton);
-    this.storeDescriptionPanel.installButton.removeAction(this.uninstallAction);
-    this.storeDescriptionPanel.installButton.removeAction(this.updateAction);
-    this.storeDescriptionPanel.installButton.setDefaultAction(this.installAction);
+    this.installButton.setStyleSheet(style.STYLESHEETS.installButton);
+    this.installButton.removeAction(this.uninstallAction);
+    this.installButton.removeAction(this.updateAction);
+    this.installButton.setDefaultAction(this.installAction);
   }
-  this.storeDescriptionPanel.installButton.enabled = (extension.package.files.length > 0)
+  this.installButton.enabled = (extension.package.files.length > 0)
 }
 
 
 /**
  * Slide the extension description panel in and out
  */
-StoreUI.prototype.toggleDescriptionPanel = function(){
+StoreUI.prototype.toggleDescriptionPanel = function () {
   var selection = this.extensionsList.selectedItems();
 
 
@@ -464,7 +472,7 @@ StoreUI.prototype.toggleDescriptionPanel = function(){
 /**
  * Installs the currently selected extension
  */
-StoreUI.prototype.performInstall = function() {
+StoreUI.prototype.performInstall = function () {
   var selection = this.extensionsList.selectedItems();
   if (selection.length == 0) return
   var id = selection[0].data(0, Qt.UserRole);
@@ -472,22 +480,33 @@ StoreUI.prototype.performInstall = function() {
 
   log.info("installing extension : " + extension.repository.name + extension.name);
   // log(JSON.stringify(extension.package, null, "  "))
-  try {
-    this.localList.install(extension, this.storeDescriptionPanel.installButton);
+  var installer = extension.installer;
+  // log.debug(installer.onInstallProgressChanged)
+  // log.debug(this.installButton.setProgress)
+
+  this.success = function (){
     MessageBox.information("Extension " + extension.name + " v" + extension.version + "\nwas installed correctly.");
-  } catch (err) {
+    this.localList.refreshExtensions();
+    this.updateExtensionsList();
+  }
+
+  this.failure = function (){
     log.error(err);
     MessageBox.information("There was an error while installing extension\n" + extension.name + " v" + extension.version + ":\n\n" + err);
   }
-  this.localList.refreshExtensions();
-  this.updateExtensionsList();
+
+  installer.onInstallProgressChanged.connect(this.installButton, this.installButton.setProgress);
+  installer.onInstallFinished.connect(this, this.success);
+  installer.onInstallFailed.connect(this, this.failure);
+
+  this.localList.install(extension)
 }
 
 
 /**
  * Uninstalls the currently selected extension
  */
-StoreUI.prototype.performUninstall = function(){
+StoreUI.prototype.performUninstall = function () {
   var selection = this.extensionsList.selectedItems();
   if (selection.length == 0) return;
   var id = selection[0].data(0, Qt.UserRole);
@@ -505,75 +524,5 @@ StoreUI.prototype.performUninstall = function(){
   this.updateExtensionsList();
 }
 
-
-
-/**
- * A QWebView to display the description
- * @param {QWidget} parent
- */
-function DescriptionView(parent){
-  var webPreviewsFontFamily = "Arial";
-  var webPreviewsFontSize = UiLoader.dpiScale(12);
-
-  QWebView.call(this, parent)
-
-  this.setMinimumSize(0, 0);
-  this.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum);
-  var settings = this.settings();
-  settings.setFontFamily(QWebSettings.StandardFont, webPreviewsFontFamily);
-  settings.setFontSize(QWebSettings.DefaultFontSize, webPreviewsFontSize);
-}
-DescriptionView.prototype = Object.create(QWebView.prototype)
-
-/**
- * The QTreeWidgetTtem that represents a single extension in the store list.
- * @classdesc
- * @param {storeLib.Extension} extension           the extension which will be represented by this item
- * @param {storelib.LocalExtensionList} localList  the list of extensions installed on this machine
- * @param {QTreeWidget} parent                     the parent widget for this item
- */
- function ExtensionItem(extension, localList, parent) {
-  this._parent = parent // this is the QTreeWidget
-  var newExtensions = localList.getData("newExtensions", []);
-  var extensionLabel = extension.name;
-
-  if (newExtensions.indexOf(extension.id) != -1) extensionLabel += " ★new!"
-
-  QTreeWidgetItem.call(this, [extensionLabel, icon], 1024);
-  // add an icon in the middle column showing if installed and if update present
-  if (localList.isInstalled(extension)) {
-    var iconPath = style.ICONS.installed;
-    this.setToolTip(1, "Extension is installed correctly.");
-    var localExtension = localList.extensions[extension.id];
-    // log.debug("checking files from "+extension.id, localList.checkFiles(localExtension));
-    if (localExtension.currentVersionIsOlder(extension.version)) {
-      iconPath = style.ICONS.update;
-      this.setToolTip(1, "Update available:\ncurrently installed version : v" + extension.version);
-    } else if (!localList.checkFiles(localExtension)) {
-      iconPath = style.ICONS.error;
-      this.setToolTip(1, "Some files from this extension are missing.");
-    }
-  } else {
-    iconPath = style.ICONS.notInstalled;
-  }
-  var icon = new StyledImage(iconPath);
-  icon.setAsIcon(this, 1);
-
-  if (extension.iconUrl){
-    // set up an icon if one is available
-    log.debug("adding icon to extension "+ extension.name + " from url : "+extension.iconUrl)
-    this.extensionIcon = new WebIcon(extension.iconUrl);
-    this.extensionIcon.setToWidget(this);
-
-  }else{
-    // fallback to local icon
-    var extensionIcon = new StyledImage(style.ICONS.defaultExtension);
-    extensionIcon.setAsIcon(this, 0);
-  }
-
-  // store the extension id in the item
-  this.setData(0, Qt.UserRole, extension.id);
-}
-ExtensionItem.prototype = Object.create(QTreeWidgetItem.prototype);
 
 exports.StoreUI = StoreUI;

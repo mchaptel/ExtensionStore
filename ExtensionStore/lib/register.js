@@ -1,4 +1,5 @@
 var Logger = require("./logger.js").Logger;
+var DescriptionView = require("./lib/widgets.js").DescriptionView;
 
 /**
  * The custom dialog to register a new extension

@@ -1,6 +1,7 @@
 var NetworkConnexionHandler = require("./network.js").NetworkConnexionHandler;
 var webQuery = new NetworkConnexionHandler();
 var Logger = require("./logger.js").Logger;
+var Signal = require("./widgets.js").Signal;
 var io = require("./io.js");
 var readFile = io.readFile;
 var writeFile = io.writeFile;
@@ -837,32 +838,17 @@ Object.defineProperty(Extension.prototype, "localPaths", {
 })
 
 
-
-// /**
-//  * The ExtensionDownloader instance to handle the downloads for this extension
-//  */
-// Object.defineProperty(Extension.prototype, "downloader", {
-//   get: function () {
-//     if (typeof this._downloader === 'undefined') {
-//       this._downloader = new ExtensionDownloader(this);
-//     }
-//     return this._downloader
-//   }
-// })
-
-
-// /**
-//  * gets the extension icon file. Can provide a callback to execute once the icon has been obtained.
-//  */
-
-// Extension.prototype.getIcon = function (callback) {
-//   get: function () {
-//     var icon = listFiles(this.downloader.cacheFolder, this.safeName + "_icon.png")
-//     if (icon.length == 0) {
-//       // look for an icon in the repo
-//     }
-//   }
-// })
+/**
+ * The ExtensionInstaller instance to handle the downloads for this extension
+ */
+Object.defineProperty(Extension.prototype, "installer", {
+  get: function () {
+    if (typeof this._installer === 'undefined') {
+      this._installer = new ExtensionInstaller(this);
+    }
+    return this._installer
+  }
+})
 
 
 /**
@@ -1036,23 +1022,26 @@ LocalExtensionList.prototype.checkFiles = function (extension) {
 
 /**
  * Installs the extension
- * @param {QToolButton} widget - Optional widget to use as a progressbar.
- * @returns {bool}  the success of the installation
+ * @returns {ExtensionInstaller}  the installer instance
  */
-LocalExtensionList.prototype.install = function (extension, widget) {
+LocalExtensionList.prototype.install = function (extension) {
   // if (this.isInstalled(extension)) return true;         // extension is already installed
-  var downloader = new ExtensionDownloader(extension);  // dedicated object to implement threaded download later
+  var installer = extension.installer;  // dedicated object to implement threaded download later
   var installLocation = this.installLocation(extension)
 
-  var files = downloader.downloadFiles(widget);
-  this.log.debug("downloaded files :\n" + files.join("\n"));
-  var tempFolder = files[0];
-  // move the files into the script folder or package folder
-  recursiveFileCopy(tempFolder, installLocation);
-  this.addToList(extension); // create a record of this installation
+  function copyFiles (files){
+    this.log.debug("downloaded files :\n" + files.join("\n"));
+    var tempFolder = files[0];
+    // move the files into the script folder or package folder
+    recursiveFileCopy(tempFolder, installLocation);
+    this.addToList(extension); // create a record of this installation
+    this.log.debug("adding to list "+extension);
+  }
 
-  return true;
+  installer.onInstallFinished.connect(this, copyFiles)
+  installer.downloadFiles();
 
+  return installer;
 }
 
 
@@ -1211,7 +1200,7 @@ Object.defineProperty(LocalExtensionList.prototype, "settings", {
  * @param {string} value
  */
 LocalExtensionList.prototype.saveData = function(name, value){
-  this.log.debug("saving data ", JSON.stringify(value, null, "  "), "under name", name)
+  // this.log.debug("saving data ", JSON.stringify(value, null, "  "), "under name", name)
   var prefs = this.settings;
   prefs[name] = value;
   this.settings = prefs;
@@ -1225,20 +1214,24 @@ LocalExtensionList.prototype.saveData = function(name, value){
  */
 LocalExtensionList.prototype.getData = function(name, defaultValue){
   if (typeof defaultValue === 'undefined') defaultValue = "";
-  this.log.debug("getting data", name, "defaultvalue (type:", (typeof defaultValue), ")")
+  // this.log.debug("getting data", name, "defaultvalue (type:", (typeof defaultValue), ")")
   var prefs = this.settings;
   if (typeof prefs[name] === 'undefined') return defaultValue;
   return prefs[name];
 }
 
 
-// ScriptDownloader Class --------------------------------------------
+// ExtensionInstaller Class --------------------------------------------
 /**
  * @classdesc
  * @constructor
  */
-function ExtensionDownloader(extension) {
-  this.log = new Logger("ExtensionDownloader")
+function ExtensionInstaller(extension) {
+  this.onInstallProgressChanged = new Signal();
+  this.onInstallFinished = new Signal();
+  this.onInstallFailed = new Signal();
+
+  this.log = new Logger("ExtensionInstaller")
   this.log.level = this.log.LEVEL.LOG;
   this.repository = extension.repository;
   this.extension = extension;
@@ -1248,74 +1241,43 @@ function ExtensionDownloader(extension) {
 
 /**
  * Downloads the files of the extension from the repository set in the object instance.
- * @param {QToolButton} widget - UI icon to treat as a progressbar.
- * @returns [string[]]    an array of paths of the downloaded files location, as well as the destination folder at index 0 of the array.
  */
-ExtensionDownloader.prototype.downloadFiles = function (widget) {
+ExtensionInstaller.prototype.downloadFiles = function () {
   this.log.info("starting download of files from extension " + this.extension.name);
   var destFolder = this.destFolder;
-  
+
   // get the files list (heavy operations)
+  this.onInstallProgressChanged.emit(0);  // show the progress bar at 0
   var destPaths = this.extension.localPaths.map(function (x) { return destFolder + x });
   var dlFiles = [this.destFolder];
   var files = this.extension.files;
- 
+
   this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
 
-  // Set parameters based on whether provided widget is the update button, or install extension button.
-  var widgetClass = widget.objectName === "installButton" ? "QToolButton" : "QPushButton";
-  var completedText = widget.objectName === "installButton" ? "Install Complete" : "Update Complete";
-  var initialText = widget.objectName === "installButton" ? "Installing..." : "Updating...";
-  var completedState = widget.objectName === "installButton" ? true : false;
-
-  // Configure widget style and text for installation.
-  widget.setStyleSheet(
-    widgetClass + "{\
-      border-color: transparent transparent " + style.COLORS.GREEN + " transparent;\
-      color: " + style.COLORS.GREEN + ";\
-    }");
-  widget.text = initialText;
-
   for (var i = 0; i < files.length; i++) {
-    webQuery.download(this.getDownloadUrl(files[i].path), destPaths[i]);
-    var dlFile = new File(destPaths[i]);
-    if (dlFile.size == files[i].size) {
-      // download complete!
-      this.log.debug("successfully downloaded " + files[i].path + " to location : " + destPaths[i]);
-      dlFiles.push(destPaths[i]);
-
-      // Set stylesheet to act as a progressbar.
-      var progressStopL = i / files.length;
-      var progressStopR = progressStopL + 0.001;
-      var progressStyleSheet = widgetClass + " {\
-        background-color:\
-          qlineargradient(\
-            spread:pad,\
-            x1:0, y1:0, x2:1, y2:0,\
-            stop: " + progressStopL + " " + style.COLORS.GREEN + ",\
-            stop:" + progressStopR + " " + style.COLORS["12DP"] +
-          ");\
-          border-color: transparent transparent " + style.COLORS.GREEN + " transparent;\
-          color: " + style.COLORS.GREEN + ";\
-        }";
-      // Update widget with the new linear gradient progression.
-      widget.setStyleSheet(progressStyleSheet);
-
-    } else {
-      throw new Error("Downloaded file " + destPaths[i] + " size does not match expected size : \n" + dlFile.size + " bytes (expected : " + files[i].size+" bytes)")
+    this.onInstallProgressChanged.emit(i/files.length);
+    try{
+      webQuery.download(this.getDownloadUrl(files[i].path), destPaths[i]);
+      var dlFile = new File(destPaths[i]);
+      if (dlFile.size == files[i].size) {
+        // download complete!
+        this.log.debug("successfully downloaded " + files[i].path + " to location : " + destPaths[i]);
+        dlFiles.push(destPaths[i]);
+      } else {
+        var error = new Error("Downloaded file " + destPaths[i] + " size does not match expected size : \n" + dlFile.size + " bytes (expected : " + files[i].size+" bytes)");
+        throw error;
+      }
+    }catch(error){
+      this.onInstallFailed.emit(error);
     }
   }
 
-  // Configure widget to indicate the download is completed.
-  widget.setStyleSheet(widgetClass + " { border: none; background-color: " + style.COLORS.GREEN + "; color: black}");
-  widget.text = completedText;
-  widget.enabled = completedState;
-
-  return dlFiles;
+  this.onInstallProgressChanged.emit(1);
+  this.onInstallFinished.emit(dlFiles);
 }
 
 
-ExtensionDownloader.prototype.getDownloadUrl = function (filePath) {
+ExtensionInstaller.prototype.getDownloadUrl = function (filePath) {
   return this.extension.repository.dlUrl + filePath;
 }
 
