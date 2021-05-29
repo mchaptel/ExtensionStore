@@ -76,7 +76,7 @@ function recursiveFileCopy(folder, destination) {
 
     return output;
   } catch (err) {
-    log.error("error on line "+err.lineNumber+" of file "+err.fileName+": \n"+err);
+    log.error(err);
     return null;
   }
 }
