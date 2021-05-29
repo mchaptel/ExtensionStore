@@ -85,7 +85,7 @@ QLineEdit {
 }
 
 /* Tooltips */
-QToolTip {	
+QToolTip {
 	color: lightGrey;
 	background-color: @06DP;
 }
@@ -341,6 +341,10 @@ QTreeView::item:selected {
 */
 
 QFrame#sidepanelFrame {
+	background-color: @04DP;
+}
+
+QFrame#installButtonPlaceHolder {
 	background-color: @04DP;
 }
 

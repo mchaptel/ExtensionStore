@@ -73,6 +73,9 @@
            <property name="alignment">
             <set>Qt::AlignCenter</set>
            </property>
+           <property name="buddy">
+            <cstring>installButtonPlaceHolder</cstring>
+           </property>
           </widget>
          </item>
          <item>
@@ -108,7 +111,7 @@
               <x>0</x>
               <y>0</y>
               <width>474</width>
-              <height>201</height>
+              <height>223</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_10">
@@ -550,7 +553,7 @@
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="0,0,1">
+           <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="0,0,0,1">
             <item>
              <spacer name="horizontalSpacer_6">
               <property name="orientation">
@@ -566,6 +569,30 @@
                </size>
               </property>
              </spacer>
+            </item>
+            <item>
+             <widget class="QFrame" name="authorSocialFrame">
+              <property name="lineWidth">
+               <number>0</number>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_7">
+               <property name="spacing">
+                <number>3</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+              </layout>
+             </widget>
             </item>
             <item>
              <widget class="QLabel" name="label_6">
@@ -668,42 +695,19 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_10">
-            <property name="topMargin">
-             <number>15</number>
+           <widget class="QFrame" name="installButtonPlaceHolder">
+            <property name="lineWidth">
+             <number>0</number>
             </property>
-            <property name="bottomMargin">
-             <number>15</number>
-            </property>
-            <item>
-             <widget class="QToolButton" name="installButton">
-              <property name="minimumSize">
-               <size>
-                <width>80</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>130</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true"/>
-              </property>
-              <property name="text">
-               <string>Install</string>
-              </property>
-              <property name="toolButtonStyle">
-               <enum>Qt::ToolButtonIconOnly</enum>
-              </property>
-              <property name="autoRaise">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-           </layout>
+            <layout class="QHBoxLayout" name="horizontalLayout_10">
+             <property name="topMargin">
+              <number>15</number>
+             </property>
+             <property name="bottomMargin">
+              <number>15</number>
+             </property>
+            </layout>
+           </widget>
           </item>
          </layout>
         </widget>
