@@ -142,6 +142,7 @@ function StoreUI() {
 
   // Install Button Actions -------------------------------------------
   this.installButton = new ProgressButton();
+  this.installButton.objectName = "installButton";
   this.storeDescriptionPanel.installButtonPlaceHolder.layout().addWidget(this.installButton, 1, Qt.AlignCenter);
 
   this.installAction = new QAction("Install", this);
@@ -153,6 +154,24 @@ function StoreUI() {
   this.uninstallAction = new QAction("Uninstall", this);
   this.uninstallAction.triggered.connect(this, this.performUninstall);
 }
+
+
+/**
+ * The currently selected Extension in the list.
+ */
+ Object.defineProperty(StoreUI.prototype, "selectedExtension", {
+  get: function(){
+    var selection = this.extensionsList.selectedItems();
+    if (selection.length > 0 && selection[0].type() != 0){
+      var id = selection[0].data(0, Qt.UserRole);
+      var extension = this.store.extensions[id];
+
+      return extension;
+    }
+    return null;
+  }
+})
+
 
 /**
  * Brings up the register extension dialog for script makers
@@ -342,6 +361,8 @@ StoreUI.prototype.updateStore = function (currentVersion, storeVersion) {
 StoreUI.prototype.updateExtensionsList = function () {
   if (this.localList.list.length == 0) this.localList.createListFile(this.store);
 
+  log.debug("updating extensions list")
+
   function nameSort(a, b) {
     return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1
   }
@@ -399,10 +420,12 @@ StoreUI.prototype.updateExtensionsList = function () {
 
 
 /**
- * Updates the info in the slideout description panel for the given extension
- * @param {storeLib.Extension} extension
+ * Updates the info in the slideout description panel for the currently selected extension
  */
-StoreUI.prototype.updateDescriptionPanel = function (extension) {
+StoreUI.prototype.updateDescriptionPanel = function () {
+  var extension = this.selectedExtension;
+  if (!extension) return
+
   this.storeDescriptionPanel.versionStoreLabel.text = extension.version;
   this.descriptionText.setHtml(extension.package.description);
   this.storeDescriptionPanel.storeKeywordsGroup.storeKeywordsLabel.text = extension.package.keywords.join(", ");
@@ -421,20 +444,26 @@ StoreUI.prototype.updateDescriptionPanel = function (extension) {
     var localExtension = this.localList.extensions[extension.id];
     if (!localExtension.currentVersionIsOlder(extension.version) && this.localList.checkFiles(extension)) {
       // Extension installed and up-to-date.
+      log.debug("set button to uninstall")
       this.installButton.setStyleSheet(style.STYLESHEETS.uninstallButton);
+      this.installButton.accentColor = style.COLORS.ORANGE;
       this.installButton.removeAction(this.installAction);
       this.installButton.removeAction(this.updateAction);
       this.installButton.setDefaultAction(this.uninstallAction);
     } else {
+      log.debug("set button to update")
       // Extension installed and update available.
       this.installButton.setStyleSheet(style.STYLESHEETS.updateButton);
+      this.installButton.accentColor = style.COLORS.YELLOW;
       this.installButton.removeAction(this.installAction);
       this.installButton.removeAction(this.uninstallAction);
       this.installButton.setDefaultAction(this.updateAction);
     }
   } else {
     // Extension not installed.
+    log.debug("set button to install")
     this.installButton.setStyleSheet(style.STYLESHEETS.installButton);
+    this.installButton.accentColor = style.COLORS.GREEN;
     this.installButton.removeAction(this.uninstallAction);
     this.installButton.removeAction(this.updateAction);
     this.installButton.setDefaultAction(this.installAction);
@@ -447,21 +476,16 @@ StoreUI.prototype.updateDescriptionPanel = function (extension) {
  * Slide the extension description panel in and out
  */
 StoreUI.prototype.toggleDescriptionPanel = function () {
-  var selection = this.extensionsList.selectedItems();
-
-
+  // only save the splitter size if it's not collapsed
   if (this.storeFrame.storeSplitter.sizes()[1] != 0) {
     this.storeFrameState = this.storeFrame.storeSplitter.saveState();
   }
+  var extension = this.selectedExtension;
 
-
-  if (selection.length > 0 && selection[0].type() != 0) {
+  if (extension) {
     this.storeFrame.storeSplitter.restoreState(this.storeFrameState);
-    var id = selection[0].data(0, Qt.UserRole);
-    var extension = this.store.extensions[id];
-
     // populate the description panel
-    this.updateDescriptionPanel(extension);
+    this.updateDescriptionPanel();
   } else {
     // collapse description
     this.storeFrame.storeSplitter.setSizes([this.storeFrame.storeSplitter.width, 0]);
@@ -479,16 +503,7 @@ StoreUI.prototype.performInstall = function () {
   var extension = this.store.extensions[id];
 
   log.info("installing extension : " + extension.repository.name + extension.name);
-  // log(JSON.stringify(extension.package, null, "  "))
   var installer = extension.installer;
-  // log.debug(installer.onInstallProgressChanged)
-  // log.debug(this.installButton.setProgress)
-
-  this.success = function (){
-    MessageBox.information("Extension " + extension.name + " v" + extension.version + "\nwas installed correctly.");
-    this.localList.refreshExtensions();
-    this.updateExtensionsList();
-  }
 
   this.failure = function (){
     log.error(err);
@@ -496,10 +511,12 @@ StoreUI.prototype.performInstall = function () {
   }
 
   installer.onInstallProgressChanged.connect(this.installButton, this.installButton.setProgress);
-  installer.onInstallFinished.connect(this, this.success);
   installer.onInstallFailed.connect(this, this.failure);
 
-  this.localList.install(extension)
+  this.localList.install(extension);
+  this.localList.refreshExtensions();
+  this.updateExtensionsList();
+  this.updateDescriptionPanel();
 }
 
 

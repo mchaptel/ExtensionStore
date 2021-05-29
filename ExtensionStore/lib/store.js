@@ -1025,7 +1025,6 @@ LocalExtensionList.prototype.checkFiles = function (extension) {
  * @returns {ExtensionInstaller}  the installer instance
  */
 LocalExtensionList.prototype.install = function (extension) {
-  // if (this.isInstalled(extension)) return true;         // extension is already installed
   var installer = extension.installer;  // dedicated object to implement threaded download later
   var installLocation = this.installLocation(extension)
 

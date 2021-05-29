@@ -74,33 +74,22 @@ ExtensionItem.prototype = Object.create(QTreeWidgetItem.prototype);
 /**
  * A button that can also shows progress
  */
-function ProgressButton(){
-  QToolButton.apply(this, arguments)
+function ProgressButton(color){
+  QToolButton.call(this);
   this.maximumWidth = this.minimumWidth = UiLoader.dpiScale(130);
   this.maximumHeight = this.minimumHeight = UiLoader.dpiScale(30);
 
-  // Set parameters based on whether provided widget is the update button, or install extension button.
-  // var widgetClass = widget.objectName === "installButton" ? "QToolButton" : "QPushButton";
-  // var completedText = widget.objectName === "installButton" ? "Install Complete" : "Update Complete";
-  // var initialText = widget.objectName === "installButton" ? "Installing..." : "Updating...";
-  // var completedState = widget.objectName === "installButton" ? true : false;
-
-  // Configure widget style and text for installation.
-  this.setStyleSheet(
-    "QToolButton {"+
-    "  border-color: transparent transparent " + style.COLORS.GREEN + " transparent;"+
-    "  color: " + style.COLORS.GREEN + ";" +
-    "}");
-  // this.text = initialText;
+  this.accentColor = color;
 }
 ProgressButton.prototype = Object.create(QToolButton.prototype)
 
 ProgressButton.prototype.setProgress = function (progress){
-  log.debug(this)
-  log.debug("progress button update for progress: "+progress)
   if (progress < 0){
-    // hide progress bar
+    // hide progress bar ?
   } else if (progress < 1) {
+    // this.text = "Installing...";
+    this.enabled = false;
+
     // Set stylesheet to act as a progressbar.
     var progressStopL = progress;
     var progressStopR = progressStopL + 0.001;
@@ -109,26 +98,27 @@ ProgressButton.prototype.setProgress = function (progress){
       "  qlineargradient(" +
       "    spread:pad," +
       "    x1:0, y1:0, x2:1, y2:0," +
-      "    stop: " + progressStopL + " " + style.COLORS.GREEN + "," +
+      "    stop: " + progressStopL + " " + this.accentColor + "," +
       "    stop:" + progressStopR + " " + style.COLORS["12DP"] +
       "  );"+
-      "  border-color: transparent transparent " + style.COLORS.GREEN + " transparent;" +
-      "  color: " + style.COLORS.GREEN + ";" +
+      "  border-color: transparent transparent " + this.accentColor + " transparent;" +
+      "  color: white;" +
       "}";
     // Update widget with the new linear gradient progression.
     this.setStyleSheet(progressStyleSheet);
 
   }else{
     // Configure widget to indicate the download is completed.
-    this.setStyleSheet("QToolButton { border: none; background-color: " + style.COLORS.GREEN + "; color: black}");
-    // this.text = completedText;
-    // this.enabled = true;
+    this.setStyleSheet("QToolButton { border: none; background-color: " + this.accentColor + "; color: white}");
+    this.enabled = true;
   }
 }
 
 
 /**
  * A Qt like custom signal that can be defined, connected and emitted.
+ * As this signal is not actually threaded, the connected callbacks will be exectuted
+ * directly when the signal is emited, and the rest of the code will execute after.
  * @param {type} type the type of value accepted as argument when calling emit()
  */
  function Signal(type){
@@ -166,27 +156,26 @@ Signal.prototype.emit = function () {
   //   throw new error ("Signal can't emit type "+ (typeof value) + ". Must be : " + this.type)
   // }
 
-  var args = []
+  var args = [];
   for (var i=0; i<arguments.length; i++){
-    args.push(arguments[i])
+    args.push(arguments[i]);
   }
 
-  log.debug("emiting signal with "+ args)
+  log.debug("emiting signal with "+ args);
 
   for (var i in this.connexions){
     var context = this.connexions[i].context;
     var slot = this.connexions[i].slot;
-    log.debug(context)
-    log.debug(slot)
+    log.debug("calling slot "+ slot);
     slot.apply(context, args);
   }
 }
 
 Signal.prototype.toString = function(){
-  return "Signal"
+  return "Signal";
 }
 
-exports.Signal = Signal
-exports.ProgressButton = ProgressButton
-exports.DescriptionView = DescriptionView
-exports.ExtensionItem = ExtensionItem
+exports.Signal = Signal;
+exports.ProgressButton = ProgressButton;
+exports.DescriptionView = DescriptionView;
+exports.ExtensionItem = ExtensionItem;
