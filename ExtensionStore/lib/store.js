@@ -1036,14 +1036,15 @@ LocalExtensionList.prototype.checkFiles = function (extension) {
 
 /**
  * Installs the extension
+ * @param {QToolButton} widget - Optional widget to use as a progressbar.
  * @returns {bool}  the success of the installation
  */
-LocalExtensionList.prototype.install = function (extension) {
+LocalExtensionList.prototype.install = function (extension, widget) {
   // if (this.isInstalled(extension)) return true;         // extension is already installed
   var downloader = new ExtensionDownloader(extension);  // dedicated object to implement threaded download later
   var installLocation = this.installLocation(extension)
 
-  var files = downloader.downloadFiles();
+  var files = downloader.downloadFiles(widget);
   this.log.debug("downloaded files :\n" + files.join("\n"));
   var tempFolder = files[0];
   // move the files into the script folder or package folder
@@ -1247,41 +1248,68 @@ function ExtensionDownloader(extension) {
 
 /**
  * Downloads the files of the extension from the repository set in the object instance.
+ * @param {QToolButton} widget - UI icon to treat as a progressbar.
  * @returns [string[]]    an array of paths of the downloaded files location, as well as the destination folder at index 0 of the array.
  */
-ExtensionDownloader.prototype.downloadFiles = function () {
+ExtensionDownloader.prototype.downloadFiles = function (widget) {
   this.log.info("starting download of files from extension " + this.extension.name);
   var destFolder = this.destFolder;
-
-  var progress = new QProgressDialog();
-  progress.title = "Installing extension " + this.extension.name;
-  progress.setLabelText("Downloading files...");
-  progress.modal = true;
-  progress.show();
-
+  
   // get the files list (heavy operations)
   var destPaths = this.extension.localPaths.map(function (x) { return destFolder + x });
   var dlFiles = [this.destFolder];
   var files = this.extension.files;
-
-  progress.setRange(0, files.length);
+ 
   this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
 
-  for (var i = 0; i < files.length; i++) {
+  // Set parameters based on whether provided widget is the update button, or install extension button.
+  var widgetClass = widget.objectName === "installButton" ? "QToolButton" : "QPushButton";
+  var completedText = widget.objectName === "installButton" ? "Install Complete" : "Update Complete";
+  var initialText = widget.objectName === "installButton" ? "Installing..." : "Updating...";
+  var completedState = widget.objectName === "installButton" ? true : false;
 
+  // Configure widget style and text for installation.
+  widget.setStyleSheet(
+    widgetClass + "{\
+      border-color: transparent transparent " + style.COLORS.GREEN + " transparent;\
+      color: " + style.COLORS.GREEN + ";\
+    }");
+  widget.text = initialText;
+
+  for (var i = 0; i < files.length; i++) {
     webQuery.download(this.getDownloadUrl(files[i].path), destPaths[i]);
     var dlFile = new File(destPaths[i]);
     if (dlFile.size == files[i].size) {
       // download complete!
-      this.log.debug("successfully downloaded " + files[i].path + " to location : " + destPaths[i])
-      dlFiles.push(destPaths[i])
-      progress.value = i;
+      this.log.debug("successfully downloaded " + files[i].path + " to location : " + destPaths[i]);
+      dlFiles.push(destPaths[i]);
+
+      // Set stylesheet to act as a progressbar.
+      var progressStopL = i / files.length;
+      var progressStopR = progressStopL + 0.001;
+      var progressStyleSheet = widgetClass + " {\
+        background-color:\
+          qlineargradient(\
+            spread:pad,\
+            x1:0, y1:0, x2:1, y2:0,\
+            stop: " + progressStopL + " " + style.COLORS.GREEN + ",\
+            stop:" + progressStopR + " " + style.COLORS["12DP"] +
+          ");\
+          border-color: transparent transparent " + style.COLORS.GREEN + " transparent;\
+          color: " + style.COLORS.GREEN + ";\
+        }";
+      // Update widget with the new linear gradient progression.
+      widget.setStyleSheet(progressStyleSheet);
+
     } else {
       throw new Error("Downloaded file " + destPaths[i] + " size does not match expected size : \n" + dlFile.size + " bytes (expected : " + files[i].size+" bytes)")
     }
   }
 
-  progress.close();
+  // Configure widget to indicate the download is completed.
+  widget.setStyleSheet(widgetClass + " { border: none; background-color: " + style.COLORS.GREEN + "; color: black}");
+  widget.text = completedText;
+  widget.enabled = completedState;
 
   return dlFiles;
 }

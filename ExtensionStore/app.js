@@ -63,14 +63,37 @@ function StoreUI(){
   var logo = new StyledImage(storelib.appFolder+"/resources/logo.png", 600, 150);
   this.aboutFrame.storeLabel.setPixmap(logo.pixmap);
 
+  // Social media buttons
+  // Twitter
+  var twitterIcon = new StyledImage(style.ICONS.twitter);
+  twitterIcon.setAsIcon(this.aboutFrame.twitterButton);
+
+  // Github
+  var githubIcon = new StyledImage(style.ICONS.github);
+  githubIcon.setAsIcon(this.aboutFrame.githubButton);
+
+  // Discord
+  var discordIcon = new StyledImage(style.ICONS.discord);
+  discordIcon.setAsIcon(this.aboutFrame.discordButton);
+
   // Header logo
-  var headerLogo = new StyledImage(storelib.appFolder+"/resources/icon.png", 24, 24);
+  var headerLogo = new StyledImage(style.ICONS.headerLogo, 24, 24);
   this.storeHeader.headerLogo.setPixmap(headerLogo.pixmap);
 
   this.checkForUpdates()
 
   // connect UI signals
   this.aboutFrame.loadStoreButton.clicked.connect(this, this.loadStore)
+  // Social media UI signals
+  this.aboutFrame.twitterButton.clicked.connect(this, function () {
+    QDesktopServices.openUrl(new QUrl(this.aboutFrame.twitterButton.toolTip));
+  });
+  this.aboutFrame.discordButton.clicked.connect(this, function () {
+    QDesktopServices.openUrl(new QUrl(this.aboutFrame.discordButton.toolTip));
+  });
+  this.aboutFrame.githubButton.clicked.connect(this, function () {
+    QDesktopServices.openUrl(new QUrl(this.aboutFrame.githubButton.toolTip));
+  });
 
   // filter the store list --------------------------------------------
   this.storeHeader.searchStore.textChanged.connect(this, this.updateExtensionsList)
@@ -79,7 +102,7 @@ function StoreUI(){
   this.storeHeader.showInstalledCheckbox.toggled.connect(this, this.updateExtensionsList)
 
   // Clear search button ----------------------------------------------
-  var clearSearchIcon = new StyledImage(storelib.appFolder+"/resources/cancel_icon.png");
+  var clearSearchIcon = new StyledImage(style.ICONS.cancelSearch);
   clearSearchIcon.setAsIcon(this.storeHeader.storeClearSearch)
 
   var searchField = this.storeHeader.searchStore
@@ -293,7 +316,7 @@ StoreUI.prototype.lockStore = function(message){
  * installs the version of the store found on the repo.
  */
 StoreUI.prototype.updateStore = function(currentVersion, storeVersion){
-  var success = this.localList.install(this.storeExtension);
+  var success = this.localList.install(this.storeExtension, this.ui.aboutFrame.updateButton);
   if (success) {
     MessageBox.information("Store succesfully updated to version v" + storeVersion + ".\n\nPlease restart Harmony for changes to take effect.");
     this.updateRibbon.storeVersion.setText("v" + currentVersion);
@@ -450,7 +473,7 @@ StoreUI.prototype.performInstall = function() {
   log.info("installing extension : " + extension.repository.name + extension.name);
   // log(JSON.stringify(extension.package, null, "  "))
   try {
-    this.localList.install(extension);
+    this.localList.install(extension, this.storeDescriptionPanel.installButton);
     MessageBox.information("Extension " + extension.name + " v" + extension.version + "\nwas installed correctly.");
   } catch (err) {
     log.error(err);
@@ -544,7 +567,7 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
 
   }else{
     // fallback to local icon
-    var extensionIcon = new StyledImage(storelib.appFolder + "/resources/default_extension_icon.png");
+    var extensionIcon = new StyledImage(style.ICONS.defaultExtension);
     extensionIcon.setAsIcon(this, 0);
   }
 
