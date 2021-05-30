@@ -83,7 +83,48 @@ function ProgressButton(color){
 }
 ProgressButton.prototype = Object.create(QToolButton.prototype)
 
+/**
+ * Basic implementation of determing Action state (install, uninstall, update)
+ * by using the action tooltip.
+ * @returns {Object} Object containing the state, default text and updating base.
+ */
+ProgressButton.prototype.getState = function() {
+  var state;
+  switch (this.defaultAction.toolTip) {
+    case "install":
+      state = {
+        "state": "install",
+        "defaultText": "Install",
+        "progressText": "Installing"
+      }
+      break;
+      case "uninstall":
+        state = {
+          "state": "uninstall",
+          "defaultText": "Uninstall",
+          "progressText": "Uninstalling"
+        }
+        break;
+      case "update":
+        state = {
+          "state": "update",
+          "defaultText": "Update",
+          "progressText": "Updating"
+        }
+    default:
+      break;
+  }
+  return state;
+}
+
+Object.defineProperty(ProgressButton.prototype, "text", {
+  set: function (text) {
+    this.defaultAction().text = text;
+  }});
+
 ProgressButton.prototype.setProgress = function (progress){
+  var state = this.getState();
+
   if (progress < 0){
     // hide progress bar ?
   } else if (progress < 1) {
@@ -107,10 +148,14 @@ ProgressButton.prototype.setProgress = function (progress){
     // Update widget with the new linear gradient progression.
     this.setStyleSheet(progressStyleSheet);
 
+    // Update text with progress
+    this.text = state.progressText + " " + Math.round((progressStopL * 100)) + "%";
+
   }else{
     // Configure widget to indicate the download is completed.
     this.setStyleSheet("QToolButton { border: none; background-color: " + this.accentColor + "; color: white}");
     this.enabled = true;
+    this.text = state.defaultText;
   }
 }
 
