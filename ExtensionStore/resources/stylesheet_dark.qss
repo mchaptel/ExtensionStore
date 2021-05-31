@@ -257,7 +257,8 @@ QLineEdit#searchStore {
 QLineEdit:focus#searchStore {
 	background-color: @03DP;
 	border-radius: 10px;
-	border: none;
+ 	border-width: 2px;
+	border-color: transparent;
 }
 
 /* Store search box clear */
