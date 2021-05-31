@@ -38,6 +38,7 @@ const styleSheetsDark = {
   defaultRibbon : "QWidget { background-color: transparent; color: gray;}",
   updateRibbon : "QWidget { background-color: " + COLORS.YELLOW + "; color: black }",
   noConnexionRibbon : "QWidget { background-color: " + COLORS.RED + "; color: white; }",
+  progressButton : "QToolButton { border-color: transparent transparent @ACCENT transparent; }",
   installButton : "QToolButton { border-color: transparent transparent " + COLORS.GREEN + " transparent; }",
   uninstallButton : "QToolButton { border-color: transparent transparent " + COLORS.ORANGE + " transparent; }",
   updateButton : "QToolButton { border-color: transparent transparent " + COLORS.YELLOW + " transparent; }"
@@ -151,9 +152,23 @@ Object.defineProperty(StyledImage.prototype, "path", {
 Object.defineProperty(StyledImage.prototype, "pixmap", {
   get: function(){
     if (typeof this._pixmap === 'undefined') {
-      log.debug("new pixmap for image : " + this.path)
+      log.debug("new pixmap for image : " + this.path);
       var pixmap = new QPixmap(this.path);
-      var aspectRatioFlag = this.uniformScaling?Qt.KeepAspectRatio:Qt.IgnoreAspectRatio;
+
+      // work out scaling based on params
+      if (this.uniformScaling){
+        if (this.width && this.height){
+          // keep inside the given rectangle
+          var aspectRatioFlag = Qt.KeepAspectRatio;
+        }else{
+          // if one of the width or height is missing, only the other value will be used
+          var aspectRatioFlag = Qt.KeepAspectRatioByExpanding;
+        }
+      }else{
+        // resize to match the box exactly
+        var aspectRatioFlag = Qt.IgnoreAspectRatio;
+      }
+
       var pixmap = pixmap.scaled(this.width, this.height, aspectRatioFlag, Qt.SmoothTransformation);
 
       this._pixmap = pixmap

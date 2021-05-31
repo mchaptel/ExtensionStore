@@ -79,13 +79,14 @@ function ProgressButton(color){
   this.maximumWidth = this.minimumWidth = UiLoader.dpiScale(130);
   this.maximumHeight = this.minimumHeight = UiLoader.dpiScale(30);
 
-  this.accentColor = color;
+  this._accentColor = color;
 }
 ProgressButton.prototype = Object.create(QToolButton.prototype)
 
 ProgressButton.prototype.setProgress = function (progress){
   if (progress < 0){
-    // hide progress bar ?
+    // reset stylesheet by changing the accentColor
+    this.accentColor = this.accentColor;
   } else if (progress < 1) {
     // this.text = "Installing...";
     this.enabled = false;
@@ -113,6 +114,17 @@ ProgressButton.prototype.setProgress = function (progress){
     this.enabled = true;
   }
 }
+
+Object.defineProperty(ProgressButton.prototype, "accentColor", {
+  get: function(){
+    return this._accentColor;
+  },
+  set: function(newColor){
+    this._accentColor = newColor;
+    this.setStyleSheet(style.STYLESHEETS.progressButton.replace("@ACCENT", this._accentColor))
+  }
+})
+
 
 
 /**
@@ -167,7 +179,13 @@ Signal.prototype.emit = function () {
     var context = this.connexions[i].context;
     var slot = this.connexions[i].slot;
     log.debug("calling slot "+ slot);
-    slot.apply(context, args);
+
+    // support connecting signals to each other
+    if (slot instanceof Signal){
+      slot.emit.apply(context, args)
+    }else{
+      slot.apply(context, args);
+    }
   }
 }
 
