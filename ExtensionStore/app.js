@@ -445,7 +445,6 @@ StoreUI.prototype.updateDescriptionPanel = function () {
     if (!localExtension.currentVersionIsOlder(extension.version) && this.localList.checkFiles(extension)) {
       // Extension installed and up-to-date.
       log.debug("set button to uninstall")
-      this.installButton.setStyleSheet(style.STYLESHEETS.uninstallButton);
       this.installButton.accentColor = style.COLORS.ORANGE;
       this.installButton.removeAction(this.installAction);
       this.installButton.removeAction(this.updateAction);
@@ -453,7 +452,6 @@ StoreUI.prototype.updateDescriptionPanel = function () {
     } else {
       log.debug("set button to update")
       // Extension installed and update available.
-      this.installButton.setStyleSheet(style.STYLESHEETS.updateButton);
       this.installButton.accentColor = style.COLORS.YELLOW;
       this.installButton.removeAction(this.installAction);
       this.installButton.removeAction(this.uninstallAction);
@@ -462,7 +460,6 @@ StoreUI.prototype.updateDescriptionPanel = function () {
   } else {
     // Extension not installed.
     log.debug("set button to install")
-    this.installButton.setStyleSheet(style.STYLESHEETS.installButton);
     this.installButton.accentColor = style.COLORS.GREEN;
     this.installButton.removeAction(this.uninstallAction);
     this.installButton.removeAction(this.updateAction);
@@ -497,10 +494,8 @@ StoreUI.prototype.toggleDescriptionPanel = function () {
  * Installs the currently selected extension
  */
 StoreUI.prototype.performInstall = function () {
-  var selection = this.extensionsList.selectedItems();
-  if (selection.length == 0) return
-  var id = selection[0].data(0, Qt.UserRole);
-  var extension = this.store.extensions[id];
+  var extension = this.selectedExtension
+  if (!extension) return
 
   log.info("installing extension : " + extension.repository.name + extension.name);
   var installer = extension.installer;
@@ -524,10 +519,8 @@ StoreUI.prototype.performInstall = function () {
  * Uninstalls the currently selected extension
  */
 StoreUI.prototype.performUninstall = function () {
-  var selection = this.extensionsList.selectedItems();
-  if (selection.length == 0) return;
-  var id = selection[0].data(0, Qt.UserRole);
-  var extension = this.store.extensions[id];
+  var extension = this.selectedExtension
+  if (!extension) return
 
   log.info("uninstalling extension : " + extension.repository.name + extension.name);
   try {
