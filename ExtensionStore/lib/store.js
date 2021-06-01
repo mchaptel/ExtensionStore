@@ -1055,7 +1055,7 @@ LocalExtensionList.prototype.uninstall = function (extension) {
 
   // Remove packages recursively as they have a parent directory.
   if (extension.package.isPackage) {
-    var folder = new Dir(this.installFolder + "packages/" + extension.name.replace(" ", ""));
+    var folder = new Dir(this.installFolder + "/packages/" + extension.name.replace(" ", ""));
     this.log.debug("removing folder " + folder.path);
     if (folder.exists) folder.rmdirs();
   } else {
@@ -1071,7 +1071,16 @@ LocalExtensionList.prototype.uninstall = function (extension) {
   // Update the extension list accordingly.
   this.removeFromList(extension);
 
-  return true;
+  // Verify delete operations.
+  var filesDeleted = localExtension.package.localFiles.every(function(x) {
+    return !new QFileInfo(x).exists();
+  });
+
+  // Return operation success.
+  if (filesDeleted) {
+    return true;
+  }
+  throw new Error("Unable to delete one or more local extension files during uninstall.");
 }
 
 
