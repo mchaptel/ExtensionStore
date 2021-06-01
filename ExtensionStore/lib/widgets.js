@@ -1,4 +1,5 @@
 var Logger = require("logger.js").Logger;
+var style = require("style.js");
 var log = new Logger("Widgets");
 
 /**
@@ -76,56 +77,53 @@ ExtensionItem.prototype = Object.create(QTreeWidgetItem.prototype);
  * @classdesc
  * @constructor
  */
-function ProgressButton(){
+function ProgressButton(color, text, progressText, finishedText){
+  if (typeof finishedText === 'undefined') var finishedText = "Done";
+  if (typeof progressText === 'undefined') var progressText = "In progress...";
+
   QToolButton.call(this);
   this.maximumWidth = this.minimumWidth = UiLoader.dpiScale(130);
   this.maximumHeight = this.minimumHeight = UiLoader.dpiScale(30);
-
+  this.backgroundColor = style.COLORS["12DP"]; // get this from stylesheet?
+  this.accentColor = color;
+  this.defaultText = text;
+  this.progressText = progressText;
+  this.finishedText = finishedText;
 }
 ProgressButton.prototype = Object.create(QToolButton.prototype);
 
-/**
- * Set the text of the underlying Action rather than the widget directly.
- */
-Object.defineProperty(ProgressButton.prototype, "text", {
-  get: function () {
-    return this.defaultAction().text;
-  },
-  set: function (text) {
-    this.defaultAction().text = text;
-  }
-});
 
 /**
- * Get or Set the button mode.
- * Changing the mode alters the visual appearance as well
- * as exposes a different Action.
+ * The accent color used by the button to show the loading and the border.
+ * Setting this will apply the corresponding stylesheet.
  */
-Object.defineProperty(ProgressButton.prototype, "mode", {
-  get: function () {
-    return this._mode;
+Object.defineProperty(ProgressButton.prototype, "accentColor", {
+  get: function(){
+    return this._accentColor;
   },
-  set: function (mode) {
-    var mode = mode.toUpperCase();
-    this._mode = this.modes[mode];
-    this.accentColor = this.modes[mode].accentColor;
-    this.setStyleSheet(this.modes[mode].styleSheet);
-    this.removeAction(this.defaultAction());
-    this.setDefaultAction(this.modes[mode].action);
+  set: function(newColor){
+    this._accentColor = newColor;
+    this.setStyleSheet(style.STYLESHEETS.progressButton.replace("@ACCENT", this._accentColor))
   }
-});
+})
 
 
 /**
  * Use the background stylesheet of the widget to act as a progress bar.
- * @param {Int} progress - Value from 0 to 1 that the operation is currently at. 
+ * @param {Int} progress - Value from 0 to 1 that the operation is currently at.
  */
 ProgressButton.prototype.setProgress = function (progress) {
   var accentColor = this.accentColor;
   var backgroundColor = this.backgroundColor;
 
-  if (progress < 1) {
+  if (progress < 0) {
+    // resetting stylesheet by setting accentColor
+    this.accentColor = accentColor;
+    this.text = this.defaultText;
+
+  } else if (progress < 1) {
     this.enabled = false;
+    this.text = this.progressText;
 
     // Set stylesheet to act as a progressbar.
     var progressStopR = progress;
@@ -151,32 +149,11 @@ ProgressButton.prototype.setProgress = function (progress) {
     // Configure widget to indicate the download is completed.
     this.setStyleSheet("QToolButton { border: none; background-color: " + accentColor + "; color: white}");
     this.enabled = true;
-    this.text = this.mode.defaultText;
+    this.text = this.finishedText;
   }
 }
 
-/**
- * ProgressButton child class for Loading operations.
- * @classdesc
- * @constructor
- */
-function LoadButton() {
-  ProgressButton.call(this);
 
-  this.backgroundColor = style.COLORS["08DP"];
-
-  this.modes = {
-    "LOAD": {
-      "action": new QAction("Load", this),
-      "defaultText": "Load",
-      "progressText": "Loading",
-      "accentColor": style.COLORS.ACCENT_LIGHT,
-      "styleSheet": style.STYLESHEETS.LoadButton,
-    }
-  }
-  this.mode = "LOAD";
-}
-InstallButton.prototype = Object.create(ProgressButton.prototype);
 
 /**
  * ProgressButton child class for Extension installation, uninstallation and updates.
@@ -184,36 +161,63 @@ InstallButton.prototype = Object.create(ProgressButton.prototype);
  * @constructor
  * @param {String} mode - Default mode to set the button to.
  */
-function InstallButton(mode) {
+function InstallButton() {
   ProgressButton.call(this);
-
-  this.backgroundColor = style.COLORS["12DP"];
-
   this.modes = {
     "INSTALL": {
       "action": new QAction("Install", this),
-      "defaultText": "Install",
-      "progressText": "Installing",
+      "progressText": "Installing...",
       "accentColor": style.COLORS.GREEN,
-      "styleSheet": style.STYLESHEETS.installButton,
     },
     "UNINSTALL": {
       "action": new QAction("Uninstall", this),
-      "defaultText": "Uninstall",
-      "progressText": "Uninstalling",
+      "progressText": "Uninstalling...",
       "accentColor": style.COLORS.ORANGE,
-      "styleSheet": style.STYLESHEETS.uninstallButton,
     },
     "UPDATE": {
       "action": new QAction("Update", this),
-      "defaultText": "Update",
-      "progressText": "Updating",
+      "progressText": "Updating...",
       "accentColor": style.COLORS.YELLOW,
-      "styleSheet": style.STYLESHEETS.updateButton,
     },
   }
 
-  this.mode = mode;
+  this.mode = "INSTALL";
+}
+InstallButton.prototype = Object.create(ProgressButton.prototype);
+
+
+/**
+ * Get or Set the button mode.
+ * Changing the mode alters the visual appearance as well
+ * as exposes a different Action.
+ */
+Object.defineProperty(InstallButton.prototype, "mode", {
+  get: function () {
+    return this.modes[this._mode];
+  },
+  set: function (mode) {
+    var mode = mode.toUpperCase();
+    var modeDetails = this.modes[mode]
+    if (!modeDetails) throw new Error ("Can't set InstallButton mode to "+ mode+ ", mode can only be 'INSTALL', 'UNINSTALL' or 'UPDATE'." )
+
+    if (mode != this._mode){
+      this._mode = mode;
+      this.accentColor = modeDetails.accentColor;
+      this.progressText = modeDetails.progressText;
+      this.removeAction(this.defaultAction());
+      this.setDefaultAction(modeDetails.action);
+    }
+  }
+});
+
+
+/**
+ * ProgressButton child class for Loading operations.
+ * @classdesc
+ * @constructor
+ */
+function LoadButton() {
+  ProgressButton.call(this, style.COLORS.ACCENT_LIGHT, "Load Store", "Loading...");
 }
 InstallButton.prototype = Object.create(ProgressButton.prototype);
 

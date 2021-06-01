@@ -3,6 +3,7 @@ var Logger = require("./lib/logger.js").Logger;
 var WebIcon = require("./lib/network.js").WebIcon;
 var style = require("./lib/style.js");
 var widgets = require("./lib/widgets.js");
+var appFolder = require("./lib/io.js").appFolder;
 var DescriptionView = widgets.DescriptionView;
 var ExtensionItem = widgets.ExtensionItem;
 var ProgressButton = widgets.ProgressButton;
@@ -52,7 +53,7 @@ function StoreUI() {
     this.aboutFrame.hide();
 
     // EULA logo
-    var eulaLogo = new StyledImage(storelib.appFolder + "/resources/logo.png", 800, 140)
+    var eulaLogo = new StyledImage(appFolder + "/resources/logo.png", 800, 140)
     this.eulaFrame.innerFrame.eulaLogo.setPixmap(eulaLogo.pixmap);
 
     this.eulaFrame.innerFrame.eulaCB.stateChanged.connect(this, function () {
@@ -66,7 +67,7 @@ function StoreUI() {
   }
 
   // About logo
-  var logo = new StyledImage(storelib.appFolder + "/resources/logo.png", 800, 140);
+  var logo = new StyledImage(appFolder + "/resources/logo.png", 800, 140);
   this.aboutFrame.storeLabel.setPixmap(logo.pixmap);
 
   // Social media buttons
