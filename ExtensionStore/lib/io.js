@@ -81,7 +81,14 @@ function recursiveFileCopy(folder, destination) {
   }
 }
 
+
+// returns the folder of this file
+var appFolder = __file__.split("/").slice(0, -2).join("/");
+if (appFolder.indexOf("repo") == -1) Logger.level = 1;   // disable logging if extension isn't in a repository
+
+
 exports.listFiles = listFiles
 exports.writeFile = writeFile
 exports.readFile = readFile
 exports.recursiveFileCopy = recursiveFileCopy
+exports.appFolder = appFolder

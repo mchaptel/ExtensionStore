@@ -2,7 +2,7 @@ var Logger = require("./logger.js").Logger;
 var io = require("./io.js");
 
 var log = new Logger("Style");
-var appFolder = require("./store.js").appFolder;
+var appFolder = io.appFolder;
 
 // Enum to hold dark style palette.
 // 4% opacity over Material UI palette.

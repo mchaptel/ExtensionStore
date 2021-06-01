@@ -6,6 +6,7 @@ var io = require("./io.js");
 var readFile = io.readFile;
 var writeFile = io.writeFile;
 var recursiveFileCopy = io.recursiveFileCopy;
+var appFolder = io.appFolder;
 
 Logger.level = 2;
 
@@ -1291,10 +1292,6 @@ ExtensionInstaller.prototype.getDownloadUrl = function (filePath) {
 
 
 // Helper functions ---------------------------------------------------
-
-// returns the folder of this file
-var appFolder = __file__.split("/").slice(0, -2).join("/");
-if (appFolder.indexOf("repo") == -1) Logger.level = 1;   // disable logging if extension isn't in a repository
 
 // make a deep copy of an object
 function deepCopy(object) {
