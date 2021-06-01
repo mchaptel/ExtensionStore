@@ -6,6 +6,7 @@ var widgets = require("./lib/widgets.js");
 var DescriptionView = widgets.DescriptionView;
 var ExtensionItem = widgets.ExtensionItem;
 var ProgressButton = widgets.ProgressButton;
+var InstallButton = widgets.InstallButton;
 var StyledImage = style.StyledImage;
 
 var log = new Logger("UI");
@@ -141,18 +142,13 @@ function StoreUI() {
   this.storeFooter.registerButton.clicked.connect(this, this.registerExtension);
 
   // Install Button Actions -------------------------------------------
-  this.installButton = new ProgressButton();
+  this.installButton = new InstallButton("Install");
   this.installButton.objectName = "installButton";
   this.storeDescriptionPanel.installButtonPlaceHolder.layout().addWidget(this.installButton, 1, Qt.AlignCenter);
 
-  this.installAction = new QAction("Install", this);
-  this.installAction.triggered.connect(this, this.performInstall);
-
-  this.updateAction = new QAction("Update", this);
-  this.updateAction.triggered.connect(this, this.performInstall);
-
-  this.uninstallAction = new QAction("Uninstall", this);
-  this.uninstallAction.triggered.connect(this, this.performUninstall);
+  this.installButton.modes.INSTALL.action.triggered.connect(this, this.performInstall);
+  this.installButton.modes.UPDATE.action.triggered.connect(this, this.performInstall);
+  this.installButton.modes.UNINSTALL.action.triggered.connect(this, this.performUninstall);
 }
 
 
@@ -444,26 +440,17 @@ StoreUI.prototype.updateDescriptionPanel = function () {
     var localExtension = this.localList.extensions[extension.id];
     if (!localExtension.currentVersionIsOlder(extension.version) && this.localList.checkFiles(extension)) {
       // Extension installed and up-to-date.
-      log.debug("set button to uninstall")
-      this.installButton.accentColor = style.COLORS.ORANGE;
-      this.installButton.removeAction(this.installAction);
-      this.installButton.removeAction(this.updateAction);
-      this.installButton.setDefaultAction(this.uninstallAction);
+      log.debug("set button to uninstall");
+      this.installButton.mode = "Uninstall";
     } else {
       log.debug("set button to update")
       // Extension installed and update available.
-      this.installButton.accentColor = style.COLORS.YELLOW;
-      this.installButton.removeAction(this.installAction);
-      this.installButton.removeAction(this.uninstallAction);
-      this.installButton.setDefaultAction(this.updateAction);
+      this.installButton.mode = "Update";
     }
   } else {
     // Extension not installed.
     log.debug("set button to install")
-    this.installButton.accentColor = style.COLORS.GREEN;
-    this.installButton.removeAction(this.uninstallAction);
-    this.installButton.removeAction(this.updateAction);
-    this.installButton.setDefaultAction(this.installAction);
+    this.installButton.mode = "Install";
   }
   this.installButton.enabled = (extension.package.files.length > 0)
 }
