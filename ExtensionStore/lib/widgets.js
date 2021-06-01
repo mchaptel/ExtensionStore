@@ -72,59 +72,150 @@ ExtensionItem.prototype = Object.create(QTreeWidgetItem.prototype);
 
 
 /**
- * A button that can also shows progress
+ * A button that can also show progress
+ * @classdesc
+ * @constructor
  */
-function ProgressButton(color){
+function ProgressButton(){
   QToolButton.call(this);
   this.maximumWidth = this.minimumWidth = UiLoader.dpiScale(130);
   this.maximumHeight = this.minimumHeight = UiLoader.dpiScale(30);
 
-  this._accentColor = color;
 }
-ProgressButton.prototype = Object.create(QToolButton.prototype)
+ProgressButton.prototype = Object.create(QToolButton.prototype);
 
-ProgressButton.prototype.setProgress = function (progress){
-  if (progress < 0){
-    // reset stylesheet by changing the accentColor
-    this.accentColor = this.accentColor;
-  } else if (progress < 1) {
-    // this.text = "Installing...";
+/**
+ * Set the text of the underlying Action rather than the widget directly.
+ */
+Object.defineProperty(ProgressButton.prototype, "text", {
+  get: function () {
+    return this.defaultAction().text;
+  },
+  set: function (text) {
+    this.defaultAction().text = text;
+  }
+});
+
+/**
+ * Get or Set the button mode.
+ * Changing the mode alters the visual appearance as well
+ * as exposes a different Action.
+ */
+Object.defineProperty(ProgressButton.prototype, "mode", {
+  get: function () {
+    return this._mode;
+  },
+  set: function (mode) {
+    var mode = mode.toUpperCase();
+    this._mode = this.modes[mode];
+    this.accentColor = this.modes[mode].accentColor;
+    this.setStyleSheet(this.modes[mode].styleSheet);
+    this.removeAction(this.defaultAction());
+    this.setDefaultAction(this.modes[mode].action);
+  }
+});
+
+
+/**
+ * Use the background stylesheet of the widget to act as a progress bar.
+ * @param {Int} progress - Value from 0 to 1 that the operation is currently at. 
+ */
+ProgressButton.prototype.setProgress = function (progress) {
+  var accentColor = this.accentColor;
+  var backgroundColor = this.backgroundColor;
+
+  if (progress < 1) {
     this.enabled = false;
 
     // Set stylesheet to act as a progressbar.
-    var progressStopL = progress;
-    var progressStopR = progressStopL + 0.001;
+    var progressStopR = progress;
+    var progressStopL = progressStopR - 0.001;
     var progressStyleSheet = "QToolButton {" +
       "background-color:" +
       "  qlineargradient(" +
       "    spread:pad," +
       "    x1:0, y1:0, x2:1, y2:0," +
-      "    stop: " + progressStopL + " " + this.accentColor + "," +
-      "    stop:" + progressStopR + " " + style.COLORS["12DP"] +
+      "    stop: " + progressStopL + " " + accentColor + "," +
+      "    stop:" + progressStopR + " " + backgroundColor +
       "  );"+
-      "  border-color: transparent transparent " + this.accentColor + " transparent;" +
+      "  border-color: transparent transparent " + accentColor + " transparent;" +
       "  color: white;" +
       "}";
     // Update widget with the new linear gradient progression.
     this.setStyleSheet(progressStyleSheet);
 
-  }else{
+    // Update text with progress
+    this.text = this.mode.progressText + " " + Math.round((progressStopR * 100)) + "%";
+
+  } else {
     // Configure widget to indicate the download is completed.
-    this.setStyleSheet("QToolButton { border: none; background-color: " + this.accentColor + "; color: white}");
+    this.setStyleSheet("QToolButton { border: none; background-color: " + accentColor + "; color: white}");
     this.enabled = true;
+    this.text = this.mode.defaultText;
   }
 }
 
-Object.defineProperty(ProgressButton.prototype, "accentColor", {
-  get: function(){
-    return this._accentColor;
-  },
-  set: function(newColor){
-    this._accentColor = newColor;
-    this.setStyleSheet(style.STYLESHEETS.progressButton.replace("@ACCENT", this._accentColor))
-  }
-})
+/**
+ * ProgressButton child class for Loading operations.
+ * @classdesc
+ * @constructor
+ */
+function LoadButton() {
+  ProgressButton.call(this);
 
+  this.backgroundColor = style.COLORS["08DP"];
+
+  this.modes = {
+    "LOAD": {
+      "action": new QAction("Load", this),
+      "defaultText": "Load",
+      "progressText": "Loading",
+      "accentColor": style.COLORS.ACCENT_LIGHT,
+      "styleSheet": style.STYLESHEETS.LoadButton,
+    }
+  }
+  this.mode = "LOAD";
+}
+InstallButton.prototype = Object.create(ProgressButton.prototype);
+
+/**
+ * ProgressButton child class for Extension installation, uninstallation and updates.
+ * @classdesc
+ * @constructor
+ * @param {String} mode - Default mode to set the button to.
+ */
+function InstallButton(mode) {
+  ProgressButton.call(this);
+
+  this.backgroundColor = style.COLORS["12DP"];
+
+  this.modes = {
+    "INSTALL": {
+      "action": new QAction("Install", this),
+      "defaultText": "Install",
+      "progressText": "Installing",
+      "accentColor": style.COLORS.GREEN,
+      "styleSheet": style.STYLESHEETS.installButton,
+    },
+    "UNINSTALL": {
+      "action": new QAction("Uninstall", this),
+      "defaultText": "Uninstall",
+      "progressText": "Uninstalling",
+      "accentColor": style.COLORS.ORANGE,
+      "styleSheet": style.STYLESHEETS.uninstallButton,
+    },
+    "UPDATE": {
+      "action": new QAction("Update", this),
+      "defaultText": "Update",
+      "progressText": "Updating",
+      "accentColor": style.COLORS.YELLOW,
+      "styleSheet": style.STYLESHEETS.updateButton,
+    },
+  }
+
+  this.mode = mode;
+}
+InstallButton.prototype = Object.create(ProgressButton.prototype);
 
 
 /**
@@ -195,5 +286,7 @@ Signal.prototype.toString = function(){
 
 exports.Signal = Signal;
 exports.ProgressButton = ProgressButton;
+exports.LoadButton = LoadButton;
+exports.InstallButton = InstallButton;
 exports.DescriptionView = DescriptionView;
 exports.ExtensionItem = ExtensionItem;
