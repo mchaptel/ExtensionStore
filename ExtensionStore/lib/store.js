@@ -1055,7 +1055,7 @@ LocalExtensionList.prototype.uninstall = function (extension) {
 
   // Remove packages recursively as they have a parent directory.
   if (extension.package.isPackage) {
-    var folder = new Dir(this.installFolder + "packages/" + extension.name.replace(" ", ""));
+    var folder = new Dir(this.installFolder + "/packages/" + extension.name.replace(" ", ""));
     this.log.debug("removing folder " + folder.path);
     if (folder.exists) folder.rmdirs();
   } else {
