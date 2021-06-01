@@ -197,13 +197,15 @@ Object.defineProperty(InstallButton.prototype, "mode", {
   },
   set: function (mode) {
     var mode = mode.toUpperCase();
+    var modeDetails = this.modes[mode]
+    if (!modeDetails) throw new Error ("Can't set InstallButton mode to "+ mode+ ", mode can only be 'INSTALL', 'UNINSTALL' or 'UPDATE'." )
 
     if (mode != this._mode){
       this._mode = mode;
-      this.accentColor = this.modes[mode].accentColor;
-      this.progressText = this.modes[mode].progressText;
+      this.accentColor = modeDetails.accentColor;
+      this.progressText = modeDetails.progressText;
       this.removeAction(this.defaultAction());
-      this.setDefaultAction(this.modes[mode].action);
+      this.setDefaultAction(modeDetails.action);
     }
   }
 });
