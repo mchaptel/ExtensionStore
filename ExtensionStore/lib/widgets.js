@@ -73,7 +73,7 @@ ExtensionItem.prototype = Object.create(QTreeWidgetItem.prototype);
 
 
 /**
- * A button that can also show progress
+ * A button that can show progress by animating the background stylesheet.
  * @classdesc
  * @constructor
  */
@@ -113,15 +113,17 @@ Object.defineProperty(ProgressButton.prototype, "accentColor", {
  * @param {Int} progress - Value from 0 to 1 that the operation is currently at.
  */
 ProgressButton.prototype.setProgress = function (progress) {
+  // ProgressBar requires integers, so remap from 0 => 1 for the QLinearGradient.
+  var progress = progress / 100;
+
   var accentColor = this.accentColor;
   var backgroundColor = this.backgroundColor;
 
-  if (progress < 0) {
-    // resetting stylesheet by setting accentColor
-    this.accentColor = accentColor;
-    this.text = this.defaultText;
+  // Nothing to do.
+  if (progress === 0) return;
 
-  } else if (progress < 1) {
+  // Operation in progress
+  if (progress < 1) {
     this.enabled = false;
     this.text = this.progressText;
 
@@ -146,7 +148,7 @@ ProgressButton.prototype.setProgress = function (progress) {
     this.text = this.mode.progressText + " " + Math.round((progressStopR * 100)) + "%";
 
   } else {
-    // Configure widget to indicate the download is completed.
+    // Configure widget to indicate the operation is complete.
     this.setStyleSheet("QToolButton { border: none; background-color: " + accentColor + "; color: white}");
     this.enabled = true;
     this.text = this.finishedText;
@@ -200,7 +202,7 @@ Object.defineProperty(InstallButton.prototype, "mode", {
     var modeDetails = this.modes[mode]
     if (!modeDetails) throw new Error ("Can't set InstallButton mode to "+ mode+ ", mode can only be 'INSTALL', 'UNINSTALL' or 'UPDATE'." )
 
-    if (mode != this._mode){
+    if (mode !== this._mode){
       this._mode = mode;
       this.accentColor = modeDetails.accentColor;
       this.progressText = modeDetails.progressText;
@@ -218,13 +220,16 @@ Object.defineProperty(InstallButton.prototype, "mode", {
  */
 function LoadButton() {
   ProgressButton.call(this, style.COLORS.ACCENT_LIGHT, "Load Store", "Loading...");
+  this.action = new QAction(this.defaultText, this);
+  this.setDefaultAction(this.action);
+
 }
-InstallButton.prototype = Object.create(ProgressButton.prototype);
+LoadButton.prototype = Object.create(ProgressButton.prototype);
 
 
 /**
  * A Qt like custom signal that can be defined, connected and emitted.
- * As this signal is not actually threaded, the connected callbacks will be exectuted
+ * As this signal is not actually threaded, the connected callbacks will be executed
  * directly when the signal is emited, and the rest of the code will execute after.
  * @param {type} type the type of value accepted as argument when calling emit()
  */

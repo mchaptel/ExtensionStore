@@ -6,7 +6,7 @@ var widgets = require("./lib/widgets.js");
 var appFolder = require("./lib/io.js").appFolder;
 var DescriptionView = widgets.DescriptionView;
 var ExtensionItem = widgets.ExtensionItem;
-var ProgressButton = widgets.ProgressButton;
+var LoadButton = widgets.LoadButton;
 var InstallButton = widgets.InstallButton;
 var StyledImage = style.StyledImage;
 
@@ -34,6 +34,10 @@ function StoreUI() {
   // Set the global application stylesheet
   this.ui.setStyleSheet(style.getSyleSheet());
 
+  // Create Load Store Button
+  this.loadStoreButton = new LoadButton();
+  this.loadStoreButton.objectName = "loadStoreButton";
+
   // create shorthand references to some of the main widgets of the ui
   this.eulaFrame = this.ui.eulaFrame;
   this.storeFrame = this.ui.storeFrame;
@@ -44,6 +48,9 @@ function StoreUI() {
   this.updateRibbon = this.aboutFrame.updateRibbon
   this.storeHeader = this.storeFrame.storeHeader;
   this.storeFooter = this.storeFrame.storeFooter;
+
+  // Insert the Loading button
+  this.aboutFrame.layout().insertWidget(6, this.loadStoreButton, 0, Qt.AlignCenter);
 
   // Hide the store and the loading UI elements.
   this.storeFrame.hide();
@@ -90,7 +97,8 @@ function StoreUI() {
   this.checkForUpdates()
 
   // connect UI signals
-  this.aboutFrame.loadStoreButton.clicked.connect(this, this.loadStore)
+  this.loadStoreButton.released.connect(this, this.loadStore);
+
   // Social media UI signals
   this.aboutFrame.twitterButton.clicked.connect(this, function () {
     QDesktopServices.openUrl(new QUrl(this.aboutFrame.twitterButton.toolTip));
@@ -101,6 +109,9 @@ function StoreUI() {
   this.aboutFrame.githubButton.clicked.connect(this, function () {
     QDesktopServices.openUrl(new QUrl(this.aboutFrame.githubButton.toolTip));
   });
+
+  this.store.onLoadProgressChanged.connect(this.aboutFrame.updateProgress, this.aboutFrame.updateProgress.setValue);
+  this.store.onLoadProgressChanged.connect(this.loadStoreButton, this.loadStoreButton.setProgress);
 
   // filter the store list --------------------------------------------
   this.storeHeader.searchStore.textChanged.connect(this, this.updateExtensionsList)
@@ -143,7 +154,7 @@ function StoreUI() {
   this.storeFooter.registerButton.clicked.connect(this, this.registerExtension);
 
   // Install Button Actions -------------------------------------------
-  this.installButton = new InstallButton("Install");
+  this.installButton = new InstallButton();
   this.installButton.objectName = "installButton";
   this.storeDescriptionPanel.installButtonPlaceHolder.layout().addWidget(this.installButton, 1, Qt.AlignCenter);
 
@@ -190,10 +201,9 @@ StoreUI.prototype.show = function () {
  * @param {boolean} visible - Determine whether the progress state should be enabled or disabled.
  */
 StoreUI.prototype.setUpdateProgressUIState = function (visible) {
-  this.aboutFrame.updateButton.visible = !visible;
-  this.aboutFrame.loadStoreButton.visible = !visible;
-  this.aboutFrame.updateLabel.visible = visible;
   this.aboutFrame.updateProgress.visible = visible;
+  this.aboutFrame.updateButton.visible = !visible;
+  this.aboutFrame.updateRibbon.storeVersion.visible = !visible;
 }
 
 

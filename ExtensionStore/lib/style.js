@@ -1,6 +1,5 @@
 var Logger = require("./logger.js").Logger;
 var io = require("./io.js");
-
 var log = new Logger("Style");
 var appFolder = io.appFolder;
 
@@ -83,12 +82,12 @@ function isDarkStyle() {
  * style-specific overrides.
  */
 function getSyleSheet() {
-  var styleFile = storelib.appFolder + "/resources/stylesheet_dark.qss";
+  var styleFile = appFolder + "/resources/stylesheet_dark.qss";
   var styleSheet = io.readFile(styleFile);
 
   // Get light-specific style overriddes
   if (!isDarkStyle()) {
-      styleFileLight = storelib.appFolder + "/resources/stylesheet_light.qss";
+      styleFileLight = appFolder + "/resources/stylesheet_light.qss";
       styleSheet += io.readFile(styleFileLight);
   }
 
