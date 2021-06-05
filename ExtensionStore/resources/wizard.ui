@@ -545,7 +545,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_16">
           <item>
-           <widget class="QToolButton" name="page2Back_2">
+           <widget class="QToolButton" name="page2bBack">
             <property name="minimumSize">
              <size>
               <width>24</width>
@@ -828,7 +828,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_7">
           <item>
-           <widget class="QToolButton" name="page2Back_3">
+           <widget class="QToolButton" name="page3Back">
             <property name="minimumSize">
              <size>
               <width>24</width>
@@ -1072,7 +1072,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_9">
           <item>
-           <widget class="QToolButton" name="page2Back_4">
+           <widget class="QToolButton" name="page4Back">
             <property name="minimumSize">
              <size>
               <width>24</width>
@@ -1424,7 +1424,7 @@ p, li { white-space: pre-wrap; }
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_10">
           <item>
-           <widget class="QToolButton" name="page2Back_5">
+           <widget class="QToolButton" name="page5Back">
             <property name="minimumSize">
              <size>
               <width>24</width>
@@ -1583,7 +1583,7 @@ p, li { white-space: pre-wrap; }
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_18">
           <item>
-           <widget class="QLineEdit" name="filesField_2">
+           <widget class="QLineEdit" name="iconField">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -1602,7 +1602,7 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="filesPicker_2">
+           <widget class="QToolButton" name="iconPicker">
             <property name="text">
              <string>...</string>
             </property>
@@ -1729,7 +1729,7 @@ p, li { white-space: pre-wrap; }
       </widget>
      </item>
      <item>
-      <widget class="QFrame" name="frame">
+      <widget class="QFrame" name="page6">
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
        </property>
@@ -1740,7 +1740,7 @@ p, li { white-space: pre-wrap; }
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_14">
           <item>
-           <widget class="QToolButton" name="page2Back_6">
+           <widget class="QToolButton" name="page6Back">
             <property name="minimumSize">
              <size>
               <width>24</width>
@@ -1986,7 +1986,7 @@ p, li { white-space: pre-wrap; }
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_11">
+           <widget class="QPushButton" name="doneButton">
             <property name="text">
              <string>Done</string>
             </property>
