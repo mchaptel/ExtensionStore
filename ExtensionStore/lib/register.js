@@ -1,8 +1,10 @@
 var Logger = require("./logger.js").Logger;
 var DescriptionView = require("./widgets.js").DescriptionView;
 var appFolder = require("./io.js").appFolder;
+var style = require("./style.js")
+var StyledImage = style.StyledImage
 
-log = new Logger("Register")
+var log = new Logger ("Register")
 
 /**
  * The custom dialog to register a new extension
@@ -572,6 +574,73 @@ FilesPicker.prototype.cancelDialog = function (){
 }
 
 
+function RegisterWizard(store, localList){
+  // RegisterExtensionDialog.call(this, store, localList)
+  this.store = store;
+  this.localList = localList;
+  this.seller;
+
+  this.ui = UiLoader.load(appFolder + "/resources/wizard.ui");
+  this.ui.windowTitle = "Register Extension"
+
+  this.pages = {
+    "1": this.ui.page1,
+    "2": this.ui.page2,
+    "2b": this.ui.page2b,
+    "3": this.ui.page3,
+    "4": this.ui.page4,
+    "5": this.ui.page5,
+    "6": this.ui.page6,
+  }
+
+  this.setCurrentPage("1");
+
+  // set dialog geometry
+  var width = UiLoader.dpiScale(400)
+  var height = UiLoader.dpiScale(550)
+
+  for (var i in this.pages){
+    this.pages[i].minimumWidth = this.pages[i].maximumWidth = width;
+    this.pages[i].minimumHeight = this.pages[i].maximumHeight = height;
+  }
+
+  this.ui.size = new QSize(width, height);
+  var x = QApplication.desktop().width/2-width/2;
+  var y = QApplication.desktop().height/2-height/2;
+  this.ui.move(x, y);
+
+  // add icon
+  this.icon = new StyledImage(style.ICONS.headerLogo, 22, 22)
+  this.ui.logo.setPixmap(this.icon.pixmap)
+
+  // connect navigation buttons
+  this.ui.page1.page1Next.clicked.connect(this, function(){this.setCurrentPage("2");})
+  this.ui.page2.page2Next.clicked.connect(this, function(){this.setCurrentPage("3");})
+  this.ui.page3.page3Next.clicked.connect(this, function(){this.setCurrentPage("4");})
+  this.ui.page4.page4Next.clicked.connect(this, function(){this.setCurrentPage("5");})
+  this.ui.page5.page5Next.clicked.connect(this, function(){this.setCurrentPage("6");})
+  this.ui.page2.page2Back.clicked.connect(this, function(){this.setCurrentPage("1");})
+  this.ui.page2b.page2bBack.clicked.connect(this, function(){this.setCurrentPage("1");})
+  this.ui.page3.page3Back.clicked.connect(this, function(){this.setCurrentPage("2");})
+  this.ui.page4.page4Back.clicked.connect(this, function(){this.setCurrentPage("3");})
+  this.ui.page5.page5Back.clicked.connect(this, function(){this.setCurrentPage("4");})
+  this.ui.page6.page6Back.clicked.connect(this, function(){this.setCurrentPage("5");})
+}
+RegisterWizard.prototype = Object.create(RegisterExtensionDialog.prototype)
+
+RegisterWizard.prototype.isPageValid = function (index){
+  return true
+}
+
+RegisterWizard.prototype.setCurrentPage = function (index){
+  if (this.isPageValid(this.currentPage))
+  for (var i in this.pages){
+    this.pages[i].visible = false;
+  }
+  this.pages[index].visible = true;
+  this.currentPage = index
+}
+
 /**
  * converts a file search string with wildcard and extensions to a regex search
  * @param {string} search  the string to convert to a valid regex
@@ -591,3 +660,4 @@ function searchToRe(search) {
 }
 
 exports.RegisterExtensionDialog = RegisterExtensionDialog
+exports.RegisterWizard = RegisterWizard
