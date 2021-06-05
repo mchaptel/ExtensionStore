@@ -219,7 +219,7 @@ Object.defineProperty(InstallButton.prototype, "mode", {
 function LoadButton() {
   ProgressButton.call(this, style.COLORS.ACCENT_LIGHT, "Load Store", "Loading...");
 }
-InstallButton.prototype = Object.create(ProgressButton.prototype);
+LoadButton.prototype = Object.create(ProgressButton.prototype);
 
 
 /**
