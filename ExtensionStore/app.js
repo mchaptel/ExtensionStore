@@ -228,8 +228,11 @@ function StoreUI() {
  * Brings up the register extension dialog for script makers
  */
 StoreUI.prototype.registerExtension = function () {
-  var RegisterExtensionDialog = require("./lib/register.js").RegisterExtensionDialog;
-  var registerDialog = new RegisterExtensionDialog(this.store, this.localList);
+  // var RegisterExtensionDialog = require("./lib/register.js").RegisterExtensionDialog;
+  // var registerDialog = new RegisterExtensionDialog(this.store, this.localList);
+  var RegisterWizard = require("./lib/register.js").RegisterWizard;
+  var registerDialog = new RegisterWizard(this.store, this.localList);
+
   registerDialog.show();
 }
 
