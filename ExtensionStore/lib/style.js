@@ -226,7 +226,9 @@ Object.defineProperty(StyledImage.prototype, "pixmap", {
         var aspectRatioFlag = Qt.IgnoreAspectRatio;
       }
 
-      var pixmap = pixmap.scaled(this.width, this.height, aspectRatioFlag, Qt.SmoothTransformation);
+      if (this.width || this.height){
+        var pixmap = pixmap.scaled(this.width, this.height, aspectRatioFlag, Qt.SmoothTransformation);
+      }
 
       this._pixmap = pixmap
     }
