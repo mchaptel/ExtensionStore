@@ -21,7 +21,6 @@ function RegisterExtensionDialog(store, localList){
 
   // Setup register panel --------------------------------------------
   this.registerPanel = this.ui.registerForm;
-  // this.registerDescription = this.registerPanel.descriptionSplitter.widget(0);
 
   this.extensionList = this.registerPanel.extensionPicker;
   this.authorBox = this.ui.authorBox;
@@ -35,9 +34,7 @@ function RegisterExtensionDialog(store, localList){
   this.authorNameBox = this.authorBox.authorField;
   this.websiteBox = this.authorBox.websiteField;
   this.socialBox = this.authorBox.socialField;
-  // this.packageAuthorField = this.ui.page2b.packageAuthorField;
   this.extensionList = this.registerPanel.extensionPicker;
-  // this.extensionNameBox = this.ui.page3.extensionNameBox;
   this.licenseBox = this.registerPanel.licenseType;
   this.compatibilityBox = this.registerPanel.compatibilityComboBox;
   this.versionBox = this.registerPanel.versionField;
@@ -51,9 +48,7 @@ function RegisterExtensionDialog(store, localList){
   this.iconPicker = this.registerPanel.iconPicker;
   this.filesField = this.registerPanel.filesField;
   this.filesPicker = this.registerPanel.filesPicker;
-  // this.packageField = this.ui.page6.packageField;
-  // this.mainRepoField = this.ui.page6.mainRepoField;
-
+  this.generateButton = this.reviewPage.generateButton;
 
   // create the webview programmatically
   this.descriptionPreview = new DescriptionView();
@@ -81,16 +76,13 @@ function RegisterExtensionDialog(store, localList){
   this.licenseBox.editingFinished.connect(this, this.savePackageInfo);
   this.compatibilityBox["currentIndexChanged(int)"].connect(this, this.savePackageInfo);
   this.descriptionField.focusOutEvent = this.savePackageInfo;
-  this.keywordsBox.keywordsField.editingFinished.connect(this, this.savePackageInfo);
+  this.keywordsBox.editingFinished.connect(this, this.savePackageInfo);
   this.repoField.editingFinished.connect(this, this.savePackageInfo);
 
-  this.registerPanel.addExtensionButton.clicked.connect(this, this.addExtension);
-  this.registerPanel.removeExtensionButton.clicked.connect(this, this.removeExtension);
-  this.registerPanel.renameExtensionButton.clicked.connect(this, this.renameExtension);
-
-  this.ui.generateButton.clicked.connect(this, this.generatePackage);
+  this.generateButton.clicked.connect(this, this.generatePackage);
 
   this.filesPicker.clicked.connect(this, this.selectFiles);
+  this.iconPicker.clicked.connect(this, this.selectIcon);
 
   // block signals when updating is true
   this.updating = false;
@@ -274,7 +266,8 @@ RegisterExtensionDialog.prototype.updatePackageInfo = function(index) {
  this.descriptionField.setPlainText(this.descriptionStringFromHtml(extension.package.description));
  this.keywordsBox.text = extension.package.keywords.join(", ");
  this.repoField.text = extension.package.repository;
- this.filesField.text = extension.package.files.join(", ");
+ this.iconField.text = extension.package.icon;
+ this.filesField.setPlainText(extension.package.files.join(",\n"));
  this.licenseBox.text = extension.package.license;
 
  this.updating = false;
@@ -383,12 +376,24 @@ RegisterExtensionDialog.prototype.generatePackage = function () {
 
 RegisterExtensionDialog.prototype.selectFiles = function (){
   var repoUrl = this.repoField.text;
-  var includedFiles = this.filesField.text.split(",");
+  var includedFiles = this.filesField.plainText.split(",\n");
   var filesPicker = new FilesPicker(repoUrl, includedFiles)
   var includedFiles = filesPicker.exec();
 
   if (includedFiles){
-    this.filesField.text = includedFiles.join(",");
+    this.filesField.setPlainText(includedFiles.join(",\n"));
+    this.savePackageInfo();
+  }
+}
+
+RegisterExtensionDialog.prototype.selectIcon = function (){
+  var repoUrl = this.repoField.text;
+  var iconFile = this.iconField;
+  var filesPicker = new FilesPicker(repoUrl, iconFile)
+  var includedFiles = filesPicker.exec();
+
+  if (includedFiles){
+    this.iconField.text = includedFiles.join(",");
     this.savePackageInfo();
   }
 }
@@ -603,59 +608,71 @@ function RegisterWizard(store, localList){
   this.ui = UiLoader.load(appFolder + "/resources/wizard.ui");
   this.ui.windowTitle = "Register Extension"
 
-  this.pages = {
-    "1": this.ui.page1,
-    "2": this.ui.page2,
-    "2b": this.ui.page2b,
-    "3": this.ui.page3,
-    "4": this.ui.page4,
-    "5": this.ui.page5,
-    "6": this.ui.page6,
+  this.PAGES = {
+    "MAINREPO":0,
+    "PACKAGEFOUND":1,
+    "AUTHORINFO":2,
+    "EXTENSION":3,
+    "DESCRIPTION":4,
+    "FILES":5,
+    "REVIEW":6
   }
 
-  this.setCurrentPage("1");
+  // add icon
+  this.icon = new StyledImage(style.ICONS.headerLogo, 22, 22);
+  this.ui.header.logo.setPixmap(this.icon.pixmap);
+
+  this.ui.setStyleSheet(style.getSyleSheet());
 
   // set dialog geometry
+  this.pages = this.ui.pages;
+
   var width = UiLoader.dpiScale(400)
   var height = UiLoader.dpiScale(550)
 
-  for (var i in this.pages){
-    this.pages[i].minimumWidth = this.pages[i].maximumWidth = width;
-    this.pages[i].minimumHeight = this.pages[i].maximumHeight = height;
-  }
+  this.pages.minimumWidth = this.pages.maximumWidth = width;
+  this.pages.minimumHeight = this.pages.maximumHeight = height;
 
   this.ui.size = new QSize(width, height);
   var x = QApplication.desktop().width/2-width/2;
   var y = QApplication.desktop().height/2-height/2;
   this.ui.move(x, y);
 
-  // add icon
-  this.icon = new StyledImage(style.ICONS.headerLogo, 22, 22);
-  this.ui.logo.setPixmap(this.icon.pixmap);
-
   // ui elements
-  this.mainRepo = this.ui.page1.mainRepoBox;
-  this.authorNameBox = this.ui.page2.authorNameBox;
-  this.websiteBox = this.ui.page2.websiteBox;
-  this.socialBox = this.ui.page2.socialBox;
-  this.packageAuthorField = this.ui.page2b.packageAuthorField;
-  this.extensionList = this.ui.page2b.extensionsList;
-  this.extensionNameBox = this.ui.page3.extensionNameBox;
-  this.licenseBox = this.ui.page3.licenseBox;
-  this.compatibilityBox = this.ui.page3.compatibilityBox;
-  this.versionBox = this.ui.page4.versionBox;
-  this.descriptionSplitter = this.ui.page4.descriptionSplitter;
+  this.progressBar = this.ui.progressBar;
+  this.mainRepoPage = this.pages.widget(this.PAGES.MAINREPO);
+  this.authorInfoPage = this.pages.widget(this.PAGES.AUTHORINFO);
+  this.packageFoundPage = this.pages.widget(this.PAGES.PACKAGEFOUND);
+  this.extensionPage = this.pages.widget(this.PAGES.EXTENSION);
+  this.descriptionPage = this.pages.widget(this.PAGES.DESCRIPTION);
+  this.filesPage = this.pages.widget(this.PAGES.FILES);
+  this.reviewPage = this.pages.widget(this.PAGES.REVIEW);
+
+  this.mainRepo = this.mainRepoPage.mainRepoBox;
+  this.packageAuthorField = this.packageFoundPage.packageAuthorField;
+  this.extensionList = this.packageFoundPage.extensionsList;
+  this.packageFoundWarning = this.packageFoundPage.packageFoundWarning;
+  this.noPackageWarning = this.authorInfoPage.noPackageWarning;
+  this.authorNameBox = this.authorInfoPage.authorNameBox;
+  this.websiteBox = this.authorInfoPage.websiteBox;
+  this.socialBox = this.authorInfoPage.socialBox;
+  this.extensionNameBox = this.extensionPage.extensionNameBox;
+  this.licenseBox = this.extensionPage.licenseBox;
+  this.compatibilityBox = this.extensionPage.compatibilityBox;
+  this.versionBox = this.descriptionPage.versionBox;
+  this.descriptionSplitter = this.descriptionPage.descriptionSplitter;
   this.descriptionField = this.descriptionSplitter.widget(0);
   this.htmlPreview = this.descriptionSplitter.widget(1);
-  this.keywordsBox = this.ui.page4.keywordsBox;
-  this.extensionAuthorBox = this.ui.page4.extensionAuthorBox;
-  this.repoField = this.ui.page5.repoField;
-  this.iconField = this.ui.page5.iconField;
-  this.iconPicker = this.ui.page5.iconPicker;
-  this.filesField = this.ui.page5.filesField;
-  this.filesPicker = this.ui.page5.filesPicker;
-  this.packageField = this.ui.page6.packageField;
-  this.mainRepoField = this.ui.page6.mainRepoField;
+  this.keywordsBox = this.descriptionPage.keywordsBox;
+  this.extensionAuthorBox = this.descriptionPage.extensionAuthorBox;
+  this.repoField = this.filesPage.repoField;
+  this.iconField = this.filesPage.iconField;
+  this.iconPicker = this.filesPage.iconPicker;
+  this.filesField = this.filesPage.filesField;
+  this.filesPicker = this.filesPage.filesPicker;
+  this.packageField = this.reviewPage.packageField;
+  this.mainRepoField = this.reviewPage.mainRepoField;
+  this.generateButton = this.reviewPage.generateButton;
 
   // create the webview programmatically
   this.descriptionPreview = new DescriptionView();
@@ -663,6 +680,7 @@ function RegisterWizard(store, localList){
   this.htmlPreview.setLayout(new QVBoxLayout());
   this.htmlPreview.layout().setContentsMargins(0, 0, 0, 0);
   this.htmlPreview.layout().addWidget(this.descriptionPreview, 0, Qt.AlignTop);
+  this.descriptionField.textChanged.connect(this, this.updateHtmlPreview);
 
   // fill url textfield if previously saved to local preferences
   var repoUrl = this.localList.getData("recentGithubUrl", "");
@@ -670,35 +688,47 @@ function RegisterWizard(store, localList){
   if (repoUrl) this.mainRepo.setText(repoUrl);
 
   // connect navigation buttons
-  this.ui.page1.page1Next.clicked.connect(this, this.loadPackage)
-  this.ui.page2.page2Next.clicked.connect(this, function(){this.setCurrentPage("3");})
-  this.ui.page3.page3Next.clicked.connect(this, function(){this.setCurrentPage("4");})
-  this.ui.page4.page4Next.clicked.connect(this, function(){this.setCurrentPage("5");})
-  this.ui.page5.page5Next.clicked.connect(this, function(){this.setCurrentPage("6");})
-  this.ui.page2.page2Back.clicked.connect(this, function(){this.setCurrentPage("1");})
-  this.ui.page2b.page2bBack.clicked.connect(this, function(){this.setCurrentPage("1");})
-  this.ui.page3.page3Back.clicked.connect(this, function(){this.setCurrentPage("2");})
-  this.ui.page4.page4Back.clicked.connect(this, function(){this.setCurrentPage("3");})
-  this.ui.page5.page5Back.clicked.connect(this, function(){this.setCurrentPage("4");})
-  this.ui.page6.page6Back.clicked.connect(this, function(){this.setCurrentPage("5");})
+  this.mainRepoPage.page1Next.clicked.connect(this, this.loadPackage)
+  this.authorInfoPage.page2Next.clicked.connect(this, function(){this.setCurrentPage(this.PAGES.PACKAGEFOUND);})
+  this.extensionPage.page3Next.clicked.connect(this, function(){this.setCurrentPage(this.PAGES.DESCRIPTION);})
+  this.descriptionPage.page4Next.clicked.connect(this, function(){this.setCurrentPage(this.PAGES.FILES);})
+  this.filesPage.page5Next.clicked.connect(this, function(){this.setCurrentPage(this.PAGES.REVIEW);})
+  this.authorInfoPage.page2Back.clicked.connect(this, function(){this.setCurrentPage(this.PAGES.PACKAGEFOUND);})
+  this.packageFoundPage.page2bBack.clicked.connect(this, function(){this.setCurrentPage(this.PAGES.MAINREPO);})
+  this.extensionPage.page3Back.clicked.connect(this, function(){this.setCurrentPage(this.PAGES.PACKAGEFOUND);})
+  this.descriptionPage.page4Back.clicked.connect(this, function(){this.setCurrentPage(this.PAGES.EXTENSION);})
+  this.filesPage.page5Back.clicked.connect(this, function(){this.setCurrentPage(this.PAGES.DESCRIPTION);})
+  this.reviewPage.page6Back.clicked.connect(this, function(){this.setCurrentPage(this.PAGES.FILES);})
 
-  this.ui.page2b.addExtensionButton.clicked.connect(this, function(){this.setCurrentPage("3");})
-  this.ui.page2b.editAuthorButton.clicked.connect(this, function(){this.setCurrentPage("2");})
-  this.ui.page2b.editExtensionButton.clicked.connect(this, this.editExtension)
-}
-RegisterWizard.prototype = Object.create(RegisterExtensionDialog.prototype)
+  this.packageFoundPage.addExtensionButton.clicked.connect(this, this.addExtension)
+  this.packageFoundPage.editAuthorButton.clicked.connect(this, function(){this.setCurrentPage(this.PAGES.AUTHORINFO);})
+  this.packageFoundPage.editExtensionButton.clicked.connect(this, this.editExtension)
 
-RegisterWizard.prototype.isPageValid = function (index){
-  return true
+  // connect editing fields
+  this.extensionList["currentIndexChanged(int)"].connect(this, this.updatePackageInfo);
+  this.extensionList["currentIndexChanged(int)"].connect(this, function(){this.extensionNameBox.text = this.extensionList.currentText});
+
+  this.extensionNameBox.editingFinished.connect(this, this.savePackageInfo);
+  this.versionBox.editingFinished.connect(this, this.savePackageInfo);
+  this.licenseBox.editingFinished.connect(this, this.savePackageInfo);
+  this.compatibilityBox["currentIndexChanged(int)"].connect(this, this.savePackageInfo);
+  this.descriptionField.focusOutEvent = this.savePackageInfo;
+  this.keywordsBox.editingFinished.connect(this, this.savePackageInfo);
+  this.repoField.editingFinished.connect(this, this.savePackageInfo);
+
+  this.generateButton.clicked.connect(this, this.generatePackage);
+
+  this.filesPicker.clicked.connect(this, this.selectFiles);
+  this.iconPicker.clicked.connect(this, this.selectIcon);
+
+  this.setCurrentPage(this.PAGES.MAINREPO);
 }
+RegisterWizard.prototype = Object.create(RegisterExtensionDialog.prototype);
+
 
 RegisterWizard.prototype.setCurrentPage = function (index){
-  if (this.isPageValid(this.currentPage))
-  for (var i in this.pages){
-    this.pages[i].hide();
-  }
-  this.pages[index].visible = true;
-  this.currentPage = index
+  this.progressBar.value = index;
+  this.pages.setCurrentIndex(index);
 }
 
 
@@ -708,9 +738,14 @@ RegisterWizard.prototype.setCurrentPage = function (index){
 */
 RegisterWizard.prototype.loadSeller = function (seller) {
   if (!seller.package) {
-    this.setCurrentPage("2")
+    this.setCurrentPage(this.PAGES.AUTHORINFO);
+    this.noPackageWarning.visible = true;
+    this.packageFoundWarning.visible = false;
     return;
   }
+
+  this.noPackageWarning.visible = false;
+  this.packageFoundWarning.visible = true;
 
   this.seller = seller;
   this.resetPanel();
@@ -728,27 +763,27 @@ RegisterWizard.prototype.loadSeller = function (seller) {
 
   // add extensions to the drop down
   for (var i in extensions) {
-    log.debug("adding extension " + extensions[i].name)
+    log.debug("adding extension " + extensions[i].name);
     this.extensionList.addItem(extensions[i].name, extensions[i].id);
   }
   this.updatePackageInfo(0);
 
-  this.setCurrentPage("2b")
+  this.setCurrentPage(this.PAGES.PACKAGEFOUND);
 }
 
 
 RegisterWizard.prototype.editExtension = function(){
-  this.updatePackageInfo()
-  this.setCurrentPage("3")
+  this.updatePackageInfo(this.extensionList.currentIndex);
+  this.setCurrentPage(this.PAGES.EXTENSION);
 }
 
 RegisterWizard.prototype.addExtension = function(){
   this.savePackageInfo()
-  var extension = this.seller.addExtension("New Extension");
+  var newName = "New Extension";
+  var extension = this.seller.addExtension(newName);
   this.extensionList.addItem(newName, extension.id);
-  this.updatePackageInfo()
-
-  this.setCurrentPage("3")
+  this.extensionList.setCurrentIndex(this.extensionList.findText(newName));
+  this.setCurrentPage(this.PAGES.EXTENSION);
 }
 
 /**

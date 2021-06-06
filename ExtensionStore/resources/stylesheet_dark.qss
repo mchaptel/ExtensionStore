@@ -5,7 +5,33 @@ Overall widget styling.
 ======================
 */
 
-/* Base widget of the entire UI */
+/* Base Widgets. */
+QWidget {
+	background-color: @04DP;
+}
+
+/* Base PushButton. */
+QPushButton {
+	background-color: @12DP;
+	border-radius: 3px;
+	padding: 5px;
+}
+QPushButton:hover {
+	background-color: @16DP;
+}
+
+/* Base QToolButton. */
+QToolButton {
+	background-color: @04DP;
+	border-radius: 3px;
+	padding: 5px;
+}
+QToolButton:hover {
+	background-color: @16DP;
+}
+
+
+/* Only useful if rounding corners and update label fixed. */
 QWidget#Form {
   background-color: @01DP;
 }

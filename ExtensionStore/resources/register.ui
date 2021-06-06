@@ -398,7 +398,7 @@
            <string>This specifies which versions of Harmony is required for the extension to work.</string>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>0</number>
           </property>
           <item>
            <property name="text">
@@ -418,16 +418,6 @@
           <item>
            <property name="text">
             <string>Harmony Premium 15</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Harmony Premium 14</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Harmony Premium 12</string>
            </property>
           </item>
          </widget>
