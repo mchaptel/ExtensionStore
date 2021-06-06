@@ -219,7 +219,7 @@ Object.defineProperty(InstallButton.prototype, "mode", {
  * @constructor
  */
 function LoadButton() {
-  ProgressButton.call(this, style.COLORS.ACCENT_LIGHT, "Load Store", "Loading...");
+  ProgressButton.call(this, style.COLORS.ACCENT_PRIMARY, "Load Store", "Loading...");
   this.action = new QAction(this.defaultText, this);
   this.setDefaultAction(this.action);
 

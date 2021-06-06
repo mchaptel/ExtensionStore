@@ -37,6 +37,7 @@ function StoreUI() {
   // Create Load Store Button
   this.loadStoreButton = new LoadButton();
   this.loadStoreButton.objectName = "loadStoreButton";
+  style.addDropShadow(this.loadStoreButton, 10, 0, 8);
 
   // create shorthand references to some of the main widgets of the ui
   this.eulaFrame = this.ui.eulaFrame;
@@ -161,6 +162,11 @@ function StoreUI() {
   this.installButton.modes.INSTALL.action.triggered.connect(this, this.performInstall);
   this.installButton.modes.UPDATE.action.triggered.connect(this, this.performInstall);
   this.installButton.modes.UNINSTALL.action.triggered.connect(this, this.performUninstall);
+
+  // Add Dropshadow to buttons.
+  style.addDropShadow(this.installButton, 10, 0, 8);
+  style.addDropShadow(this.storeDescriptionPanel.websiteButton);
+  style.addDropShadow(this.storeDescriptionPanel.sourceButton);
 }
 
 

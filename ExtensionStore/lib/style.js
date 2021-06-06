@@ -128,6 +128,37 @@ function getImage(imagePath) {
 }
 
 
+/**
+ * Add a Dropshadow graphic effect to the provided widget.
+ * @param {QWidget} widget - Widget to apply the dropshadow to.
+ * @param {Int} radius - Radius of the blur applied to the dropshadow.
+ * @param {Int} offsetX - How many pixels to offset the blur in the X coordinate.
+ * @param {Int} offsetY - How many pixels to offset the blur in the Y coordinate. 
+ * @param {Int} opacity - Opacity from 0 => 255, where 0 is fully transparent.
+ */
+ function addDropShadow(widget, radius, offsetX, offsetY, opacity) {
+  var radius = radius || 10;
+  var offsetX = offsetX || 0;
+  var offsetY = offsetY || 3;
+  var opacity = opacity || 70;
+
+  var dropShadow = new QGraphicsDropShadowEffect();
+  dropShadow.setBlurRadius(radius);
+  dropShadow.setOffset(offsetX, offsetY);
+  var shadowColor = new QColor(style.COLORS["00DP"]);
+  shadowColor.setAlpha(opacity);
+  dropShadow.setColor(shadowColor);
+
+  // Apply the effect. Catch errors if a widget that doesn't support the setGraphicEffect call is provided.
+  try {
+    widget.setGraphicsEffect(dropShadow);
+  }
+  catch (err) {
+    log.debug("Widget doesn't support setting a graphics effect.");
+  }
+}
+
+
 function StyledImage(imagePath, width, height, uniformScaling) {
   if (typeof uniformScaling === 'undefined') var uniformScaling = true;
   if (typeof width === 'undefined') var width = 0;
@@ -189,6 +220,7 @@ StyledImage.prototype.setAsIcon = function(widget, itemColumn){
   }
 }
 
+exports.addDropShadow = addDropShadow;
 exports.getSyleSheet = getSyleSheet;
 exports.StyledImage = StyledImage;
 exports.STYLESHEETS = STYLESHEETS;
