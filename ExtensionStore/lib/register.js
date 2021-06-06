@@ -21,7 +21,7 @@ function RegisterExtensionDialog(store, localList){
 
   // Setup register panel --------------------------------------------
   this.registerPanel = this.ui.registerForm;
-  this.registerDescription = this.registerPanel.descriptionSplitter.widget(0);
+  // this.registerDescription = this.registerPanel.descriptionSplitter.widget(0);
 
   this.extensionList = this.registerPanel.extensionPicker;
   this.authorBox = this.ui.authorBox;
@@ -30,36 +30,59 @@ function RegisterExtensionDialog(store, localList){
   this.authorBox.enabled = false;
   this.registerPanel.enabled = false;
 
+  // ui elements
+  this.mainRepo = this.packageBox.packageUrl;
+  this.authorNameBox = this.authorBox.authorField;
+  this.websiteBox = this.authorBox.websiteField;
+  this.socialBox = this.authorBox.socialField;
+  // this.packageAuthorField = this.ui.page2b.packageAuthorField;
+  this.extensionList = this.registerPanel.extensionPicker;
+  // this.extensionNameBox = this.ui.page3.extensionNameBox;
+  this.licenseBox = this.registerPanel.licenseType;
+  this.compatibilityBox = this.registerPanel.compatibilityComboBox;
+  this.versionBox = this.registerPanel.versionField;
+  this.descriptionSplitter = this.registerPanel.descriptionSplitter;
+  this.descriptionField = this.descriptionSplitter.widget(0);
+  this.htmlPreview = this.descriptionSplitter.widget(1);
+  this.keywordsBox = this.registerPanel.keywordsPanel.keywordsField
+  this.extensionAuthorBox = this.registerPanel.authorName;
+  this.repoField = this.registerPanel.repoField;
+  this.iconField = this.registerPanel.iconField;
+  this.iconPicker = this.registerPanel.iconPicker;
+  this.filesField = this.registerPanel.filesField;
+  this.filesPicker = this.registerPanel.filesPicker;
+  // this.packageField = this.ui.page6.packageField;
+  // this.mainRepoField = this.ui.page6.mainRepoField;
+
+
   // create the webview programmatically
   this.descriptionPreview = new DescriptionView();
 
-  htmlPreview = this.registerPanel.descriptionSplitter.widget(1);
-  htmlPreview.setLayout(new QVBoxLayout());
-  htmlPreview.layout().setContentsMargins(0, 0, 0, 0);
-  htmlPreview.layout().addWidget(this.descriptionPreview, 0, Qt.AlignTop);
+  this.htmlPreview.setLayout(new QVBoxLayout());
+  this.htmlPreview.layout().setContentsMargins(0, 0, 0, 0);
+  this.htmlPreview.layout().addWidget(this.descriptionPreview, 0, Qt.AlignTop);
 
-  this.registerPanel.descriptionSplitter.setSizes([this.registerPanel.descriptionSplitter.width, 0]);
+  this.descriptionSplitter.setSizes([this.descriptionSplitter.width, 0]);
 
   // fill url textfield if previously saved to local preferences
   var repoUrl = this.localList.getData("recentGithubUrl", "");
   log.debug(repoUrl);
-  if (repoUrl) this.packageBox.packageUrl.setText(repoUrl);
+  if (repoUrl) this.mainRepo.setText(repoUrl);
 
   // Set up signal connexions ----------------------------------------
-  this.registerDescription.textChanged.connect(this, this.updateHtmlPreview);
+  this.descriptionField.textChanged.connect(this, this.updateHtmlPreview);
   this.packageBox.loadPackageButton.clicked.connect(this, this.loadPackage);
   this.packageBox.loadPackageFromFileButton.clicked.connect(this, this.loadPackageFromFile);
   this.packageBox.newPackageButton.clicked.connect(this, this.createNewPackage);
 
   this.extensionList["currentIndexChanged(int)"].connect(this, this.updatePackageInfo);
 
-  this.registerPanel.versionField.editingFinished.connect(this, this.savePackageInfo);
-  this.registerPanel.licenseType.editingFinished.connect(this, this.savePackageInfo);
-  this.registerPanel.compatibilityComboBox["currentIndexChanged(int)"].connect(this, this.savePackageInfo);
-  this.registerDescription.focusOutEvent = this.savePackageInfo;
-  this.registerPanel.isPackageCheckBox.stateChanged.connect(this, this.savePackageInfo);
-  this.registerPanel.keywordsPanel.keywordsField.editingFinished.connect(this, this.savePackageInfo);
-  this.registerPanel.repoField.editingFinished.connect(this, this.savePackageInfo);
+  this.versionBox.editingFinished.connect(this, this.savePackageInfo);
+  this.licenseBox.editingFinished.connect(this, this.savePackageInfo);
+  this.compatibilityBox["currentIndexChanged(int)"].connect(this, this.savePackageInfo);
+  this.descriptionField.focusOutEvent = this.savePackageInfo;
+  this.keywordsBox.keywordsField.editingFinished.connect(this, this.savePackageInfo);
+  this.repoField.editingFinished.connect(this, this.savePackageInfo);
 
   this.registerPanel.addExtensionButton.clicked.connect(this, this.addExtension);
   this.registerPanel.removeExtensionButton.clicked.connect(this, this.removeExtension);
@@ -67,7 +90,7 @@ function RegisterExtensionDialog(store, localList){
 
   this.ui.generateButton.clicked.connect(this, this.generatePackage);
 
-  this.registerPanel.filesPicker.clicked.connect(this, this.selectFiles);
+  this.filesPicker.clicked.connect(this, this.selectFiles);
 
   // block signals when updating is true
   this.updating = false;
@@ -101,7 +124,7 @@ RegisterExtensionDialog.prototype.descriptionStringFromHtml = function (html) {
 }
 
 RegisterExtensionDialog.prototype.updateHtmlPreview = function() {
-  var descriptionInputText = this.registerDescription.document().toPlainText()
+  var descriptionInputText = this.descriptionField.document().toPlainText()
   var html = this.htmlFromDescription(descriptionInputText)
   this.descriptionPreview.setHtml(html);
 }
@@ -109,10 +132,10 @@ RegisterExtensionDialog.prototype.updateHtmlPreview = function() {
 
 RegisterExtensionDialog.prototype.getRepoUrl = function() {
   log.debug("loading package");
-  var packageUrl = this.packageBox.packageUrl.text;
+  var packageUrl = this.mainRepo.text;
   if (packageUrl.slice(-1) != "/") {
     this.packageBox.packageUrl.text += "/";
-    this.packageUrl = this.packageBox.packageUrl.text;
+    this.packageUrl = this.mainRepo.text;
   }
   var sellerRe = /https:\/\/github.com\/[^\/]*\/[^\/]*\//i;
   var sellerUrl = sellerRe.exec(packageUrl);
@@ -182,9 +205,9 @@ RegisterExtensionDialog.prototype.loadSeller = function (seller) {
   this.resetPanel();
 
   // update seller info
-  this.authorBox.authorField.setText(seller.name);
-  this.authorBox.websiteField.setText(seller.package.website);
-  this.authorBox.socialField.setText(seller.package.social);
+  this.authorNameBox.text = seller.name;
+  this.websiteBox.text = seller.package.website;
+  this.socialBox.text = seller.package.social;
 
   this.authorBox.enabled = true;
   this.registerPanel.enabled = true;
@@ -205,24 +228,23 @@ RegisterExtensionDialog.prototype.loadSeller = function (seller) {
  * Clears all values from the register panel
  */
 RegisterExtensionDialog.prototype.resetPanel = function() {
-  this.updating = true
-  this.authorBox.authorField.setText("");
-  this.authorBox.websiteField.setText("");
-  this.authorBox.socialField.setText("");
+  this.updating = true;
+  this.authorNameBox.text = "";
+  this.websiteBox.text = "";
+  this.socialBox.text = "";
 
   // in case of reloading, first delete all existing items in drop down
   while (this.extensionList.count) {
     this.extensionList.removeItem(0);
   }
 
-  this.registerPanel.versionField.setText("");
-  this.registerPanel.compatibilityComboBox.setCurrentIndex(0);
-  this.registerDescription.setPlainText("");
-  this.registerPanel.isPackageCheckBox.checked = false;
-  this.registerPanel.keywordsPanel.keywordsField.setText("");
-  this.registerPanel.repoField.setText("");
-  this.registerPanel.filesField.setText("");
-  this.registerPanel.licenseType.setText("");
+  this.versionBox.text = "";
+  this.compatibilityBox.setCurrentIndex(0);
+  this.descriptionField.setPlainText("");
+  this.keywordsBox.text = "";
+  this.repoField.text = "";
+  this.filesField.text = "";
+  this.licenseBox.text = "";
 
   this.updating = false;
 }
@@ -243,18 +265,17 @@ RegisterExtensionDialog.prototype.updatePackageInfo = function(index) {
  log.debug("displaying extension:", extensionId);
  log.debug(JSON.stringify(extension.package, null, " "));
 
- this.authorBox.authorField.setText(seller.name);
- this.registerPanel.authorName.setText(extension.package.author);
- this.registerPanel.versionField.setText(extension.package.version);
+ this.authorNameBox.text = seller.name;
+ this.extensionAuthorBox.text = extension.package.author;
+ this.versionBox.text = extension.package.version;
 
- var compatIndex = this.registerPanel.compatibilityComboBox.findText(extension.package.compatibility);
- this.registerPanel.compatibilityComboBox.setCurrentIndex(compatIndex);
- this.registerDescription.setPlainText(this.descriptionStringFromHtml(extension.package.description));
- this.registerPanel.isPackageCheckBox.checked = extension.package.isPackage;
- this.registerPanel.keywordsPanel.keywordsField.setText(extension.package.keywords.join(", "));
- this.registerPanel.repoField.setText(extension.package.repository);
- this.registerPanel.filesField.setText(extension.package.files.join(", "));
- this.registerPanel.licenseType.setText(extension.package.license)
+ var compatIndex = this.compatibilityBox.findText(extension.package.compatibility);
+ this.compatibilityBox.setCurrentIndex(compatIndex);
+ this.descriptionField.setPlainText(this.descriptionStringFromHtml(extension.package.description));
+ this.keywordsBox.text = extension.package.keywords.join(", ");
+ this.repoField.text = extension.package.repository;
+ this.filesField.text = extension.package.files.join(", ");
+ this.licenseBox.text = extension.package.license;
 
  this.updating = false;
 }
@@ -270,16 +291,15 @@ RegisterExtensionDialog.prototype.savePackageInfo = function() {
  var extensionPackage = {};
 
  extensionPackage.name = this.extensionList.currentText;
- extensionPackage.author = this.registerPanel.authorName.text;
- extensionPackage.version = this.registerPanel.versionField.text;
- extensionPackage.compatibility = this.registerPanel.compatibilityComboBox.currentText;
- extensionPackage.isPackage = this.registerPanel.isPackageCheckBox.checked;
- extensionPackage.keywords = this.registerPanel.keywordsPanel.keywordsField.text.replace(/ /g, "").split(",");
- extensionPackage.repository = this.registerPanel.repoField.text;
- extensionPackage.license = this.registerPanel.licenseType.text;
- extensionPackage.files = this.registerPanel.filesField.text.replace(/(, | ,)/g, ",").split(",");
- extensionPackage.description = this.htmlFromDescription(this.registerDescription.document().toPlainText());
- extensionPackage.website = this.authorBox.websiteField.text;
+ extensionPackage.author = this.extensionAuthorBox.text;
+ extensionPackage.version = this.versionBox.text;
+ extensionPackage.compatibility = this.compatibilityBox.currentText;
+ extensionPackage.keywords = this.keywordsBox.text.replace(/ /g, "").split(",");
+ extensionPackage.repository = this.repoField.text;
+ extensionPackage.license = this.licenseBox.text;
+ extensionPackage.files = this.filesField.text.replace(/(, | ,)/g, ",").split(",");
+ extensionPackage.description = this.htmlFromDescription(this.descriptionField.document().toPlainText());
+ extensionPackage.website = this.websiteBox.text;
 
  log.debug("saving package:");
  log.debug(JSON.stringify(extensionPackage, null, " "));
@@ -336,16 +356,16 @@ RegisterExtensionDialog.prototype.generatePackage = function () {
 
   var saveFolder = this.localList.getData("packageLastSaved", System.getenv("userprofile")); // start from folder chosen last time
   var saveDestination = QFileDialog.getSaveFileName(0, "Save Package", saveFolder, "tbpackage.json");
-  this.seller.package.name = this.authorBox.authorField.text;
-  this.seller.package.website = this.authorBox.websiteField.text;
-  this.seller.package.social = this.authorBox.socialField.text;
+  this.seller.package.name = this.authorNameBox.text;
+  this.seller.package.website = this.websiteBox.text;
+  this.seller.package.social = this.socialBox.text;
   if (!saveDestination) return;
 
   var saveFolder = saveDestination.slice(0, saveDestination.lastIndexOf("/"))
   this.localList.saveData("packageLastSaved", saveFolder) // save chosen folder for next time
   this.seller.exportPackage(saveDestination);
 
-  var url = this.packageBox.packageUrl.text;
+  var url = this.mainRepo.text;
 
   var message = '<html><head /><body>'
   message += '<p>Export succesful.</p><p>Upload the file: '
@@ -362,13 +382,13 @@ RegisterExtensionDialog.prototype.generatePackage = function () {
 
 
 RegisterExtensionDialog.prototype.selectFiles = function (){
-  var repoUrl = this.registerPanel.repoField.text;
-  var includedFiles = this.registerPanel.filesField.text.split(",");
+  var repoUrl = this.repoField.text;
+  var includedFiles = this.filesField.text.split(",");
   var filesPicker = new FilesPicker(repoUrl, includedFiles)
   var includedFiles = filesPicker.exec();
 
   if (includedFiles){
-    this.registerPanel.filesField.text = includedFiles.join(",");
+    this.filesField.text = includedFiles.join(",");
     this.savePackageInfo();
   }
 }
@@ -610,11 +630,47 @@ function RegisterWizard(store, localList){
   this.ui.move(x, y);
 
   // add icon
-  this.icon = new StyledImage(style.ICONS.headerLogo, 22, 22)
-  this.ui.logo.setPixmap(this.icon.pixmap)
+  this.icon = new StyledImage(style.ICONS.headerLogo, 22, 22);
+  this.ui.logo.setPixmap(this.icon.pixmap);
+
+  // ui elements
+  this.mainRepo = this.ui.page1.mainRepoBox;
+  this.authorNameBox = this.ui.page2.authorNameBox;
+  this.websiteBox = this.ui.page2.websiteBox;
+  this.socialBox = this.ui.page2.socialBox;
+  this.packageAuthorField = this.ui.page2b.packageAuthorField;
+  this.extensionList = this.ui.page2b.extensionsList;
+  this.extensionNameBox = this.ui.page3.extensionNameBox;
+  this.licenseBox = this.ui.page3.licenseBox;
+  this.compatibilityBox = this.ui.page3.compatibilityBox;
+  this.versionBox = this.ui.page4.versionBox;
+  this.descriptionSplitter = this.ui.page4.descriptionSplitter;
+  this.descriptionField = this.descriptionSplitter.widget(0);
+  this.htmlPreview = this.descriptionSplitter.widget(1);
+  this.keywordsBox = this.ui.page4.keywordsBox;
+  this.extensionAuthorBox = this.ui.page4.extensionAuthorBox;
+  this.repoField = this.ui.page5.repoField;
+  this.iconField = this.ui.page5.iconField;
+  this.iconPicker = this.ui.page5.iconPicker;
+  this.filesField = this.ui.page5.filesField;
+  this.filesPicker = this.ui.page5.filesPicker;
+  this.packageField = this.ui.page6.packageField;
+  this.mainRepoField = this.ui.page6.mainRepoField;
+
+  // create the webview programmatically
+  this.descriptionPreview = new DescriptionView();
+
+  this.htmlPreview.setLayout(new QVBoxLayout());
+  this.htmlPreview.layout().setContentsMargins(0, 0, 0, 0);
+  this.htmlPreview.layout().addWidget(this.descriptionPreview, 0, Qt.AlignTop);
+
+  // fill url textfield if previously saved to local preferences
+  var repoUrl = this.localList.getData("recentGithubUrl", "");
+  log.debug(repoUrl);
+  if (repoUrl) this.mainRepo.setText(repoUrl);
 
   // connect navigation buttons
-  this.ui.page1.page1Next.clicked.connect(this, function(){this.setCurrentPage("2");})
+  this.ui.page1.page1Next.clicked.connect(this, this.loadPackage)
   this.ui.page2.page2Next.clicked.connect(this, function(){this.setCurrentPage("3");})
   this.ui.page3.page3Next.clicked.connect(this, function(){this.setCurrentPage("4");})
   this.ui.page4.page4Next.clicked.connect(this, function(){this.setCurrentPage("5");})
@@ -625,6 +681,10 @@ function RegisterWizard(store, localList){
   this.ui.page4.page4Back.clicked.connect(this, function(){this.setCurrentPage("3");})
   this.ui.page5.page5Back.clicked.connect(this, function(){this.setCurrentPage("4");})
   this.ui.page6.page6Back.clicked.connect(this, function(){this.setCurrentPage("5");})
+
+  this.ui.page2b.addExtensionButton.clicked.connect(this, function(){this.setCurrentPage("3");})
+  this.ui.page2b.editAuthorButton.clicked.connect(this, function(){this.setCurrentPage("2");})
+  this.ui.page2b.editExtensionButton.clicked.connect(this, this.editExtension)
 }
 RegisterWizard.prototype = Object.create(RegisterExtensionDialog.prototype)
 
@@ -635,10 +695,60 @@ RegisterWizard.prototype.isPageValid = function (index){
 RegisterWizard.prototype.setCurrentPage = function (index){
   if (this.isPageValid(this.currentPage))
   for (var i in this.pages){
-    this.pages[i].visible = false;
+    this.pages[i].hide();
   }
   this.pages[index].visible = true;
   this.currentPage = index
+}
+
+
+/**
+* load the info from the seller into the form
+* @param {Seller} seller
+*/
+RegisterWizard.prototype.loadSeller = function (seller) {
+  if (!seller.package) {
+    this.setCurrentPage("2")
+    return;
+  }
+
+  this.seller = seller;
+  this.resetPanel();
+
+  // update seller info
+  this.packageAuthorField.text = seller.name;
+
+  // edit page
+  this.authorNameBox.text = seller.name;
+  this.websiteBox.text = seller.package.website;
+  this.socialBox.text = seller.package.social;
+
+  var extensions = seller.extensions;
+  log.debug("found extensions", Object.keys(extensions));
+
+  // add extensions to the drop down
+  for (var i in extensions) {
+    log.debug("adding extension " + extensions[i].name)
+    this.extensionList.addItem(extensions[i].name, extensions[i].id);
+  }
+  this.updatePackageInfo(0);
+
+  this.setCurrentPage("2b")
+}
+
+
+RegisterWizard.prototype.editExtension = function(){
+  this.updatePackageInfo()
+  this.setCurrentPage("3")
+}
+
+RegisterWizard.prototype.addExtension = function(){
+  this.savePackageInfo()
+  var extension = this.seller.addExtension("New Extension");
+  this.extensionList.addItem(newName, extension.id);
+  this.updatePackageInfo()
+
+  this.setCurrentPage("3")
 }
 
 /**
