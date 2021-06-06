@@ -664,7 +664,6 @@ Object.defineProperty(Extension.prototype, "package", {
       "compatibility": "Harmony Premium 16",
       "description": "",
       "repository": this.repository._url,
-      "isPackage": false,
       "files": [],
       "icon": "",
       "keywords": [],
@@ -832,7 +831,6 @@ Object.defineProperty(Extension.prototype, "localPaths", {
     if (typeof this._localPaths === 'undefined') {
       var rootFolder = this.rootFolder;
       this._localPaths = this.files.map(function (x) { return x.path.replace(rootFolder, "") })
-      // log ("file paths : "+this._localPaths)
     }
     return this._localPaths;
   }
@@ -848,6 +846,27 @@ Object.defineProperty(Extension.prototype, "installer", {
       this._installer = new ExtensionInstaller(this);
     }
     return this._installer
+  }
+})
+
+
+/**
+ * Whether this extension is a package (queries the repo for files list)
+ */
+Object.defineProperty(Extension.prototype, "isPackage", {
+  get: function () {
+    if (typeof this._isPackage === 'undefined') {
+      var _files = this.package.localFiles?this.package.localFiles:this.files.map(function(x){return x.path});
+
+      this._isPackage = false;
+      for (var i in _files){
+        if (_files[i].indexOf("configure.js") != -1) {
+          this._isPackage = true;
+          break
+        }
+      }
+    }
+    return this._isPackage;
   }
 })
 
@@ -992,7 +1011,7 @@ Object.defineProperty(LocalExtensionList.prototype, "list", {
  * gets the install location for a given extension
  */
 LocalExtensionList.prototype.installLocation = function (extension) {
-  return this.installFolder + (extension.package.isPackage ? "/packages/" + extension.name.replace(" ", "") : "")
+  return this.installFolder + (extension.isPackage ? "/packages/" + extension.safeName : "");
 }
 
 
@@ -1055,8 +1074,8 @@ LocalExtensionList.prototype.uninstall = function (extension) {
   var localExtension = this.extensions[extension.id];
 
   // Remove packages recursively as they have a parent directory.
-  if (extension.package.isPackage) {
-    var folder = new Dir(this.installFolder + "/packages/" + extension.name.replace(" ", ""));
+  if (localExtension.isPackage) {
+    var folder = new Dir(this.installFolder + "/packages/" + localExtension.safeName);
     this.log.debug("removing folder " + folder.path);
     if (folder.exists) folder.rmdirs();
   } else {

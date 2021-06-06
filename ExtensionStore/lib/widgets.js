@@ -40,7 +40,6 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
     var iconPath = style.ICONS.installed;
     this.setToolTip(1, "Extension is installed correctly.");
     var localExtension = localList.extensions[extension.id];
-    // log.debug("checking files from "+extension.id, localList.checkFiles(localExtension));
     if (localExtension.currentVersionIsOlder(extension.version)) {
       iconPath = style.ICONS.update;
       this.setToolTip(1, "Update available:\ncurrently installed version : v" + extension.version);
