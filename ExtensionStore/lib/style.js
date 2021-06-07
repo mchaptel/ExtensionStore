@@ -17,22 +17,24 @@ const ColorsDark = {
   "16DP": "#363539",
   "24DP": "#38373B",
   "ACCENT_LIGHT": "#B6B1D8", // Lighter - 50% white screen overlaid.
-  "ACCENT_PRIMARY": "#5241B2", // Full intensity
-  "ACCENT_DARK": "#373061", // Subdued - 50% against D1
-  "ACCENT_BG": "#2B283B", // Very subdued - 20% against D1
+  "ACCENT_PRIMARY": "#5241B2", // Full intensity.
+  "ACCENT_DARK": "#373061", // Subdued - 50% against 01DP.
+  "ACCENT_BG": "#2B283B", // Very subdued - 20% against 01DP.
   "GREEN": "#30D158", // Valid.
-  "RED": "#FF453A", // Error
-  "YELLOW": "#FFD60A", // New or updated
-  "ORANGE": "#FF9F0A", // Notice.
-  "BLUE": "#A1CBEC", // Store update.
+  "RED": "#FF453A", // Error.
+  "YELLOW": "#FFD60A", // New or updated.
+  "ORANGE": "#FF9F0A", // Warning.
+  "BLUE": "#A1CBEC",
 }
 
 // Enum to hold light style palette.
 // TODO: Make dedicated light theme and associated palette.
 const ColorsLight = ColorsDark;
 
+// Use the appropriate colors const for further lookups.
 const COLORS = isDarkStyle() ? ColorsDark : ColorsLight;
 
+// Enum to hold light style palette.
 const styleSheetsDark = {
   defaultRibbon : "QWidget { background-color: transparent; color: gray;}",
   updateRibbon : "QWidget { background-color: " + COLORS.YELLOW + "; color: black }",
@@ -44,11 +46,15 @@ const styleSheetsDark = {
   loadButton : "QToolButton { border-color: transparent transparent " + COLORS.ACCENT_LIGHT + " transparent; }",
 }
 
+// Enum to hold light style stylesheets.
+// TODO: Make dedicated light theme and associated stylesheets.
 const styleSheetsLight = styleSheetsDark;
 
+// Use the appropriate stylesheet const for further lookups.
 const STYLESHEETS = isDarkStyle() ? styleSheetsDark : styleSheetsLight;
 
-
+// Enum to hold application icons. Automatically return the appropriately themed
+// image by calling getImage.
 var iconFolder = appFolder + "/resources/icons";
 const ICONS = {
   // Store
@@ -80,6 +86,7 @@ function isDarkStyle() {
 /**
  * Build and return a final qss string. Incorporate all necessary
  * style-specific overrides.
+ * @returns {String} Resulting stylesheet based on the Application theme.
  */
 function getSyleSheet() {
   var styleFile = appFolder + "/resources/stylesheet_dark.qss";
@@ -104,7 +111,7 @@ function getSyleSheet() {
 
 /**
  * Return the appropriate image path based on Harmony style.
- * @param {String} imagePath
+ * @param {String} imagePath - Path to the image to be evaluated.
  * @returns {String} Path to the correct image for the Harmony style.
  */
 function getImage(imagePath) {
@@ -137,10 +144,10 @@ function getImage(imagePath) {
  * @param {Int} opacity - Opacity from 0 => 255, where 0 is fully transparent.
  */
  function addDropShadow(widget, radius, offsetX, offsetY, opacity) {
-  var radius = radius || 10;
-  var offsetX = offsetX || 0;
-  var offsetY = offsetY || 3;
-  var opacity = opacity || 70;
+  if (typeof radius === 'undefined') var radius = 10;
+  if (typeof offsetX === 'undefined') var offsetX = 0;
+  if (typeof offsetY === 'undefined') var offsetY = 3;
+  if (typeof opacity === 'undefined') var opacity = 70;
 
   var dropShadow = new QGraphicsDropShadowEffect();
   dropShadow.setBlurRadius(radius);
@@ -159,6 +166,16 @@ function getImage(imagePath) {
 }
 
 
+/**
+ * Class to handle the creation of Pixmaps, including suppoort for automatically
+ * returning the correctly themed image, scaling Pixmaps if necessary, and applying onto
+ * widgets as QIcons.\
+ * @class
+ * @param {String} imagePath - Path to the image. 
+ * @param {Int} width - Width in display pixels.
+ * @param {Int} height  - Height in display pixels.
+ * @param {Boolean} uniformScaling - Whether to maintain the original aspect ratio when scaling.
+ */
 function StyledImage(imagePath, width, height, uniformScaling) {
   if (typeof uniformScaling === 'undefined') var uniformScaling = true;
   if (typeof width === 'undefined') var width = 0;
@@ -173,6 +190,9 @@ function StyledImage(imagePath, width, height, uniformScaling) {
 }
 
 
+/**
+ * Filesystem path to the image - remapped to the appropriate theme.
+ */
 Object.defineProperty(StyledImage.prototype, "path", {
   get: function(){
     return this.getImage(this.basePath);
@@ -180,6 +200,9 @@ Object.defineProperty(StyledImage.prototype, "path", {
 })
 
 
+/**
+ * Create a new Pixmap for the image, scaling if necessary.
+ */
 Object.defineProperty(StyledImage.prototype, "pixmap", {
   get: function(){
     if (typeof this._pixmap === 'undefined') {
@@ -209,6 +232,11 @@ Object.defineProperty(StyledImage.prototype, "pixmap", {
 })
 
 
+/**
+ * Apply the image to a widget.
+ * @param {QWidget} widget - The widget the image should be applied to as an icon.
+ * @param {Int} itemColumn - Index of the column the icon should be applied to, if the widget is a QTreeWidgetItem.
+ */
 StyledImage.prototype.setAsIcon = function(widget, itemColumn){
   if (widget instanceof QTreeWidgetItem){
     if (typeof itemColumn === 'undefined') var itemColumn = 0;
@@ -219,6 +247,7 @@ StyledImage.prototype.setAsIcon = function(widget, itemColumn){
     UiLoader.setSvgIcon(widget, this.path);
   }
 }
+
 
 exports.addDropShadow = addDropShadow;
 exports.getSyleSheet = getSyleSheet;

@@ -5,7 +5,7 @@ Overall widget styling.
 ======================
 */
 
-/* Only useful if rounding corners and update label fixed. */
+/* Base widget of the entire UI */
 QWidget#Form {
 	background-color: @01DP;
 }
@@ -15,7 +15,7 @@ QFrame{
 	background-color: @01DP;
 }
 
-/* Set labels to transparent for text and logos. */
+/* Set labels to transparent for text and logos */
 QLabel{
 	background-color: transparent;
 }
@@ -96,32 +96,35 @@ EULA Frame
 ======================
 */
 
+/* Exterior frame */
 QFrame#eulaFrame {
 	background-color: @01DP;
 }
 
+/* Elevated inner frame */
 QFrame#innerFrame {
 	background-color: @03DP;
 	border-radius:8px;
 }
 
+/* Elevated EULA Text container */
 QFrame#textFrame {
 	background-color: @06DP;
 	border-radius:8px;
 }
 
-/* Scrollable region base widget */
+/* Scrollable EULA text region base widget */
 QScrollArea#scrollArea_2 {
 	background-color: transparent;
 
 }
 
-/* About screen scrollable region (text background). */
+/* EULA screen scrollable region (text background). */
 QWidget#scrollAreaWidgetContents_2 {
 	background-color: transparent;
 }
 
-/* About Screen text */
+/* EULA Screen text */
 QLabel#eulaText {
 	background-color: transparent;
 	margin: 5px;
@@ -129,7 +132,7 @@ QLabel#eulaText {
 	font-size: 11pt;
 }
 
-/* EULA checkbox */
+/* EULA agreement checkbox */
 QCheckBox#eulaCB {
 	font-family: Arial;
 	font-size: 13pt;
@@ -186,8 +189,7 @@ QToolButton:hover#discordButton {
 	border-color: @ACCENT_LIGHT;
 }
 
-
-/* Push Buttons */
+/* Load Store Button */
 QToolButton#loadStoreButton {
 	background: @08DP;
 	border-width: 2px;
@@ -206,7 +208,7 @@ QToolButton:pressed#loadStoreButton {
 }
 
 
-/* Update Ribbon */
+/* Update Ribbon store version text */
 QLabel#storeVersion {
 	font-family: Arial;
 	font-size: 10pt;
@@ -233,6 +235,7 @@ QPushButton:hover#updateButton {
 Store Frame
 ======================
 */
+
 /* Store Frame */
 QFrame#storeFrame {
 	background-color: @12DP;
@@ -243,6 +246,7 @@ QFrame#storeFrame {
 	Store Header
 ======================
 */
+
 /* Store header */
 QFrame#storeHeader {
 	background-color: @08DP;
@@ -303,7 +307,7 @@ QFrame#storeFooter {
 	border-color: @01DP transparent transparent transparent;
 }
 
-/* Register button */
+/* Register new extension button */
 QPushButton#registerButton {
 	border-radius: 2px;
 	border-width: 2px;
@@ -314,17 +318,21 @@ QPushButton#registerButton {
 QPushButton:hover#registerButton {
 	background-color: @08DP;
 }
+
 /*
 ======================
 	Store Sellers
 ======================
 */
 
+/* Sellers base tree widgert */
 QTreeView {
 	background-color: @01DP;
 	border: 0px;
 	outline: none;
 }
+
+/* Item within the base sellers tree widget */
 QTreeView::item {
 	color: white;
 	background-color: @01DP;
@@ -351,6 +359,7 @@ QTreeView::item:selected {
 ======================
 */
 
+/* Sliding description panel background */
 QFrame#sidepanelFrame {
 	background-color: @04DP;
 }
