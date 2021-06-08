@@ -129,7 +129,7 @@ QLabel#eulaText {
 	background-color: transparent;
 	margin: 5px;
 	font-family: Arial;
-	font-size: 11pt;
+	font-size: 10pt;
 }
 
 /* EULA agreement checkbox */
