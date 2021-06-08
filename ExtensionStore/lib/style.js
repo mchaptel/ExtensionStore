@@ -17,7 +17,7 @@ const ColorsDark = {
   "16DP": "#363539",
   "24DP": "#38373B",
   "ACCENT_LIGHT": "#B6B1D8", // Lighter - 50% white screen overlaid.
-  "ACCENT_PRIMARY": "#4B3C9E", // Full intensity
+  "ACCENT_PRIMARY": "#5241B2", // Full intensity
   "ACCENT_DARK": "#373061", // Subdued - 50% against D1
   "ACCENT_BG": "#2B283B", // Very subdued - 20% against D1
   "GREEN": "#30D158", // Valid.

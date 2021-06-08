@@ -45,16 +45,16 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_9">
       <property name="leftMargin">
-       <number>25</number>
+       <number>16</number>
       </property>
       <property name="topMargin">
-       <number>25</number>
+       <number>16</number>
       </property>
       <property name="rightMargin">
-       <number>25</number>
+       <number>16</number>
       </property>
       <property name="bottomMargin">
-       <number>25</number>
+       <number>16</number>
       </property>
       <item>
        <widget class="QFrame" name="innerFrame">
@@ -65,6 +65,18 @@
          <enum>QFrame::Raised</enum>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_11">
+         <property name="leftMargin">
+          <number>9</number>
+         </property>
+         <property name="topMargin">
+          <number>9</number>
+         </property>
+         <property name="rightMargin">
+          <number>9</number>
+         </property>
+         <property name="bottomMargin">
+          <number>9</number>
+         </property>
          <item>
           <widget class="QLabel" name="eulaLogo">
            <property name="text">
@@ -89,91 +101,95 @@
            <property name="sizeHint" stdset="0">
             <size>
              <width>20</width>
-             <height>20</height>
+             <height>5</height>
             </size>
            </property>
           </spacer>
          </item>
          <item>
-          <widget class="QScrollArea" name="scrollArea_2">
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Plain</enum>
-           </property>
-           <property name="widgetResizable">
-            <bool>true</bool>
-           </property>
-           <widget class="QWidget" name="scrollAreaWidgetContents_2">
-            <property name="geometry">
-             <rect>
-              <x>0</x>
-              <y>0</y>
-              <width>722</width>
-              <height>223</height>
-             </rect>
+          <widget class="QFrame" name="textFrame">
+           <layout class="QVBoxLayout" name="textFrameLayout">
+            <property name="leftMargin">
+             <number>3</number>
             </property>
-            <layout class="QVBoxLayout" name="verticalLayout_10">
-             <item>
-              <widget class="QLabel" name="eulaText">
-               <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This extension store is made available for free by enthusiast script makers and users, and is not endorsed or curated by Toon Boom. Extensions available for download on this store are to be used at your own risk.&lt;/p&gt;&lt;p&gt;The extensions available on this store are open source and are automatically downloaded from verified github accounts. While efforts are made to vet sellers, it is your responsibility to read and understand the source code before you install any extension.&lt;/p&gt;&lt;p&gt;Questions, concerns or issues can be directed towards the creator using the provided github or website address. We cannot offer support for extensions not working correctly.&lt;/p&gt;&lt;p&gt;The source for this extension, including a list of all registered sellers, can be viewed here: &lt;br/&gt;&lt;a href=&quot;https://github.com/mchaptel/ExtensionStore&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#c8c8c8;&quot;&gt;https://github.com/mchaptel/ExtensionStore&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>3</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QScrollArea" name="scrollArea_2">
+              <property name="frameShape">
+               <enum>QFrame::NoFrame</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Plain</enum>
+              </property>
+              <property name="widgetResizable">
+               <bool>true</bool>
+              </property>
+              <widget class="QWidget" name="scrollAreaWidgetContents_2">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>734</width>
+                 <height>228</height>
+                </rect>
                </property>
-               <property name="alignment">
-                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-               </property>
-               <property name="wordWrap">
-                <bool>true</bool>
-               </property>
-               <property name="openExternalLinks">
-                <bool>true</bool>
-               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_10">
+                <item>
+                 <widget class="QLabel" name="eulaText">
+                  <property name="text">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This extension store is made available for free by enthusiast script makers and users, and is not endorsed or curated by Toon Boom. Extensions available for download on this store are to be used at your own risk.&lt;/p&gt;&lt;p&gt;The extensions available on this store are open source and are automatically downloaded from verified github accounts. While efforts are made to vet sellers, it is your responsibility to read and understand the source code before you install any extension.&lt;/p&gt;&lt;p&gt;Questions, concerns or issues can be directed towards the creator using the provided github or website address. We cannot offer support for extensions not working correctly.&lt;/p&gt;&lt;p&gt;The source for this extension, including a list of all registered sellers, can be viewed here: &lt;br/&gt;&lt;a href=&quot;https://github.com/mchaptel/ExtensionStore&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#c8c8c8;&quot;&gt;https://github.com/mchaptel/ExtensionStore&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                  <property name="openExternalLinks">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </widget>
-             </item>
-            </layout>
-           </widget>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_6">
-           <item>
-            <spacer name="horizontalSpacer_7">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="eulaCB">
-             <property name="text">
-              <string>I accept</string>
-             </property>
-             <property name="tristate">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer_8">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
+          <spacer name="cb_margin">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>5</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item alignment="Qt::AlignHCenter">
+          <widget class="QCheckBox" name="eulaCB">
+           <property name="text">
+            <string>I accept</string>
+           </property>
+           <property name="tristate">
+            <bool>false</bool>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -814,7 +830,7 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_6">
       <property name="spacing">
-       <number>8</number>
+       <number>4</number>
       </property>
       <property name="leftMargin">
        <number>0</number>
@@ -862,6 +878,9 @@
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <property name="spacing">
+         <number>4</number>
+        </property>
         <item>
          <widget class="QLabel" name="label_3">
           <property name="sizePolicy">
@@ -918,7 +937,7 @@
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>30</height>
+          <height>15</height>
          </size>
         </property>
        </spacer>

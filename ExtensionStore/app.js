@@ -50,6 +50,10 @@ function StoreUI() {
   this.storeHeader = this.storeFrame.storeHeader;
   this.storeFooter = this.storeFrame.storeFooter;
 
+  // Add a dropshadow to the EULA inner frame.
+  style.addDropShadow(this.eulaFrame.innerFrame, 10, 10, 10);
+  style.addDropShadow(this.eulaFrame.innerFrame.textFrame, 5, 5, 5, 50);
+
   // Insert the Loading button
   this.aboutFrame.layout().insertWidget(6, this.loadStoreButton, 0, Qt.AlignCenter);
 
