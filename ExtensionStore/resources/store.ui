@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>794</width>
-    <height>1053</height>
+    <height>1056</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -138,7 +138,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>734</width>
-                 <height>228</height>
+                 <height>229</height>
                 </rect>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_10">
@@ -852,7 +852,7 @@
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>40</height>
+          <height>5</height>
          </size>
         </property>
        </spacer>
@@ -897,7 +897,7 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>425</width>
+            <width>350</width>
             <height>70</height>
            </size>
           </property>
@@ -908,7 +908,7 @@
            <string notr="true"/>
           </property>
           <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Bringing together enthusiast script makers and users using the power of open source.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:11pt;&quot;&gt;Bringing together enthusiast script makers and users through the power of open source.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="textFormat">
            <enum>Qt::AutoText</enum>
@@ -937,7 +937,7 @@
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>15</height>
+          <height>25</height>
          </size>
         </property>
        </spacer>
@@ -1125,7 +1125,7 @@
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>40</height>
+          <height>5</height>
          </size>
         </property>
        </spacer>

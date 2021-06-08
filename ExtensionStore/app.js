@@ -54,6 +54,9 @@ function StoreUI() {
   style.addDropShadow(this.eulaFrame.innerFrame, 10, 10, 10);
   style.addDropShadow(this.eulaFrame.innerFrame.textFrame, 5, 5, 5, 50);
 
+  // Add a light dropshadow to the about screen text - to shadow the bottom border.
+  style.addDropShadow(this.aboutFrame.label_3, 5, 5, 5, 25);
+
   // Insert the Loading button
   this.aboutFrame.layout().insertWidget(6, this.loadStoreButton, 0, Qt.AlignCenter);
 

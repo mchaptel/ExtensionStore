@@ -149,13 +149,15 @@ About Frame
 /* About Screen text */
 QLabel#label_3 {
 	background-color: transparent;
-	font-family: Arial;
+	font-family: Palatino;
 	font-size: 12pt;
-	margin-top: 15px;
+	padding-bottom: 7px;
+	border-width: 2px;
+	border-style: solid;
+	border-color: transparent transparent @04DP transparent;
 }
 
 /* Social Media */
-
 /* Twitter */
 QToolButton#twitterButton {
 	background-color: transparent;
