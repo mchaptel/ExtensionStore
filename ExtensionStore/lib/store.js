@@ -34,8 +34,9 @@ function test() {
  * The Store class is used to search the github repos for available extensions
  */
 function Store() {
-  this.log = new Logger("Store")
-  this.log.info("init store")
+  this.log = new Logger("Store");
+  this.log.info("init store");
+  this.onLoadProgressChanged = new Signal();
 }
 
 
@@ -65,11 +66,12 @@ Object.defineProperty(Store.prototype, "sellers", {
 
       // handle wrong packages found in sellers list
       var validSellers = [];
-      for (var i in sellersList) {
+      for (var i = 0; i < sellersList.length; i += 1) {
         try {
           var seller = new Seller(sellersList[i]);
           var package = seller.package;
-          validSellers.push(seller)
+          validSellers.push(seller);
+          this.onLoadProgressChanged.emit(i / sellersList.length);
         } catch (error) {
           this.log.error("problem getting package for seller " + sellersList[i], error);
         }
@@ -129,6 +131,7 @@ Object.defineProperty(Store.prototype, "extensions", {
       }
     }
 
+    this.onLoadProgressChanged.emit(1);
     return this._extensions;
   }
 })
@@ -149,7 +152,6 @@ Object.defineProperty(Store.prototype, "storeExtension", {
 })
 
 
-
 /**
  * The contents of the local tbpackage.json file
  */
@@ -166,7 +168,6 @@ Object.defineProperty(Store.prototype, "localPackage", {
     return this._localPackage;
   }
 })
-
 
 
 // Seller Class ------------------------------------------------
@@ -623,7 +624,6 @@ Repository.prototype.searchToRe = function (search) {
 }
 
 
-
 // Extension Class ---------------------------------------------------
 /**
  * @classdesc
@@ -649,6 +649,7 @@ Object.defineProperty(Extension.prototype, "name", {
     this.package.name = newName;
   }
 })
+
 
 /**
  * Get the json package describing this extension. Thanks to this getter setter, we can ensure the package file is complete even with an obsolete json
@@ -1163,7 +1164,6 @@ LocalExtensionList.prototype.refreshExtensions = function () {
 }
 
 
-
 /**
  * goes through the store extensions and checks whether it is already installed even if not in the list
  */
@@ -1201,6 +1201,7 @@ LocalExtensionList.prototype.createListFile = function (store) {
   return this.list;
 }
 
+
 /**
  * Access the custom settings
  */
@@ -1221,6 +1222,7 @@ Object.defineProperty(LocalExtensionList.prototype, "settings", {
     writeFile(this._ini, JSON.stringify(settingsObject, null, "  "))
   }
 })
+
 
 /**
  * Saves the specified data to a local file.
@@ -1323,4 +1325,3 @@ exports.Store = Store;
 exports.LocalExtensionList = LocalExtensionList;
 exports.Seller = Seller;
 exports.Repository = Repository;
-exports.appFolder = appFolder;

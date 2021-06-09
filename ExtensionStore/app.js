@@ -6,8 +6,9 @@ var widgets = require("./lib/widgets.js");
 var appFolder = require("./lib/io.js").appFolder;
 var DescriptionView = widgets.DescriptionView;
 var ExtensionItem = widgets.ExtensionItem;
-var ProgressButton = widgets.ProgressButton;
+var LoadButton = widgets.LoadButton;
 var InstallButton = widgets.InstallButton;
+var ProgressBar = widgets.ProgressBar;
 var StyledImage = style.StyledImage;
 
 var log = new Logger("UI");
@@ -34,6 +35,15 @@ function StoreUI() {
   // Set the global application stylesheet
   this.ui.setStyleSheet(style.getSyleSheet());
 
+  // Create Load Store Button
+  this.loadStoreButton = new LoadButton();
+  this.loadStoreButton.objectName = "loadStoreButton";
+  style.addDropShadow(this.loadStoreButton, 10, 0, 8);
+
+  // Create progressbar
+  this.updateProgress = new ProgressBar();
+  this.updateProgress.objectName = "updateProgress";
+
   // create shorthand references to some of the main widgets of the ui
   this.eulaFrame = this.ui.eulaFrame;
   this.storeFrame = this.ui.storeFrame;
@@ -45,6 +55,22 @@ function StoreUI() {
   this.storeHeader = this.storeFrame.storeHeader;
   this.storeFooter = this.storeFrame.storeFooter;
 
+  // Add a dropshadow to the EULA inner frame.
+  style.addDropShadow(this.eulaFrame.innerFrame, 10, 10, 10);
+  style.addDropShadow(this.eulaFrame.innerFrame.textFrame, 5, 5, 5, 50);
+
+  // Add a light dropshadow to the about screen text - to shadow the bottom border.
+  style.addDropShadow(this.aboutFrame.label_3, 5, 5, 5, 25);
+
+  // Add a dropshadow to the Update store button.
+  style.addDropShadow(this.aboutFrame.updateButton, 5, 5, 5, 50);
+
+  // Insert the Loading button.
+  this.aboutFrame.layout().insertWidget(6, this.loadStoreButton, 0, Qt.AlignCenter);
+
+  // Insert the progress bar.
+  this.aboutFrame.layout().insertWidget(10, this.updateProgress, 0, 0);
+
   // Hide the store and the loading UI elements.
   this.storeFrame.hide();
   this.setUpdateProgressUIState(false);
@@ -53,7 +79,7 @@ function StoreUI() {
     this.aboutFrame.hide();
 
     // EULA logo
-    var eulaLogo = new StyledImage(appFolder + "/resources/logo.png", 800, 140)
+    var eulaLogo = new StyledImage(appFolder + "/resources/logo.png", 380, 120);
     this.eulaFrame.innerFrame.eulaLogo.setPixmap(eulaLogo.pixmap);
 
     this.eulaFrame.innerFrame.eulaCB.stateChanged.connect(this, function () {
@@ -67,7 +93,7 @@ function StoreUI() {
   }
 
   // About logo
-  var logo = new StyledImage(appFolder + "/resources/logo.png", 800, 140);
+  var logo = new StyledImage(appFolder + "/resources/logo.png", 380, 120);
   this.aboutFrame.storeLabel.setPixmap(logo.pixmap);
 
   // Social media buttons
@@ -90,7 +116,8 @@ function StoreUI() {
   this.checkForUpdates()
 
   // connect UI signals
-  this.aboutFrame.loadStoreButton.clicked.connect(this, this.loadStore)
+  this.loadStoreButton.released.connect(this, this.loadStore);
+
   // Social media UI signals
   this.aboutFrame.twitterButton.clicked.connect(this, function () {
     QDesktopServices.openUrl(new QUrl(this.aboutFrame.twitterButton.toolTip));
@@ -101,6 +128,9 @@ function StoreUI() {
   this.aboutFrame.githubButton.clicked.connect(this, function () {
     QDesktopServices.openUrl(new QUrl(this.aboutFrame.githubButton.toolTip));
   });
+
+  this.store.onLoadProgressChanged.connect(this.updateProgress, this.updateProgress.setProgress);
+  this.store.onLoadProgressChanged.connect(this.loadStoreButton, this.loadStoreButton.setProgress);
 
   // filter the store list --------------------------------------------
   this.storeHeader.searchStore.textChanged.connect(this, this.updateExtensionsList)
@@ -143,13 +173,18 @@ function StoreUI() {
   this.storeFooter.registerButton.clicked.connect(this, this.registerExtension);
 
   // Install Button Actions -------------------------------------------
-  this.installButton = new InstallButton("Install");
+  this.installButton = new InstallButton();
   this.installButton.objectName = "installButton";
   this.storeDescriptionPanel.installButtonPlaceHolder.layout().addWidget(this.installButton, 1, Qt.AlignCenter);
 
   this.installButton.modes.INSTALL.action.triggered.connect(this, this.performInstall);
   this.installButton.modes.UPDATE.action.triggered.connect(this, this.performInstall);
   this.installButton.modes.UNINSTALL.action.triggered.connect(this, this.performUninstall);
+
+  // Add Dropshadow to buttons.
+  style.addDropShadow(this.installButton, 10, 0, 8);
+  style.addDropShadow(this.storeDescriptionPanel.websiteButton);
+  style.addDropShadow(this.storeDescriptionPanel.sourceButton);
 }
 
 
@@ -190,10 +225,9 @@ StoreUI.prototype.show = function () {
  * @param {boolean} visible - Determine whether the progress state should be enabled or disabled.
  */
 StoreUI.prototype.setUpdateProgressUIState = function (visible) {
+  this.updateProgress.visible = visible;
   this.aboutFrame.updateButton.visible = !visible;
-  this.aboutFrame.loadStoreButton.visible = !visible;
-  this.aboutFrame.updateLabel.visible = visible;
-  this.aboutFrame.updateProgress.visible = visible;
+  this.aboutFrame.updateRibbon.storeVersion.visible = !visible;
 }
 
 

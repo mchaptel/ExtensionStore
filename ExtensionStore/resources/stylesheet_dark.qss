@@ -5,9 +5,9 @@ Overall widget styling.
 ======================
 */
 
-/* Only useful if rounding corners and update label fixed. */
+/* Base widget of the entire UI */
 QWidget#Form {
-	background-color: @00DP;
+	background-color: @01DP;
 }
 
 /* Overall BG color */
@@ -15,7 +15,7 @@ QFrame{
 	background-color: @01DP;
 }
 
-/* Set labels to transparent for text and logos. */
+/* Set labels to transparent for text and logos */
 QLabel{
 	background-color: transparent;
 }
@@ -96,35 +96,43 @@ EULA Frame
 ======================
 */
 
+/* Exterior frame */
 QFrame#eulaFrame {
 	background-color: @01DP;
 }
 
+/* Elevated inner frame */
 QFrame#innerFrame {
-	background-color: @06DP;
-	border-radius:10px;
-}
-
-/* Scrollable region base widget */
-QScrollArea#scrollArea_2 {
-	margin-left: 5px;
-	margin-right: 5px;
-}
-
-/* About screen scrollable region (text background). */
-QWidget#scrollAreaWidgetContents_2 {
 	background-color: @03DP;
+	border-radius:8px;
 }
 
-/* About Screen text */
+/* Elevated EULA Text container */
+QFrame#textFrame {
+	background-color: @06DP;
+	border-radius:8px;
+}
+
+/* Scrollable EULA text region base widget */
+QScrollArea#scrollArea_2 {
+	background-color: transparent;
+
+}
+
+/* EULA screen scrollable region (text background). */
+QWidget#scrollAreaWidgetContents_2 {
+	background-color: transparent;
+}
+
+/* EULA Screen text */
 QLabel#eulaText {
 	background-color: transparent;
 	margin: 5px;
 	font-family: Arial;
-	font-size: 11pt;
+	font-size: 10pt;
 }
 
-/* EULA checkbox */
+/* EULA agreement checkbox */
 QCheckBox#eulaCB {
 	font-family: Arial;
 	font-size: 13pt;
@@ -141,13 +149,15 @@ About Frame
 /* About Screen text */
 QLabel#label_3 {
 	background-color: transparent;
-	font-family: Arial;
+	font-family: Palatino;
 	font-size: 12pt;
-	margin-top: 15px;
+	padding-bottom: 7px;
+	border-width: 2px;
+	border-style: solid;
+	border-color: transparent transparent @04DP transparent;
 }
 
 /* Social Media */
-
 /* Twitter */
 QToolButton#twitterButton {
 	background-color: transparent;
@@ -181,9 +191,8 @@ QToolButton:hover#discordButton {
 	border-color: @ACCENT_LIGHT;
 }
 
-
-/* Push Buttons */
-QPushButton#loadStoreButton {
+/* Load Store Button */
+QToolButton#loadStoreButton {
 	background: @08DP;
 	border-width: 2px;
 	border-style: solid;
@@ -191,17 +200,17 @@ QPushButton#loadStoreButton {
 	border-radius: 7px;
 }
 
-QPushButton:hover#loadStoreButton {
+QToolButton:hover#loadStoreButton {
 	border-color: @ACCENT_LIGHT;
 	background: @12DP;
 }
-QPushButton:pressed#loadStoreButton {
+QToolButton:pressed#loadStoreButton {
 	background: @02DP;
 	border-color: @ACCENT_PRIMARY;
 }
 
 
-/* Update Ribbon */
+/* Update Ribbon store version text */
 QLabel#storeVersion {
 	font-family: Arial;
 	font-size: 10pt;
@@ -212,6 +221,11 @@ QPushButton#updateButton {
 	padding: 5px;
 	color: black;
 	background-color: @YELLOW;
+	border-width: 2px;
+	border-style: solid;
+	border-color: transparent;
+	border-radius: 7px;
+
 }
 
 QPushButton:hover#updateButton {
@@ -223,6 +237,7 @@ QPushButton:hover#updateButton {
 Store Frame
 ======================
 */
+
 /* Store Frame */
 QFrame#storeFrame {
 	background-color: @12DP;
@@ -233,6 +248,7 @@ QFrame#storeFrame {
 	Store Header
 ======================
 */
+
 /* Store header */
 QFrame#storeHeader {
 	background-color: @08DP;
@@ -293,7 +309,7 @@ QFrame#storeFooter {
 	border-color: @01DP transparent transparent transparent;
 }
 
-/* Register button */
+/* Register new extension button */
 QPushButton#registerButton {
 	border-radius: 2px;
 	border-width: 2px;
@@ -304,17 +320,21 @@ QPushButton#registerButton {
 QPushButton:hover#registerButton {
 	background-color: @08DP;
 }
+
 /*
 ======================
 	Store Sellers
 ======================
 */
 
+/* Sellers base tree widgert */
 QTreeView {
 	background-color: @01DP;
 	border: 0px;
 	outline: none;
 }
+
+/* Item within the base sellers tree widget */
 QTreeView::item {
 	color: white;
 	background-color: @01DP;
@@ -341,6 +361,7 @@ QTreeView::item:selected {
 ======================
 */
 
+/* Sliding description panel background */
 QFrame#sidepanelFrame {
 	background-color: @04DP;
 }

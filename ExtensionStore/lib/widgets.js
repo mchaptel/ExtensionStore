@@ -20,6 +20,7 @@ var log = new Logger("Widgets");
 }
 DescriptionView.prototype = Object.create(QWebView.prototype)
 
+
 /**
  * The QTreeWidgetTtem that represents a single extension in the store list.
  * @classdesc
@@ -72,7 +73,7 @@ ExtensionItem.prototype = Object.create(QTreeWidgetItem.prototype);
 
 
 /**
- * A button that can also show progress
+ * A button that can show progress by animating the background stylesheet.
  * @classdesc
  * @constructor
  */
@@ -115,12 +116,11 @@ ProgressButton.prototype.setProgress = function (progress) {
   var accentColor = this.accentColor;
   var backgroundColor = this.backgroundColor;
 
-  if (progress < 0) {
-    // resetting stylesheet by setting accentColor
-    this.accentColor = accentColor;
-    this.text = this.defaultText;
+  // Nothing to do.
+  if (progress === 0) return;
 
-  } else if (progress < 1) {
+  // Operation in progress
+  if (progress < 1) {
     this.enabled = false;
     this.text = this.progressText;
 
@@ -145,13 +145,12 @@ ProgressButton.prototype.setProgress = function (progress) {
     this.text = this.mode.progressText + " " + Math.round((progressStopR * 100)) + "%";
 
   } else {
-    // Configure widget to indicate the download is completed.
+    // Configure widget to indicate the operation is complete.
     this.setStyleSheet("QToolButton { border: none; background-color: " + accentColor + "; color: white}");
     this.enabled = true;
     this.text = this.finishedText;
   }
 }
-
 
 
 /**
@@ -199,7 +198,7 @@ Object.defineProperty(InstallButton.prototype, "mode", {
     var modeDetails = this.modes[mode]
     if (!modeDetails) throw new Error ("Can't set InstallButton mode to "+ mode+ ", mode can only be 'INSTALL', 'UNINSTALL' or 'UPDATE'." )
 
-    if (mode != this._mode){
+    if (mode !== this._mode){
       this._mode = mode;
       this.accentColor = modeDetails.accentColor;
       this.progressText = modeDetails.progressText;
@@ -216,14 +215,17 @@ Object.defineProperty(InstallButton.prototype, "mode", {
  * @constructor
  */
 function LoadButton() {
-  ProgressButton.call(this, style.COLORS.ACCENT_LIGHT, "Load Store", "Loading...");
+  ProgressButton.call(this, style.COLORS.ACCENT_PRIMARY, "Load Store", "Loading...");
+  this.action = new QAction(this.defaultText, this);
+  this.setDefaultAction(this.action);
+
 }
 LoadButton.prototype = Object.create(ProgressButton.prototype);
 
 
 /**
  * A Qt like custom signal that can be defined, connected and emitted.
- * As this signal is not actually threaded, the connected callbacks will be exectuted
+ * As this signal is not actually threaded, the connected callbacks will be executed
  * directly when the signal is emited, and the rest of the code will execute after.
  * @param {type} type the type of value accepted as argument when calling emit()
  */
@@ -233,6 +235,12 @@ LoadButton.prototype = Object.create(ProgressButton.prototype);
   this.blocked = false;
 }
 
+
+/**
+ * Register the calling object and the slot.
+ * @param {object} context
+ * @param {function} slot
+ */
 Signal.prototype.connect = function (context, slot){
   // support slot.connect(callback) synthax
   if (typeof slot === 'undefined'){
@@ -242,6 +250,11 @@ Signal.prototype.connect = function (context, slot){
   this.connexions.push ({context: context, slot:slot});
 }
 
+
+/**
+ * Remove a connection registered with this Signal.
+ * @param {function} slot
+ */
 Signal.prototype.disconnect = function(slot){
   if (typeof slot === "undefined"){
     this.connexions = [];
@@ -255,6 +268,10 @@ Signal.prototype.disconnect = function(slot){
   }
 }
 
+
+/**
+ * Call the slot function using the provided context and and any arguments.
+ */
 Signal.prototype.emit = function () {
   if (this.blocked) return;
 
@@ -283,9 +300,41 @@ Signal.prototype.emit = function () {
   }
 }
 
+
 Signal.prototype.toString = function(){
   return "Signal";
 }
+
+
+/**
+ * Child class QProgressBar to remap the number range used by ProgressButton's QLinearGradient
+ * into the range used by the QProgressBar.
+ */
+function ProgressBar() {
+  QProgressBar.call(this);
+
+  // Exclusively using an input percentage from 0 => 100.
+  this.value = 0;
+  this.maximum = 100;
+
+  // Set the default geometry.
+  this.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding);
+  this.maximumHeight = 5;
+
+  // Hide progress text.
+  this.textVisible = false;
+}
+ProgressBar.prototype = Object.create(QProgressBar.prototype);
+
+
+/**
+ * Transform the input value and update the progress bar.
+ * @param {number} value - Progress as a percentage with a range of 0 => 1 .
+ */
+ProgressBar.prototype.setProgress = function(value) {
+  this.setValue(value * 100);
+}
+
 
 exports.Signal = Signal;
 exports.ProgressButton = ProgressButton;
@@ -293,3 +342,4 @@ exports.LoadButton = LoadButton;
 exports.InstallButton = InstallButton;
 exports.DescriptionView = DescriptionView;
 exports.ExtensionItem = ExtensionItem;
+exports.ProgressBar = ProgressBar;
