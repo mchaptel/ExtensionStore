@@ -8,6 +8,7 @@ var DescriptionView = widgets.DescriptionView;
 var ExtensionItem = widgets.ExtensionItem;
 var LoadButton = widgets.LoadButton;
 var InstallButton = widgets.InstallButton;
+var ProgressBar = widgets.ProgressBar;
 var StyledImage = style.StyledImage;
 
 var log = new Logger("UI");
@@ -39,6 +40,10 @@ function StoreUI() {
   this.loadStoreButton.objectName = "loadStoreButton";
   style.addDropShadow(this.loadStoreButton, 10, 0, 8);
 
+  // Create progressbar
+  this.updateProgress = new ProgressBar();
+  this.updateProgress.objectName = "updateProgress";
+
   // create shorthand references to some of the main widgets of the ui
   this.eulaFrame = this.ui.eulaFrame;
   this.storeFrame = this.ui.storeFrame;
@@ -57,8 +62,14 @@ function StoreUI() {
   // Add a light dropshadow to the about screen text - to shadow the bottom border.
   style.addDropShadow(this.aboutFrame.label_3, 5, 5, 5, 25);
 
-  // Insert the Loading button
+  // Add a dropshadow to the Update store button.
+  style.addDropShadow(this.aboutFrame.updateButton, 5, 5, 5, 50);
+
+  // Insert the Loading button.
   this.aboutFrame.layout().insertWidget(6, this.loadStoreButton, 0, Qt.AlignCenter);
+
+  // Insert the progress bar.
+  this.aboutFrame.layout().insertWidget(10, this.updateProgress, 0, 0);
 
   // Hide the store and the loading UI elements.
   this.storeFrame.hide();
@@ -118,7 +129,7 @@ function StoreUI() {
     QDesktopServices.openUrl(new QUrl(this.aboutFrame.githubButton.toolTip));
   });
 
-  this.store.onLoadProgressChanged.connect(this.aboutFrame.updateProgress, this.aboutFrame.updateProgress.setValue);
+  this.store.onLoadProgressChanged.connect(this.updateProgress, this.updateProgress.setProgress);
   this.store.onLoadProgressChanged.connect(this.loadStoreButton, this.loadStoreButton.setProgress);
 
   // filter the store list --------------------------------------------
@@ -214,7 +225,7 @@ StoreUI.prototype.show = function () {
  * @param {boolean} visible - Determine whether the progress state should be enabled or disabled.
  */
 StoreUI.prototype.setUpdateProgressUIState = function (visible) {
-  this.aboutFrame.updateProgress.visible = visible;
+  this.updateProgress.visible = visible;
   this.aboutFrame.updateButton.visible = !visible;
   this.aboutFrame.updateRibbon.storeVersion.visible = !visible;
 }

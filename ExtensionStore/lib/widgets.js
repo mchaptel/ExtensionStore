@@ -20,6 +20,7 @@ var log = new Logger("Widgets");
 }
 DescriptionView.prototype = Object.create(QWebView.prototype)
 
+
 /**
  * The QTreeWidgetTtem that represents a single extension in the store list.
  * @classdesc
@@ -113,9 +114,6 @@ Object.defineProperty(ProgressButton.prototype, "accentColor", {
  * @param {Int} progress - Value from 0 to 1 that the operation is currently at.
  */
 ProgressButton.prototype.setProgress = function (progress) {
-  // ProgressBar requires integers, so remap from 0 => 1 for the QLinearGradient.
-  var progress = progress / 100;
-
   var accentColor = this.accentColor;
   var backgroundColor = this.backgroundColor;
 
@@ -154,7 +152,6 @@ ProgressButton.prototype.setProgress = function (progress) {
     this.text = this.finishedText;
   }
 }
-
 
 
 /**
@@ -239,6 +236,12 @@ LoadButton.prototype = Object.create(ProgressButton.prototype);
   this.blocked = false;
 }
 
+
+/**
+ * Register the calling object and the slot.
+ * @param {object} context
+ * @param {function} slot
+ */
 Signal.prototype.connect = function (context, slot){
   // support slot.connect(callback) synthax
   if (typeof slot === 'undefined'){
@@ -248,6 +251,11 @@ Signal.prototype.connect = function (context, slot){
   this.connexions.push ({context: context, slot:slot});
 }
 
+
+/**
+ * Remove a connection registered with this Signal.
+ * @param {function} slot
+ */
 Signal.prototype.disconnect = function(slot){
   if (typeof slot === "undefined"){
     this.connexions = [];
@@ -261,6 +269,10 @@ Signal.prototype.disconnect = function(slot){
   }
 }
 
+
+/**
+ * Call the slot function using the provided context and and any arguments.
+ */
 Signal.prototype.emit = function () {
   if (this.blocked) return;
 
@@ -289,9 +301,41 @@ Signal.prototype.emit = function () {
   }
 }
 
+
 Signal.prototype.toString = function(){
   return "Signal";
 }
+
+
+/**
+ * Child class QProgressBar to remap the number range used by ProgressButton's QLinearGradient
+ * into the range used by the QProgressBar.
+ */
+function ProgressBar() {
+  QProgressBar.call(this);
+
+  // Exclusively using an input percentage from 0 => 100.
+  this.value = 0;
+  this.maximum = 100;
+
+  // Set the default geometry.
+  this.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding);
+  this.maximumHeight = 5;
+
+  // Hide progress text.
+  this.textVisible = false;
+}
+ProgressBar.prototype = Object.create(QProgressBar.prototype);
+
+
+/**
+ * Transform the input value and update the progress bar.
+ * @param {number} value - Progress as a percentage with a range of 0 => 1 .
+ */
+ProgressBar.prototype.setProgress = function(value) {
+  this.setValue(value * 100);
+}
+
 
 exports.Signal = Signal;
 exports.ProgressButton = ProgressButton;
@@ -299,3 +343,4 @@ exports.LoadButton = LoadButton;
 exports.InstallButton = InstallButton;
 exports.DescriptionView = DescriptionView;
 exports.ExtensionItem = ExtensionItem;
+exports.ProgressBar = ProgressBar;

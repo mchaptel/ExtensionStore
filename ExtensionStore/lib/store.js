@@ -71,7 +71,7 @@ Object.defineProperty(Store.prototype, "sellers", {
           var seller = new Seller(sellersList[i]);
           var package = seller.package;
           validSellers.push(seller);
-          this.onLoadProgressChanged.emit((i / sellersList.length) * 100);
+          this.onLoadProgressChanged.emit(i / sellersList.length);
         } catch (error) {
           this.log.error("problem getting package for seller " + sellersList[i], error);
         }
@@ -131,7 +131,7 @@ Object.defineProperty(Store.prototype, "extensions", {
       }
     }
 
-    this.onLoadProgressChanged.emit(100);
+    this.onLoadProgressChanged.emit(1);
     return this._extensions;
   }
 })
@@ -1266,7 +1266,7 @@ ExtensionInstaller.prototype.downloadFiles = function () {
   this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
 
   for (var i = 0; i < files.length; i++) {
-    this.onInstallProgressChanged.emit((i/files.length) * 100);
+    this.onInstallProgressChanged.emit(i/files.length);
     try{
       webQuery.download(this.getDownloadUrl(files[i].path), destPaths[i]);
       var dlFile = new File(destPaths[i]);
@@ -1283,7 +1283,7 @@ ExtensionInstaller.prototype.downloadFiles = function () {
     }
   }
 
-  this.onInstallProgressChanged.emit(100);
+  this.onInstallProgressChanged.emit(1);
   this.onInstallFinished.emit(dlFiles);
 }
 
