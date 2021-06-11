@@ -940,7 +940,6 @@ function LocalExtensionList(store) {
   this._installFolder = specialFolders.userScripts;             // default install folder, can be modified with installFolder property
   this._listFile = specialFolders.userConfig + "/.extensionsList";
   this._ini = specialFolders.userConfig + "/.extensionStorePrefs"
-  // if (this.list.length == 0) this.createListFile(store);              // initialize the list file that contains the extensions (!heavy! CBB: do it at a different time?)
 }
 
 
@@ -1042,7 +1041,6 @@ LocalExtensionList.prototype.checkFiles = function (extension) {
 
 /**
  * Installs the extension
- * @returns {ExtensionInstaller}  the installer instance
  */
 LocalExtensionList.prototype.install = function (extension) {
   var installer = extension.installer;  // dedicated object to implement threaded download later
@@ -1055,12 +1053,11 @@ LocalExtensionList.prototype.install = function (extension) {
     recursiveFileCopy(tempFolder, installLocation);
     this.addToList(extension); // create a record of this installation
     this.log.debug("adding to list "+extension);
+    delete extension._installer;
   }
 
   installer.onInstallFinished.connect(this, copyFiles)
   installer.downloadFiles();
-
-  return installer;
 }
 
 
