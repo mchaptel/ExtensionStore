@@ -532,8 +532,15 @@ StoreUI.prototype.performInstall = function () {
 
   this.localList.install(extension);
   this.localList.refreshExtensions();
-  this.updateExtensionsList();
-  this.updateDescriptionPanel();
+
+  // delay refresh after install completes
+  var timer = new QTimer();
+  timer.singleShot = true;
+  timer["timeout"].connect(this, function() {
+    this.updateExtensionsList();
+    this.updateDescriptionPanel();
+  });
+  timer.start(700);
 }
 
 
