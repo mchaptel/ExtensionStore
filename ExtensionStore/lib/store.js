@@ -8,7 +8,6 @@ var writeFile = io.writeFile;
 var recursiveFileCopy = io.recursiveFileCopy;
 var appFolder = io.appFolder;
 
-Logger.level = 2;
 
 function test() {
   var store = new Store()
