@@ -173,6 +173,11 @@ function StoreUI() {
 
   this.storeFooter.registerButton.clicked.connect(this, this.registerExtension);
 
+  this.storeFrame.storeSplitter.splitterMoved.connect(this, function(){
+    var list = this.extensionsList;
+    list.setColumnWidth(0, list.width - list.columnWidth(1));
+  })
+
   // Install Button Actions -------------------------------------------
   this.installButton = new InstallButton();
   this.installButton.objectName = "installButton";
