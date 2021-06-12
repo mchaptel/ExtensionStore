@@ -290,6 +290,22 @@ Object.defineProperty(Seller.prototype, "iconUrl", {
 })
 
 
+
+/**
+ * The social media links provided by the seller in the package.
+ * @type {string[]}
+ */
+Object.defineProperty(Seller.prototype, "socials", {
+  get: function () {
+    var social = this.package.social;
+    if (social && typeof social == "string") social = [social];
+    return social;
+  }
+})
+
+
+
+
 /**
  * Get the repositories for this seller
  * @type {Repository[]}
