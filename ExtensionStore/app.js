@@ -463,6 +463,7 @@ StoreUI.prototype.updateExtensionsList = function () {
 StoreUI.prototype.updateDescriptionPanel = function () {
   var extension = this.selectedExtension;
   if (!extension) return
+  if (this.installing) return
 
   var website = extension.package.website;
   var author = extension.package.author;
@@ -541,6 +542,7 @@ StoreUI.prototype.toggleDescriptionPanel = function () {
  * Installs the currently selected extension
  */
 StoreUI.prototype.performInstall = function () {
+  this.installing = true;
   var extension = this.selectedExtension
   if (!extension) return
 
@@ -565,6 +567,8 @@ StoreUI.prototype.performInstall = function () {
   var timer = new QTimer();
   timer.singleShot = true;
   timer["timeout"].connect(this, function() {
+    this.installing = false;
+
     this.updateExtensionsList();
     this.updateDescriptionPanel();
   });
@@ -576,6 +580,8 @@ StoreUI.prototype.performInstall = function () {
  * Uninstalls the currently selected extension
  */
 StoreUI.prototype.performUninstall = function () {
+  this.installing = true;
+
   var extension = this.selectedExtension
   if (!extension) return
 
@@ -587,6 +593,9 @@ StoreUI.prototype.performUninstall = function () {
     log.error(err);
     MessageBox.information("There was an error while uninstalling extension\n" + extension.name + " v" + extension.version + ":\n\n" + err);
   }
+
+  this.installing = false;
+
   this.localList.refreshExtensions();
   this.updateExtensionsList();
 }
