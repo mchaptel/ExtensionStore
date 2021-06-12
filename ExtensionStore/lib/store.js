@@ -925,7 +925,8 @@ Extension.prototype.matchesSearch = function (search) {
   // match all of the terms in the search, in any order, amongst the name and keywords
   search = RegExp("(?=.*" + search.split(" ").join(")(?=.*") + (").*"), "ig")
 
-  var searchableString = this.name + "," + this.package.keywords.join(",")
+  // search using seller name, extension name and keywords
+  var searchableString = this.repository.seller.name + "," + this.name + "," + this.package.keywords.join(",")
   return (search.exec(searchableString));
 }
 
