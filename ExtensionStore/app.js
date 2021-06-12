@@ -173,10 +173,7 @@ function StoreUI() {
 
   this.storeFooter.registerButton.clicked.connect(this, this.registerExtension);
 
-  this.storeFrame.storeSplitter.splitterMoved.connect(this, function(){
-    var list = this.extensionsList;
-    list.setColumnWidth(0, list.width - UiLoader.dpiScale(30));
-  })
+  this.storeFrame.storeSplitter.splitterMoved.connect(this, this.resizeColumns);
 
   // Install Button Actions -------------------------------------------
   this.installButton = new InstallButton();
@@ -248,13 +245,6 @@ StoreUI.prototype.loadStore = function () {
   webWidget.layout().setContentsMargins(0, 0, 0, 0);
   webWidget.layout().addWidget(this.descriptionText, 0, Qt.AlignTop);
 
-  // set default expanded size to half the splitter size
-  var storeFrame = this.storeFrame;
-  storeFrame.storeSplitter.setSizes([storeFrame.width / 2, storeFrame.width / 2]);
-  this.storeFrameState = storeFrame.storeSplitter.saveState();
-
-  storeFrame.storeSplitter.setSizes([storeFrame.storeSplitter.width, 0]);
-
   // Show progress dialog to give user indication that the list of extensions is being
   // updated.
   this.setUpdateProgressUIState(true);
@@ -289,9 +279,15 @@ StoreUI.prototype.loadStore = function () {
   this.storeFrame.show();
   this.aboutFrame.hide();
 
+  // set default expanded size to half the splitter size
+  var storeFrame = this.storeFrame;
+  storeFrame.storeSplitter.setSizes([storeFrame.width / 2, storeFrame.width / 2]);
+  this.storeFrameState = storeFrame.storeSplitter.saveState();
+
   // setup the store widget sizes
-  this.extensionsList.setColumnWidth(1, UiLoader.dpiScale(30));
-  this.extensionsList.setColumnWidth(0, (this.extensionsList.width / 2) - this.extensionsList.indentation - this.extensionsList.columnWidth(1));
+  this.resizeColumns()
+
+  storeFrame.storeSplitter.setSizes([storeFrame.storeSplitter.width, 0]);
 }
 
 
@@ -537,6 +533,13 @@ StoreUI.prototype.toggleDescriptionPanel = function () {
   }
 }
 
+
+StoreUI.prototype.resizeColumns = function(){
+  var list = this.extensionsList
+  var scroll = list.verticalScrollBar()
+  list.setColumnWidth(1, UiLoader.dpiScale(30))
+  list.setColumnWidth(0, list.width - scroll.visible*scroll.width - list.columnWidth(1))
+}
 
 /**
  * Installs the currently selected extension
