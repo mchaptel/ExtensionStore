@@ -2,6 +2,8 @@ var Logger = require("./logger.js").Logger;
 var DescriptionView = require("./widgets.js").DescriptionView;
 var appFolder = require("./io.js").appFolder;
 
+log = new Logger("Register")
+
 /**
  * The custom dialog to register a new extension
  * @param {Store} store

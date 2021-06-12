@@ -535,10 +535,10 @@ StoreUI.prototype.toggleDescriptionPanel = function () {
 
 
 StoreUI.prototype.resizeColumns = function(){
-  var list = this.extensionsList
-  var scroll = list.verticalScrollBar()
-  list.setColumnWidth(1, UiLoader.dpiScale(30))
-  list.setColumnWidth(0, list.width - scroll.visible*scroll.width - list.columnWidth(1))
+  var list = this.extensionsList;
+  var scroll = list.verticalScrollBar();
+  list.setColumnWidth(1, UiLoader.dpiScale(35));
+  list.setColumnWidth(0, list.width - scroll.visible*scroll.width - list.columnWidth(1));
 }
 
 /**
@@ -546,11 +546,11 @@ StoreUI.prototype.resizeColumns = function(){
  */
 StoreUI.prototype.performInstall = function () {
   this.installing = true;
-  var extension = this.selectedExtension
-  if (!extension) return
+  var extension = this.selectedExtension;
+  if (!extension) return;
 
   // set progress directly once to make the button feel more reponsive while thhe store fetches info
-  this.installButton.setProgress(0.001)
+  this.installButton.setProgress(0.001);
 
   log.info("installing extension : " + extension.repository.name + extension.name);
   var installer = extension.installer;

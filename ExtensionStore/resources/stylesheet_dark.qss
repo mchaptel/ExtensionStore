@@ -38,10 +38,10 @@ QScrollBar {
 }
 
 QScrollBar::handle {
-      border: none;
-      background: @08DP;
-	  image: none;
-	  border-color: none;
+  border: none;
+  background: @08DP;
+  image: none;
+  border-color: none;
 }
 QScrollBar::handle:hover{
       background: @12DP;
@@ -79,8 +79,8 @@ QLineEdit {
 	margin: 1px;
 	border-color: @16DP;
 	border-width: 2px;
-    border-radius: 5px;
-    background: @03DP;
+  border-radius: 5px;
+  background: @03DP;
 	selection-background-color: @ACCENT_LIGHT;
 }
 
@@ -399,6 +399,12 @@ QLineEdit#authorStoreLabel {
 
 QLineEdit#versionStoreLabel {
 	background-color: @06DP;
+}
+
+/* Splitter selection handle */
+QSplitter::handle#storeSplitter {
+    background-color: @04DP;
+    border-left: 2px solid @01DP;
 }
 
 /* Sidebar buttons */

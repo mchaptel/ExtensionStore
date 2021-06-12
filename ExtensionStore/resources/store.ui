@@ -365,13 +365,28 @@
          <enum>Qt::Horizontal</enum>
         </property>
         <property name="handleWidth">
-         <number>4</number>
+         <number>6</number>
         </property>
         <widget class="QFrame" name="extensionFrame">
          <property name="lineWidth">
           <number>1</number>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_5">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>4</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QTreeWidget" name="extensionsList">
             <property name="styleSheet">
