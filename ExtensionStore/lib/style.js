@@ -140,7 +140,7 @@ function getImage(imagePath) {
  * @param {QWidget} widget - Widget to apply the dropshadow to.
  * @param {Int} radius - Radius of the blur applied to the dropshadow.
  * @param {Int} offsetX - How many pixels to offset the blur in the X coordinate.
- * @param {Int} offsetY - How many pixels to offset the blur in the Y coordinate. 
+ * @param {Int} offsetY - How many pixels to offset the blur in the Y coordinate.
  * @param {Int} opacity - Opacity from 0 => 255, where 0 is fully transparent.
  */
  function addDropShadow(widget, radius, offsetX, offsetY, opacity) {
@@ -149,9 +149,10 @@ function getImage(imagePath) {
   if (typeof offsetY === 'undefined') var offsetY = 3;
   if (typeof opacity === 'undefined') var opacity = 70;
 
-  var dropShadow = new QGraphicsDropShadowEffect();
-  dropShadow.setBlurRadius(radius);
-  dropShadow.setOffset(offsetX, offsetY);
+  var dropShadow = new QGraphicsDropShadowEffect(widget);
+  dropShadow.setBlurRadius(UiLoader.dpiScale(radius));
+  dropShadow.setOffset(UiLoader.dpiScale(offsetX), UiLoader.dpiScale(offsetY));
+
   var shadowColor = new QColor(style.COLORS["00DP"]);
   shadowColor.setAlpha(opacity);
   dropShadow.setColor(shadowColor);
@@ -171,7 +172,7 @@ function getImage(imagePath) {
  * returning the correctly themed image, scaling Pixmaps if necessary, and applying onto
  * widgets as QIcons.\
  * @class
- * @param {String} imagePath - Path to the image. 
+ * @param {String} imagePath - Path to the image.
  * @param {Int} width - Width in display pixels.
  * @param {Int} height  - Height in display pixels.
  * @param {Boolean} uniformScaling - Whether to maintain the original aspect ratio when scaling.
@@ -188,7 +189,6 @@ function StyledImage(imagePath, width, height, uniformScaling) {
   this.basePath = imagePath;
   this.getImage = getImage;
 }
-
 
 /**
  * Filesystem path to the image - remapped to the appropriate theme.
