@@ -51,7 +51,7 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
   } else {
     iconPath = style.ICONS.notInstalled;
   }
-  var icon = new StyledImage(iconPath);
+  var icon = new StyledImage(iconPath, 18, 18);
   icon.setAsIcon(this, 1);
 
   if (extension.iconUrl){

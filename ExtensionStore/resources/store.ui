@@ -368,50 +368,60 @@
          <number>4</number>
         </property>
         <widget class="QFrame" name="extensionFrame">
+         <property name="lineWidth">
+          <number>1</number>
+         </property>
          <layout class="QVBoxLayout" name="verticalLayout_5">
-          <property name="leftMargin">
-           <number>9</number>
-          </property>
           <item>
            <widget class="QTreeWidget" name="extensionsList">
             <property name="styleSheet">
              <string notr="true"/>
             </property>
+            <property name="horizontalScrollBarPolicy">
+             <enum>Qt::ScrollBarAlwaysOff</enum>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
             <property name="showDropIndicator" stdset="0">
              <bool>true</bool>
-            </property>
-            <property name="dragDropMode">
-             <enum>QAbstractItemView::NoDragDrop</enum>
             </property>
             <property name="selectionMode">
              <enum>QAbstractItemView::ContiguousSelection</enum>
             </property>
             <property name="iconSize">
              <size>
-              <width>18</width>
-              <height>18</height>
+              <width>20</width>
+              <height>20</height>
              </size>
+            </property>
+            <property name="verticalScrollMode">
+             <enum>QAbstractItemView::ScrollPerPixel</enum>
             </property>
             <property name="indentation">
              <number>10</number>
             </property>
             <property name="rootIsDecorated">
+             <bool>false</bool>
+            </property>
+            <property name="animated">
              <bool>true</bool>
             </property>
             <property name="headerHidden">
              <bool>true</bool>
             </property>
+            <property name="columnCount">
+             <number>2</number>
+            </property>
             <attribute name="headerDefaultSectionSize">
              <number>250</number>
+            </attribute>
+            <attribute name="headerStretchLastSection">
+             <bool>false</bool>
             </attribute>
             <column>
              <property name="text">
               <string>Name</string>
-             </property>
-            </column>
-            <column>
-             <property name="text">
-              <string/>
              </property>
             </column>
             <column>
@@ -426,18 +436,12 @@
              <property name="text">
               <string/>
              </property>
-             <property name="text">
-              <string/>
-             </property>
              <item>
               <property name="text">
                <string>script1</string>
               </property>
               <property name="text">
                <string>O</string>
-              </property>
-              <property name="text">
-               <string/>
               </property>
              </item>
             </item>

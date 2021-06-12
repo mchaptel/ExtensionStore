@@ -175,7 +175,7 @@ function StoreUI() {
 
   this.storeFrame.storeSplitter.splitterMoved.connect(this, function(){
     var list = this.extensionsList;
-    list.setColumnWidth(0, list.width - list.columnWidth(1));
+    list.setColumnWidth(0, list.width - UiLoader.dpiScale(30));
   })
 
   // Install Button Actions -------------------------------------------
@@ -241,10 +241,6 @@ StoreUI.prototype.setUpdateProgressUIState = function (visible) {
  * Loads the store
  */
 StoreUI.prototype.loadStore = function () {
-  // setup the store widget sizes
-  this.extensionsList.setColumnWidth(0, UiLoader.dpiScale(220));
-  this.extensionsList.setColumnWidth(1, UiLoader.dpiScale(30));
-
   // setup the scrollArea containing the webview
   this.descriptionText = new DescriptionView()
   var webWidget = this.storeDescriptionPanel.webContent;
@@ -256,6 +252,7 @@ StoreUI.prototype.loadStore = function () {
   var storeFrame = this.storeFrame;
   storeFrame.storeSplitter.setSizes([storeFrame.width / 2, storeFrame.width / 2]);
   this.storeFrameState = storeFrame.storeSplitter.saveState();
+
   storeFrame.storeSplitter.setSizes([storeFrame.storeSplitter.width, 0]);
 
   // Show progress dialog to give user indication that the list of extensions is being
@@ -291,6 +288,10 @@ StoreUI.prototype.loadStore = function () {
   // Show the fully loaded store.
   this.storeFrame.show();
   this.aboutFrame.hide();
+
+  // setup the store widget sizes
+  this.extensionsList.setColumnWidth(1, UiLoader.dpiScale(30));
+  this.extensionsList.setColumnWidth(0, (this.extensionsList.width / 2) - this.extensionsList.indentation - this.extensionsList.columnWidth(1));
 }
 
 
