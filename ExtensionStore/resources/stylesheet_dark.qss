@@ -366,6 +366,11 @@ QFrame#sidepanelFrame {
 	background-color: @04DP;
 }
 
+/* Sliding description panel background */
+QFrame#authorSocialFrame {
+	background-color: @04DP;
+}
+
 QFrame#installButtonPlaceHolder {
 	background-color: @04DP;
 }

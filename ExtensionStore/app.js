@@ -9,6 +9,7 @@ var ExtensionItem = widgets.ExtensionItem;
 var LoadButton = widgets.LoadButton;
 var InstallButton = widgets.InstallButton;
 var ProgressBar = widgets.ProgressBar;
+var SocialButton = widgets.SocialButton;
 var StyledImage = style.StyledImage;
 
 var log = new Logger("UI");
@@ -457,18 +458,35 @@ StoreUI.prototype.updateDescriptionPanel = function () {
   var extension = this.selectedExtension;
   if (!extension) return
 
+  var website = extension.package.website;
+  var author = extension.package.author;
+  var socials = extension.repository.seller.socials;
+
   this.storeDescriptionPanel.versionStoreLabel.text = extension.version;
   this.descriptionText.setHtml(extension.package.description);
   this.storeDescriptionPanel.storeKeywordsGroup.storeKeywordsLabel.text = extension.package.keywords.join(", ");
-  this.storeDescriptionPanel.authorStoreLabel.text = extension.package.author;
+  this.storeDescriptionPanel.authorStoreLabel.text = author?author:extension.repository.seller.name;
   this.storeDescriptionPanel.sourceButton.toolTip = extension.package.repository;
-  this.storeDescriptionPanel.websiteButton.toolTip = extension.package.website;
+  this.storeDescriptionPanel.websiteButton.toolTip = website?website:extension.repository.seller.website;
 
-  var websiteIcon = new WebIcon(extension.package.website)
-  websiteIcon.setToWidget(this.storeDescriptionPanel.websiteButton)
+  var websiteIcon = new WebIcon(extension.package.website);
+  websiteIcon.setToWidget(this.storeDescriptionPanel.websiteButton);
 
-  var githubIcon = new StyledImage(style.ICONS.github)
-  githubIcon.setAsIcon(this.storeDescriptionPanel.sourceButton)
+  var githubIcon = new StyledImage(style.ICONS.github);
+  githubIcon.setAsIcon(this.storeDescriptionPanel.sourceButton);
+
+  // create buttons next to the name for social links
+  var socialsLayout = this.storeDescriptionPanel.authorSocialFrame.layout()
+  // clear existing social buttons
+  while(socialsLayout.count()){
+    delete socialsLayout.takeAt(0);
+  }
+
+  socials = socials.slice(0,4) // limit the display at 4 links
+  for (var i in socials){
+    var socialButton = new SocialButton(socials[i]);
+    socialsLayout.addWidget(socialButton, 0, Qt.AlignCenter);
+  }
 
   // update install button to reflect whether or not the extension is already installed
   if (this.localList.isInstalled(extension)) {
@@ -518,6 +536,9 @@ StoreUI.prototype.toggleDescriptionPanel = function () {
 StoreUI.prototype.performInstall = function () {
   var extension = this.selectedExtension
   if (!extension) return
+
+  // set progress directly once to make the button feel more reponsive while thhe store fetches info
+  this.installButton.setProgress(0.001)
 
   log.info("installing extension : " + extension.repository.name + extension.name);
   var installer = extension.installer;
