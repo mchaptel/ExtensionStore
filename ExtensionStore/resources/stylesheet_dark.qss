@@ -77,7 +77,7 @@ QScrollBar::sub-line {
 QLineEdit {
 	color: lightGrey;
 	margin: 1px;
-	border-color: @12DP;
+	border-color: @16DP;
 	border-width: 2px;
     border-radius: 5px;
     background: @03DP;
@@ -387,6 +387,9 @@ QSplitter::handle:hover#storeSplitter {
 
 /* Keywords */
 QGroupBox#storeKeywordsGroup {
+	border-color: @16DP;
+	border-style: solid;
+	border-width: 2px;
 	background-color: @06DP;
 }
 
