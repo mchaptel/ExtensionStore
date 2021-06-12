@@ -9,6 +9,7 @@ var ExtensionItem = widgets.ExtensionItem;
 var LoadButton = widgets.LoadButton;
 var InstallButton = widgets.InstallButton;
 var ProgressBar = widgets.ProgressBar;
+var SocialButton = widgets.SocialButton;
 var StyledImage = style.StyledImage;
 
 var log = new Logger("UI");
@@ -172,6 +173,11 @@ function StoreUI() {
 
   this.storeFooter.registerButton.clicked.connect(this, this.registerExtension);
 
+  this.storeFrame.storeSplitter.splitterMoved.connect(this, function(){
+    var list = this.extensionsList;
+    list.setColumnWidth(0, list.width - UiLoader.dpiScale(30));
+  })
+
   // Install Button Actions -------------------------------------------
   this.installButton = new InstallButton();
   this.installButton.objectName = "installButton";
@@ -235,10 +241,6 @@ StoreUI.prototype.setUpdateProgressUIState = function (visible) {
  * Loads the store
  */
 StoreUI.prototype.loadStore = function () {
-  // setup the store widget sizes
-  this.extensionsList.setColumnWidth(0, UiLoader.dpiScale(220));
-  this.extensionsList.setColumnWidth(1, UiLoader.dpiScale(30));
-
   // setup the scrollArea containing the webview
   this.descriptionText = new DescriptionView()
   var webWidget = this.storeDescriptionPanel.webContent;
@@ -250,6 +252,7 @@ StoreUI.prototype.loadStore = function () {
   var storeFrame = this.storeFrame;
   storeFrame.storeSplitter.setSizes([storeFrame.width / 2, storeFrame.width / 2]);
   this.storeFrameState = storeFrame.storeSplitter.saveState();
+
   storeFrame.storeSplitter.setSizes([storeFrame.storeSplitter.width, 0]);
 
   // Show progress dialog to give user indication that the list of extensions is being
@@ -285,6 +288,10 @@ StoreUI.prototype.loadStore = function () {
   // Show the fully loaded store.
   this.storeFrame.show();
   this.aboutFrame.hide();
+
+  // setup the store widget sizes
+  this.extensionsList.setColumnWidth(1, UiLoader.dpiScale(30));
+  this.extensionsList.setColumnWidth(0, (this.extensionsList.width / 2) - this.extensionsList.indentation - this.extensionsList.columnWidth(1));
 }
 
 
@@ -457,18 +464,36 @@ StoreUI.prototype.updateDescriptionPanel = function () {
   var extension = this.selectedExtension;
   if (!extension) return
 
+  var website = extension.package.website;
+  var author = extension.package.author;
+  var socials = extension.repository.seller.socials;
+
   this.storeDescriptionPanel.versionStoreLabel.text = extension.version;
   this.descriptionText.setHtml(extension.package.description);
   this.storeDescriptionPanel.storeKeywordsGroup.storeKeywordsLabel.text = extension.package.keywords.join(", ");
-  this.storeDescriptionPanel.authorStoreLabel.text = extension.package.author;
+  this.storeDescriptionPanel.authorStoreLabel.text = author?author:extension.repository.seller.name;
   this.storeDescriptionPanel.sourceButton.toolTip = extension.package.repository;
-  this.storeDescriptionPanel.websiteButton.toolTip = extension.package.website;
+  this.storeDescriptionPanel.websiteButton.toolTip = website?website:extension.repository.seller.website;
 
-  var websiteIcon = new WebIcon(extension.package.website)
-  websiteIcon.setToWidget(this.storeDescriptionPanel.websiteButton)
+  var websiteIcon = new WebIcon(extension.package.website);
+  websiteIcon.setToWidget(this.storeDescriptionPanel.websiteButton);
 
-  var githubIcon = new StyledImage(style.ICONS.github)
-  githubIcon.setAsIcon(this.storeDescriptionPanel.sourceButton)
+  var githubIcon = new StyledImage(style.ICONS.github);
+  githubIcon.setAsIcon(this.storeDescriptionPanel.sourceButton);
+
+  // create buttons next to the name for social links
+  var socialsLayout = this.storeDescriptionPanel.authorSocialFrame.layout()
+  // clear existing social buttons
+  while(socialsLayout.count()){
+    var button = socialsLayout.takeAt(0).widget();
+    button.deleteLater();
+  }
+
+  socials = socials.slice(0,4) // limit the display at 4 links
+  for (var i in socials){
+    var socialButton = new SocialButton(socials[i]);
+    socialsLayout.addWidget(socialButton, 0, Qt.AlignCenter);
+  }
 
   // update install button to reflect whether or not the extension is already installed
   if (this.localList.isInstalled(extension)) {
@@ -518,6 +543,9 @@ StoreUI.prototype.toggleDescriptionPanel = function () {
 StoreUI.prototype.performInstall = function () {
   var extension = this.selectedExtension
   if (!extension) return
+
+  // set progress directly once to make the button feel more reponsive while thhe store fetches info
+  this.installButton.setProgress(0.001)
 
   log.info("installing extension : " + extension.repository.name + extension.name);
   var installer = extension.installer;

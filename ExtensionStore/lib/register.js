@@ -1,6 +1,6 @@
 var Logger = require("./logger.js").Logger;
 var DescriptionView = require("./widgets.js").DescriptionView;
-var appFolder = require("./lib/io.js").appFolder;
+var appFolder = require("./io.js").appFolder;
 
 /**
  * The custom dialog to register a new extension
@@ -9,7 +9,6 @@ var appFolder = require("./lib/io.js").appFolder;
  */
 function RegisterExtensionDialog(store, localList){
 
-  var appFolder = appFolder;
   this.ui = UiLoader.load(appFolder + "/resources/register.ui");
 
   this.store = store;

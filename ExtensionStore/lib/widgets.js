@@ -51,7 +51,7 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
   } else {
     iconPath = style.ICONS.notInstalled;
   }
-  var icon = new StyledImage(iconPath);
+  var icon = new StyledImage(iconPath, 18, 18);
   icon.setAsIcon(this, 1);
 
   if (extension.iconUrl){
@@ -142,7 +142,7 @@ ProgressButton.prototype.setProgress = function (progress) {
     this.setStyleSheet(progressStyleSheet);
 
     // Update text with progress
-    this.text = this.mode.progressText + " " + Math.round((progressStopR * 100)) + "%";
+    this.text = this.progressText + " " + Math.round((progressStopR * 100)) + "%";
 
   } else {
     // Configure widget to indicate the operation is complete.
@@ -221,6 +221,29 @@ function LoadButton() {
 
 }
 LoadButton.prototype = Object.create(ProgressButton.prototype);
+
+
+/**
+ * A simple button to display a social media link
+ * @param {string} url
+ */
+function SocialButton(url){
+  QToolButton.call(this);
+  this.toolTip = url;
+
+  this.maximumHeight = this.maximumWidth = UiLoader.dpiScale(24);
+
+  // shadows seem to accumulate? leaving this in the hope to fix it later
+  style.addDropShadow(this);
+
+  var icon = new WebIcon(url);
+  icon.setToWidget(this);
+
+  this.clicked.connect(this, function(){
+    QDesktopServices.openUrl(new QUrl(url));
+  })
+}
+SocialButton.prototype = Object.create(QToolButton.prototype)
 
 
 /**
@@ -343,3 +366,4 @@ exports.InstallButton = InstallButton;
 exports.DescriptionView = DescriptionView;
 exports.ExtensionItem = ExtensionItem;
 exports.ProgressBar = ProgressBar;
+exports.SocialButton = SocialButton;

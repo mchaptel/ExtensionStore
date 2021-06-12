@@ -46,6 +46,9 @@ Object.defineProperty(Store.prototype, "sellers", {
   get: function () {
     if (typeof this._sellers === 'undefined') {
       this.log.debug("getting sellers");
+      // set progress directly once to make the button feel more reponsive while thhe store fetches info
+      this.onLoadProgressChanged.emit(0.001);
+
       // the sellers list can be overriden with an environment variable for local studio installs
       var sellersFile = System.getenv("HUES_SELLERS_PATH");
       if (!sellersFile) sellersFile = "https://raw.githubusercontent.com/mchaptel/ExtensionStore/master/SELLERSLIST";
@@ -70,7 +73,7 @@ Object.defineProperty(Store.prototype, "sellers", {
           var seller = new Seller(sellersList[i]);
           var package = seller.package;
           validSellers.push(seller);
-          this.onLoadProgressChanged.emit(i / sellersList.length);
+          this.onLoadProgressChanged.emit((i+1) / (sellersList.length+1));
         } catch (error) {
           this.log.error("problem getting package for seller " + sellersList[i], error);
         }
@@ -112,7 +115,7 @@ Object.defineProperty(Store.prototype, "repositories", {
 Object.defineProperty(Store.prototype, "extensions", {
   get: function () {
     if (typeof this._extensions === 'undefined') {
-      this.log.debug("getting the list of  available extensions.")
+      this.log.debug("getting the list of available extensions.")
 
       var repos = this.repositories;
       var extensions = [];
@@ -128,9 +131,9 @@ Object.defineProperty(Store.prototype, "extensions", {
       for (var i in extensions) {
         this._extensions[extensions[i].id] = extensions[i];
       }
+      this.onLoadProgressChanged.emit(1);
     }
 
-    this.onLoadProgressChanged.emit(1);
     return this._extensions;
   }
 })
@@ -143,7 +146,8 @@ Object.defineProperty(Store.prototype, "storeExtension", {
   get: function () {
     if (typeof this._storeExtension === 'undefined') {
       var storePackage = webQuery.get("https://raw.githubusercontent.com/mchaptel/ExtensionStore/master/ExtensionStore/tbpackage.json")
-      this._storeRepository = new Repository(storePackage.repository)
+      this._storeSeller = new Seller ("https://raw.githubusercontent.com/mchaptel/")
+      this._storeRepository = new Repository(this._storeSeller, storePackage.repository);
       this._storeExtension = new Extension(this._storeRepository, storePackage);
     }
     return this._storeExtension
@@ -205,8 +209,8 @@ Object.defineProperty(Seller.prototype, "dlUrl", {
  */
 Object.defineProperty(Seller.prototype, "package", {
   get: function () {
-    this.log.debug("getting package for " + this.masterRepositoryName);
     if (!this._tbpackage) {
+      this.log.debug("getting package for " + this.masterRepositoryName);
       var response = webQuery.get(this.dlUrl + "/tbpackage.json");
       if (!response || response.message) {
         var message = "No valid package found in repository " + this._url + ": " + response.message;
@@ -289,6 +293,22 @@ Object.defineProperty(Seller.prototype, "iconUrl", {
 })
 
 
+
+/**
+ * The social media links provided by the seller in the package.
+ * @type {string[]}
+ */
+Object.defineProperty(Seller.prototype, "socials", {
+  get: function () {
+    var social = this.package.social;
+    if (social && typeof social == "string") social = [social];
+    return social;
+  }
+})
+
+
+
+
 /**
  * Get the repositories for this seller
  * @type {Repository[]}
@@ -299,7 +319,7 @@ Object.defineProperty(Seller.prototype, "repositories", {
       this.log.debug("getting seller repositories for seller " + this._url);
       this._repositories = [];
       var tbpackage = this.package;
-      if (tbpackage == null) return this._repositories;
+      if (!tbpackage) return this._repositories;
 
       // use a repositories object to avoid duplicates
       var extensionsPackages = tbpackage.extensions;
@@ -307,7 +327,7 @@ Object.defineProperty(Seller.prototype, "repositories", {
       for (var i in extensionsPackages) {
         var repoName = extensionsPackages[i].repository;
         if (!repositories.hasOwnProperty(repoName)) {
-          repositories[repoName] = new Repository(repoName);
+          repositories[repoName] = new Repository(this, repoName);
           repositories[repoName]._extensions = [];
           this._repositories.push(repositories[repoName]);
         }
@@ -357,7 +377,7 @@ Seller.prototype.addExtension = function (name) {
     }
   }
 
-  var extension = new Extension(new Repository(this._url), { name: name, version: "1.0.0" });
+  var extension = new Extension(new Repository(this, this._url), { name: name, version: "1.0.0" });
   extension.package = { name: name, version: "1.0.0" }
   this._extensions[extension.id] = extension;
 
@@ -423,11 +443,17 @@ Seller.prototype.loadFromFile = function (packageFile) {
  * @property {Package} package        instance of the package class that holds the package informations
  * @property {Object}  contents       parsed json from the api query
  */
-function Repository(url) {
+function Repository(seller, url) {
   this.log = new Logger("Repository")
   if (url.slice(-1) != "/") url += "/";
+  this.seller = seller;
+
+  if (url.indexOf(this.seller.githubUserName)==-1){
+    throw new Error("Seller Repository must be under same github account as extension list.");
+  }
   this._url = url;
-  this.name = this._url.replace("https://github.com/", "")
+
+  this.name = this._url.replace("https://github.com/", "");
 }
 
 
@@ -467,7 +493,7 @@ Object.defineProperty(Repository.prototype, "package", {
       this.log.debug("getting repos package for repo " + this.apiUrl);
       var response = webQuery.get(this.dlUrl + "/tbpackage.json");
       if (!response || response.message) {
-        this.log.error("No valid package found in repository " + this._url + ": " + response.message)
+        this.log.error("No valid package found in repository " + this._url + ": " + response.message);
         return null
       }
       this._package = response;
@@ -1273,7 +1299,7 @@ ExtensionInstaller.prototype.downloadFiles = function () {
   var destFolder = this.destFolder;
 
   // get the files list (heavy operations)
-  this.onInstallProgressChanged.emit(0);  // show the progress bar at 0
+  this.onInstallProgressChanged.emit(0.1);  // show the progress bar starting
   var destPaths = this.extension.localPaths.map(function (x) { return destFolder + x });
   var dlFiles = [this.destFolder];
   var files = this.extension.files;
@@ -1281,7 +1307,7 @@ ExtensionInstaller.prototype.downloadFiles = function () {
   this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
 
   for (var i = 0; i < files.length; i++) {
-    this.onInstallProgressChanged.emit(i/files.length);
+    this.onInstallProgressChanged.emit((i+1)/(files.length+1));
     try{
       webQuery.download(this.getDownloadUrl(files[i].path), destPaths[i]);
       var dlFile = new File(destPaths[i]);
