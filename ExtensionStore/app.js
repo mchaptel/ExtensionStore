@@ -479,7 +479,8 @@ StoreUI.prototype.updateDescriptionPanel = function () {
   var socialsLayout = this.storeDescriptionPanel.authorSocialFrame.layout()
   // clear existing social buttons
   while(socialsLayout.count()){
-    delete socialsLayout.takeAt(0);
+    var button = socialsLayout.takeAt(0).widget();
+    button.deleteLater();
   }
 
   socials = socials.slice(0,4) // limit the display at 4 links

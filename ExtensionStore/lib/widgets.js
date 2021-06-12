@@ -234,7 +234,7 @@ function SocialButton(url){
   this.maximumHeight = this.maximumWidth = UiLoader.dpiScale(24);
 
   // shadows seem to accumulate? leaving this in the hope to fix it later
-  // style.addDropShadow(this);
+  style.addDropShadow(this);
 
   var icon = new WebIcon(url);
   icon.setToWidget(this);
