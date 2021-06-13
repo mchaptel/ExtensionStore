@@ -95,14 +95,14 @@ function getStyleSheet() {
 
   // Get light-specific style overriddes
   if (!isDarkStyle()) {
-      styleFileLight = appFolder + "/resources/stylesheet_light.qss";
-      styleSheet += io.readFile(styleFileLight);
+    styleFileLight = appFolder + "/resources/stylesheet_light.qss";
+    styleSheet += io.readFile(styleFileLight);
   }
 
   // Replace template colors with final palettes.
   for (color in COLORS) {
-      var colorRe = new RegExp("@" + color, "g");
-      styleSheet = styleSheet.replace(colorRe, COLORS[color]);
+    var colorRe = new RegExp("@" + color, "g");
+    styleSheet = styleSheet.replace(colorRe, COLORS[color]);
   }
 
   log.debug("Final qss stylesheet:\n" + styleSheet);
@@ -119,15 +119,15 @@ function getImage(imagePath) {
 
   // Images are default themed dark - just return the original image if dark style is active.
   if (isDarkStyle()) {
-      return imagePath;
+    return imagePath;
   }
 
   // Harmony in light theme. Attempt to use @light variant.
   var image = new QFileInfo(imagePath);
   var imageRemapped = new QFileInfo(image.absolutePath() + "/" + image.baseName() + "@light." + image.suffix());
   if (imageRemapped.exists()) {
-      log.debug("Using light themed variant of of " + imagePath);
-      return imageRemapped.filePath();
+    log.debug("Using light themed variant of of " + imagePath);
+    return imageRemapped.filePath();
   }
 
   // @light variant not found, fallback to using original image path.
@@ -195,7 +195,7 @@ function StyledImage(imagePath, width, height, uniformScaling) {
  * Filesystem path to the image - remapped to the appropriate theme.
  */
 Object.defineProperty(StyledImage.prototype, "path", {
-  get: function(){
+  get: function() {
     return this.getImage(this.basePath);
   }
 })
@@ -211,15 +211,15 @@ Object.defineProperty(StyledImage.prototype, "pixmap", {
       var pixmap = new QPixmap(this.path);
 
       // work out scaling based on params
-      if (this.uniformScaling){
+      if (this.uniformScaling) {
         if (this.width && this.height){
           // keep inside the given rectangle
           var aspectRatioFlag = Qt.KeepAspectRatio;
-        }else{
+        } else {
           // if one of the width or height is missing, only the other value will be used
           var aspectRatioFlag = Qt.KeepAspectRatioByExpanding;
         }
-      }else{
+      } else {
         // resize to match the box exactly
         var aspectRatioFlag = Qt.IgnoreAspectRatio;
       }
@@ -239,12 +239,12 @@ Object.defineProperty(StyledImage.prototype, "pixmap", {
  * @param {Int} itemColumn - Index of the column the icon should be applied to, if the widget is a QTreeWidgetItem.
  */
 StyledImage.prototype.setAsIcon = function(widget, itemColumn){
-  if (widget instanceof QTreeWidgetItem){
+  if (widget instanceof QTreeWidgetItem) {
     if (typeof itemColumn === 'undefined') var itemColumn = 0;
     var icon = new QIcon(this.path);
     widget.setIcon(itemColumn, icon);
-  }else{
-    log.debug("setting icon "+this.path)
+  } else {
+    log.debug("setting icon " + this.path)
     UiLoader.setSvgIcon(widget, this.path);
   }
 }
