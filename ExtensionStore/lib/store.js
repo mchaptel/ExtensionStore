@@ -34,7 +34,7 @@ function test() {
  */
 function Store() {
   this.log = new Logger("Store");
-  this.log.info("init store");
+  this.log.debug("init store");
   this.onLoadProgressChanged = new Signal();
 }
 
