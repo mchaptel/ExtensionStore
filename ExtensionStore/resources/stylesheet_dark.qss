@@ -22,19 +22,19 @@ QLabel{
 
 /* Loading/Installing progress bar */
 QProgressBar {
-    border: none;
-    padding: 0px;
-    background: @ACCENT_BG;
+  border: none;
+  padding: 0px;
+  background: @ACCENT_BG;
 }
 QProgressBar::chunk {
-    background-color: @ACCENT_PRIMARY;
+  background-color: @ACCENT_PRIMARY;
 }
 
 /* Scrollbars */
 QScrollBar {
 	image: none;
-    border: none;
-    background: @08DP;
+  border: none;
+  background: @08DP;
 }
 
 QScrollBar::handle {
@@ -44,7 +44,7 @@ QScrollBar::handle {
   border-color: none;
 }
 QScrollBar::handle:hover{
-      background: @12DP;
+  background: @12DP;
 }
 
 /* Scroll bar background (above handle) */
@@ -271,6 +271,7 @@ QLineEdit#searchStore {
 	border-style: solid;
 	border-color: transparent transparent @ACCENT_LIGHT transparent;
 }
+
 QLineEdit:focus#searchStore {
 	background-color: @03DP;
 	border-radius: 10px;
@@ -404,8 +405,8 @@ QLineEdit#versionStoreLabel {
 
 /* Splitter selection handle */
 QSplitter::handle#storeSplitter {
-    background-color: @04DP;
-    border-left: 2px solid @01DP;
+  background-color: @04DP;
+  border-left: 2px solid @01DP;
 }
 
 /* Sidebar buttons */
