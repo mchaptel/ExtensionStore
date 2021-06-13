@@ -214,6 +214,7 @@ QToolButton:pressed#loadStoreButton {
 QLabel#storeVersion {
 	font-family: Arial;
 	font-size: 10pt;
+  padding-left: 10px;
 }
 
 /* Update Store Button */

@@ -70,7 +70,7 @@ function StoreUI() {
   this.aboutFrame.layout().insertWidget(6, this.loadStoreButton, 0, Qt.AlignCenter);
 
   // Insert the progress bar.
-  this.aboutFrame.layout().insertWidget(10, this.updateProgress, 0, 0);
+  this.aboutFrame.updateRibbon.layout().insertWidget(0, this.updateProgress, 0, Qt.AlignBottom);
 
   // Hide the store and the loading UI elements.
   this.storeFrame.hide();
@@ -228,9 +228,19 @@ StoreUI.prototype.show = function () {
  * @param {boolean} visible - Determine whether the progress state should be enabled or disabled.
  */
 StoreUI.prototype.setUpdateProgressUIState = function (visible) {
+  // Save the existing store text and change text to maintain geometry while being effectively hidden.
+  if (visible) {
+    this.aboutFrame.updateRibbon.storeVersion.toolTip = this.aboutFrame.updateRibbon.storeVersion.text;
+    this.aboutFrame.updateRibbon.storeVersion.text = "";
+  }
+  else {
+    // Restore store text.
+    this.aboutFrame.updateRibbon.storeVersion.text = this.aboutFrame.updateRibbon.storeVersion.toolTip;
+    this.aboutFrame.updateRibbon.storeVersion.toolTip = "";
+  }
+
   this.updateProgress.visible = visible;
   this.aboutFrame.updateButton.visible = !visible;
-  this.aboutFrame.updateRibbon.storeVersion.visible = !visible;
 }
 
 
