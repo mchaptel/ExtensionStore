@@ -280,7 +280,7 @@ SocialButton.prototype = Object.create(QToolButton.prototype)
  * A Qt like custom signal that can be defined, connected and emitted.
  * As this signal is not actually threaded, the connected callbacks will be executed
  * directly when the signal is emited, and the rest of the code will execute after.
- * @param {type} type the type of value accepted as argument when calling emit()
+ * @param {type} type - The type of value accepted as argument when calling emit()
  */
  function Signal(type){
   // this.emitType = type;
@@ -381,8 +381,9 @@ ProgressBar.prototype = Object.create(QProgressBar.prototype);
 
 
 /**
- * Transform the input value and update the progress bar.
- * @param {number} value - Progress as a percentage with a range of 0 => 1 .
+ * Transform the input value from the input range (0=>1) to the range expected 
+ * by the QProgressBar (0=>100). Set the progressbar value with the remapped value..
+ * @param {number} value - Progress as a percentage with a range of 0 => 1.
  */
 ProgressBar.prototype.setProgress = function(value) {
   this.setValue(value * 100);

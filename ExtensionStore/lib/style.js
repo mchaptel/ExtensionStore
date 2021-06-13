@@ -89,7 +89,7 @@ function isDarkStyle() {
  * style-specific overrides.
  * @returns {String} Resulting stylesheet based on the Application theme.
  */
-function getSyleSheet() {
+function getStyleSheet() {
   var styleFile = appFolder + "/resources/stylesheet_dark.qss";
   var styleSheet = io.readFile(styleFile);
 
@@ -251,7 +251,7 @@ StyledImage.prototype.setAsIcon = function(widget, itemColumn){
 
 
 exports.addDropShadow = addDropShadow;
-exports.getSyleSheet = getSyleSheet;
+exports.getStyleSheet = getStyleSheet;
 exports.StyledImage = StyledImage;
 exports.STYLESHEETS = STYLESHEETS;
 exports.ICONS = ICONS;

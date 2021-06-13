@@ -34,7 +34,7 @@ function StoreUI() {
   this.ui.minimumHeight = UiLoader.dpiScale(200);
 
   // Set the global application stylesheet
-  this.ui.setStyleSheet(style.getSyleSheet());
+  this.ui.setStyleSheet(style.getStyleSheet());
 
   // Create Load Store Button
   this.loadStoreButton = new LoadButton();
