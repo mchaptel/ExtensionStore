@@ -89,6 +89,7 @@ function ProgressButton(color, text, progressText, finishedText){
   this.defaultText = text;
   this.progressText = progressText;
   this.finishedText = finishedText;
+  this.hasFailed = false;
 }
 ProgressButton.prototype = Object.create(QToolButton.prototype);
 
@@ -113,6 +114,12 @@ Object.defineProperty(ProgressButton.prototype, "accentColor", {
  * @param {Int} progress - Value from 0 to 1 that the operation is currently at.
  */
 ProgressButton.prototype.setProgress = function (progress) {
+
+  // Disable progress updates if the button has failed. hasFailed is Implemented in child classes.
+  if (this.hasFailed) {
+    return;
+  }
+
   var accentColor = this.accentColor;
   var backgroundColor = this.backgroundColor;
 
@@ -177,6 +184,11 @@ function InstallButton() {
       "progressText": "Updating...",
       "accentColor": style.COLORS.YELLOW,
     },
+    "FAIL": {
+      "action": new QAction("Failed", this),
+      "progressText": "Failed",
+      "accentColor": style.COLORS.RED,
+    }
   }
 
   this.mode = "INSTALL";
@@ -204,9 +216,27 @@ Object.defineProperty(InstallButton.prototype, "mode", {
       this.progressText = modeDetails.progressText;
       this.removeAction(this.defaultAction());
       this.setDefaultAction(modeDetails.action);
+      this.hasFailed = false;
     }
   }
 });
+
+
+/**
+ * Disable progress updates on the button, and set the button mode/stylesheet to indicate failure of
+ * an extension install.
+ */
+ InstallButton.prototype.setFailState = function() {
+   // Only needs to run once.
+   if (this.hasFailed) {
+     return;
+   }
+
+  this.hasFailed = true;
+  this.mode = "FAIL";
+  this.text = "Failed";
+  this.setStyleSheet("QToolButton { background-color: " + style.COLORS.RED + "; border-color: transparent; color: white}");
+}
 
 
 /**

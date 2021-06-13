@@ -1083,8 +1083,18 @@ LocalExtensionList.prototype.install = function (extension) {
     delete extension._installer;
   }
 
-  installer.onInstallFinished.connect(this, copyFiles)
-  installer.downloadFiles();
+  installer.onInstallFinished.connect(this, copyFiles);
+
+  // Try to download the extension files.
+  try {
+    installer.downloadFiles();
+    return true;
+  }
+  catch (error) {
+    this.log.debug("Unable to install extension: " + error);
+    delete extension._installer;
+    return false;
+  }
 }
 
 
@@ -1322,6 +1332,7 @@ ExtensionInstaller.prototype.downloadFiles = function () {
       }
     }catch(error){
       this.onInstallFailed.emit(error);
+      throw error;
     }
   }
 

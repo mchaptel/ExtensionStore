@@ -41,6 +41,7 @@ const styleSheetsDark = {
   noConnexionRibbon : "QWidget { background-color: " + COLORS.RED + "; color: white; }",
   progressButton : "QToolButton { border-color: transparent transparent @ACCENT transparent; }",
   installButton : "QToolButton { border-color: transparent transparent " + COLORS.GREEN + " transparent; }",
+  installFailedButton : "QToolButton { border-color: transparent transparent " + COLORS.RED + " transparent; }",
   uninstallButton : "QToolButton { border-color: transparent transparent " + COLORS.ORANGE + " transparent; }",
   updateButton : "QToolButton { border-color: transparent transparent " + COLORS.YELLOW + " transparent; }",
   loadButton : "QToolButton { border-color: transparent transparent " + COLORS.ACCENT_LIGHT + " transparent; }",
