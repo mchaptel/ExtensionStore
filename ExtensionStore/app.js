@@ -74,7 +74,7 @@ function StoreUI() {
 
   // Hide the store and the loading UI elements.
   this.storeFrame.hide();
-  this.setUpdateProgressUIState(false);
+  this.setStoreLoadUIState(false);
 
   if (!this.localList.getData("HUES_EULA_ACCEPTED", false)) {
     this.aboutFrame.hide();
@@ -225,11 +225,14 @@ StoreUI.prototype.show = function () {
 /**
  * Show widgets responsible for showing progress to the user when loading the
  * store and retrieving extensions.
- * @param {boolean} visible - Determine whether the progress state should be enabled or disabled.
+ * @param {boolean} enabled - Determine whether the progress state should be enabled or disabled.
  */
-StoreUI.prototype.setUpdateProgressUIState = function (visible) {
-  // Save the existing store text and change text to maintain geometry while being effectively hidden.
-  if (visible) {
+StoreUI.prototype.setStoreLoadUIState = function (enabled) {
+  if (enabled) {
+    // Hide elements during store load without removing them from the UI to avoid elements shifting.
+    this.aboutFrame.updateButton.setStyleSheet(style.STYLESHEETS.updateButtonInvisible);
+    this.aboutFrame.updateButton.setGraphicsEffect(null);  
+    this.aboutFrame.updateRibbon.setStyleSheet(style.STYLESHEETS.defaultRibbon);
     this.aboutFrame.updateRibbon.storeVersion.toolTip = this.aboutFrame.updateRibbon.storeVersion.text;
     this.aboutFrame.updateRibbon.storeVersion.text = "";
   }
@@ -239,8 +242,7 @@ StoreUI.prototype.setUpdateProgressUIState = function (visible) {
     this.aboutFrame.updateRibbon.storeVersion.toolTip = "";
   }
 
-  this.updateProgress.visible = visible;
-  this.aboutFrame.updateButton.visible = !visible;
+  this.updateProgress.visible = enabled;
 }
 
 
@@ -257,14 +259,14 @@ StoreUI.prototype.loadStore = function () {
 
   // Show progress dialog to give user indication that the list of extensions is being
   // updated.
-  this.setUpdateProgressUIState(true);
+  this.setStoreLoadUIState(true);
 
   // Fetch the list of available extensions.
   try {
     this.storeExtensions = this.store.extensions;
   } catch (err) {
     log.error(err)
-    this.setUpdateProgressUIState(false);
+    this.setStoreLoadUIState(false);
     this.lockStore("Could not load Extensions list.")
     return
   }

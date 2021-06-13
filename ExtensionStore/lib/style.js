@@ -45,6 +45,7 @@ const styleSheetsDark = {
   uninstallButton : "QToolButton { border-color: transparent transparent " + COLORS.ORANGE + " transparent; }",
   updateButton : "QToolButton { border-color: transparent transparent " + COLORS.YELLOW + " transparent; }",
   loadButton : "QToolButton { border-color: transparent transparent " + COLORS.ACCENT_LIGHT + " transparent; }",
+  updateButtonInvisible : "QPushButton { border-color: transparent; background-color: transparent; color: transparent; }",
 }
 
 // Enum to hold light style stylesheets.
