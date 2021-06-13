@@ -393,8 +393,9 @@ StoreUI.prototype.updateStore = function (currentVersion, storeVersion) {
   if (success) {
     MessageBox.information("Store succesfully updated to version v" + storeVersion + ".\n\nPlease restart Harmony for changes to take effect.");
     this.updateRibbon.storeVersion.setText("v" + currentVersion);
-    this.updateRibbon.setStyleSheet("");
-    this.updateRibbon.updateButton.hide();
+    this.updateRibbon.setStyleSheet(style.STYLESHEETS.defaultRibbon);
+    this.ui.aboutFrame.updateButton.setStyleSheet(style.STYLESHEETS.updateButtonInvisible);
+    this.ui.aboutFrame.updateButton.setGraphicsEffect(null);
   } else {
     MessageBox.information("There was a problem updating to v" + storeVersion + ".\n\n The update was not successful.");
   }
