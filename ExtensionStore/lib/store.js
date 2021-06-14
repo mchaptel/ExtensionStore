@@ -755,8 +755,8 @@ Object.defineProperty(Extension.prototype, "package", {
 
 
 /**
- * The highest level folder on the repository that includes files included in this extension
- * Doesn't poll github, since it only looks at the files listed in the package
+ * The longest common path in the repository, which contains all files in the extension.
+ * Doesn't poll github, since it only looks at the files listed in the package.
  * @name Extension#rootFolder
  * @type {object}
  */
@@ -764,6 +764,7 @@ Object.defineProperty(Extension.prototype, "rootFolder", {
   get: function () {
     if (typeof this._rootFolder === 'undefined') {
       var files = this.package.files;
+      files = files.map(function(x) { return x.match(/^\/?(.*)/)[1] }); // Removing leading /'s.
       if (files.length == 1) {
         this._rootFolder = files[0].slice(0, files[0].lastIndexOf("/")+1);
       } else {
@@ -818,7 +819,8 @@ Object.defineProperty(Extension.prototype, "files", {
 
       for (var i in packageFiles) {
         this.log.debug("getting extension files matching : "+packageFiles[i])
-        var results = this.repository.getFiles("/"+ packageFiles[i]);
+        var filter = packageFiles[i].substring(0,1) === "/" ? packageFiles[i] : "/" + packageFiles[i];
+        var results = this.repository.getFiles(filter);
         if (results.length > 0) files = files.concat(results);
       }
 
