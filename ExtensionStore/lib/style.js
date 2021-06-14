@@ -242,7 +242,9 @@ Object.defineProperty(StyledImage.prototype, "pixmap", {
 StyledImage.prototype.setAsIcon = function(widget, itemColumn){
   if (widget instanceof QTreeWidgetItem) {
     if (typeof itemColumn === 'undefined') var itemColumn = 0;
-    var icon = new QIcon(this.path);
+    var icon = new QIcon();
+    icon.addPixmap(this.pixmap, QIcon.Normal);
+    icon.addPixmap(this.pixmap, QIcon.Selected);
     widget.setIcon(itemColumn, icon);
   } else {
     log.debug("setting icon " + this.path)
