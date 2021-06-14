@@ -62,7 +62,7 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
 
   }else{
     // fallback to local icon
-    var extensionIcon = new StyledImage(style.ICONS.defaultExtension, 18, 18);
+    var extensionIcon = new StyledImage(style.ICONS.defaultExtension, 20, 20);
     extensionIcon.setAsIcon(this, 0);
   }
 
