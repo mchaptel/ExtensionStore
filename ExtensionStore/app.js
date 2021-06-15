@@ -391,7 +391,7 @@ StoreUI.prototype.lockStore = function (message) {
 StoreUI.prototype.updateStore = function (currentVersion, storeVersion) {
   var success = this.localList.install(this.storeExtension, this.ui.aboutFrame.updateButton);
   if (success) {
-    MessageBox.information("Store succesfully updated to version v" + storeVersion + ".\n\nPlease restart Harmony for changes to take effect.");
+    MessageBox.information("Store succesfully updated to version v" + storeVersion + ".\n\nPlease close and reopen HUES for changes to take effect.");
     this.updateRibbon.storeVersion.setText("v" + currentVersion);
     this.updateRibbon.setStyleSheet(style.STYLESHEETS.defaultRibbon);
     this.ui.aboutFrame.updateButton.setStyleSheet(style.STYLESHEETS.updateButtonInvisible);
