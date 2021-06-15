@@ -29,7 +29,7 @@ NetworkConnexionHandler.prototype.get = function (command) {
         return null;
       }
       if (json.message == "Moved Permanently") {
-        log.error("Repository " + command + " has moved to : " + json.url);
+        log.debug("Repository " + command + " has moved to : " + json.url);
         return json;
       }
       if (json.message == "400: Invalid request") {
