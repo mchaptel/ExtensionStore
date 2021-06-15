@@ -1109,19 +1109,24 @@ LocalExtensionList.prototype.uninstall = function (extension) {
   if (!this.isInstalled(extension)) return true    // extension isn't installed
   var localExtension = this.extensions[extension.id];
 
-  // Remove packages recursively as they have a parent directory.
-  if (localExtension.isPackage) {
-    var folder = new Dir(this.installFolder + "/packages/" + localExtension.safeName);
-    this.log.debug("removing folder " + folder.path);
-    if (folder.exists) folder.rmdirs();
-  } else {
-    // Otherwise remove all script files (.js, .ui, .png etc.)
-    var files = localExtension.package.localFiles;
-    for (var i in files) {
-      this.log.debug("removing file " + files[i]);
-      var file = new File(files[i]);
-      if (file.exists) file.remove();
+  try {
+    // Remove packages recursively as they have a parent directory.
+    if (localExtension.isPackage) {
+      var folder = new Dir(this.installFolder + "/packages/" + localExtension.safeName);
+      this.log.debug("removing folder " + folder.path);
+      if (folder.exists) folder.rmdirs();
+    } else {
+      // Otherwise remove all script files (.js, .ui, .png etc.)
+      var files = localExtension.package.localFiles;
+      for (var i in files) {
+        this.log.debug("removing file " + files[i]);
+        var file = new File(files[i]);
+        if (file.exists) file.remove();
+      }
     }
+  }
+  catch (err) {
+    this.log.debug(err);
   }
 
   // Update the extension list accordingly.

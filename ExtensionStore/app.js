@@ -415,6 +415,15 @@ StoreUI.prototype.updateStore = function (currentVersion, storeVersion) {
   installer.onInstallFailed.connect(this, this.failure);
   installer.onInstallFailed.connect(this.updateButton, this.updateButton.setFailState);
 
+  // Remove existing files before updating the store.
+  try {
+    this.localList.uninstall(this.storeExtension);
+  }
+  catch (err) {
+    // Only log errors as it's not a crucial step in updating the extension.
+    log.debug("Unable to remove local files before updating store. " + err);
+  }
+
   // Attempt the actual install.
   var success = this.localList.install(this.storeExtension);
   if (success) {
@@ -614,6 +623,18 @@ StoreUI.prototype.performInstall = function () {
   installer.onInstallProgressChanged.connect(this.installButton, this.installButton.setProgress);
   installer.onInstallFailed.connect(this, this.failure);
   installer.onInstallFailed.connect(this.installButton, this.installButton.setFailState);
+
+  // If the extension is already installed, this is an update operation. Remove local files before continuing
+  // to clean up the filesystem.
+  if (this.localList.isInstalled(extension)) {
+    try {
+      this.localList.uninstall(extension);
+    }
+    catch (err) {
+      // Not a critical failure, log and continue.
+      log.debug("Unable to remove local files before updating extension. " + err);
+    }
+  }
 
   // Attempt to install the extension.
   var extensionInstalled = this.localList.install(extension);
