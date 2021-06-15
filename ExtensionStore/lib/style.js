@@ -38,14 +38,15 @@ const COLORS = isDarkStyle() ? ColorsDark : ColorsLight;
 const styleSheetsDark = {
   defaultRibbon : "QWidget { background-color: transparent; color: gray;}",
   updateRibbon : "QWidget { background-color: " + COLORS.YELLOW + "; color: black }",
-  noConnexionRibbon : "QWidget { background-color: " + COLORS.RED + "; color: white; }",
+  failureRibbon : "QWidget { background-color: " + COLORS.RED + "; color: white; }",
   progressButton : "QToolButton { border-color: transparent transparent @ACCENT transparent; }",
   installButton : "QToolButton { border-color: transparent transparent " + COLORS.GREEN + " transparent; }",
   installFailedButton : "QToolButton { border-color: transparent transparent " + COLORS.RED + " transparent; }",
   uninstallButton : "QToolButton { border-color: transparent transparent " + COLORS.ORANGE + " transparent; }",
   updateButton : "QToolButton { border-color: transparent transparent " + COLORS.YELLOW + " transparent; }",
+  updateButtonSuccess: "QToolButton { background-color: transparent; border-color: transparent; color: " + COLORS.YELLOW + "; font-family: Arial Black; font-size: " + UiLoader.dpiScale(11) + "pt;}",
+  InstallButtonInvisible : "QToolButton { border-color: transparent; background-color: transparent; color: transparent; }",
   loadButton : "QToolButton { border-color: transparent transparent " + COLORS.ACCENT_LIGHT + " transparent; }",
-  updateButtonInvisible : "QPushButton { border-color: transparent; background-color: transparent; color: transparent; }",
 }
 
 // Enum to hold light style stylesheets.

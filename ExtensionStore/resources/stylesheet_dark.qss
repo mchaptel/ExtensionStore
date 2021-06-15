@@ -212,14 +212,14 @@ QToolButton:pressed#loadStoreButton {
 
 /* Update Ribbon store version text */
 QLabel#storeVersion {
-  font-family: Arial;
-  font-size: 10pt;
-  padding-left: 10px;
-  padding-bottom: 5px;
+  font-family: Palatino;
+  font-size: 9pt;
+  padding-left: 8px;
+  margin-bottom: -2px;
 }
 
 /* Update Store Button */
-QPushButton#updateButton {
+QToolButton#updateButton {
   padding: 5px;
   color: black;
   background-color: @YELLOW;

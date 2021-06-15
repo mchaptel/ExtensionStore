@@ -1108,31 +1108,6 @@
         </property>
        </spacer>
       </item>
-      <item alignment="Qt::AlignHCenter">
-       <widget class="QPushButton" name="updateButton">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>130</width>
-          <height>30</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>120</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Install Update</string>
-        </property>
-       </widget>
-      </item>
       <item>
        <spacer name="verticalSpacer">
         <property name="orientation">
@@ -1173,7 +1148,10 @@
          <item alignment="Qt::AlignLeft|Qt::AlignBottom">
           <widget class="QLabel" name="storeVersion">
            <property name="text">
-            <string>v0.0.1</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;v0.0.1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
            </property>
           </widget>
          </item>
