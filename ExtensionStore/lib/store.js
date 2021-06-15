@@ -1319,6 +1319,14 @@ ExtensionInstaller.prototype.downloadFiles = function () {
 
   this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
 
+  // If the file list is empty, there was likely an issue parsing the tbpackage and the operaiton
+  // should be aborted.
+  if (!files.length) {
+    this.onInstallFailed.emit("No files found to download.");
+    throw new Error("No files found to download");
+  };
+
+  // Download each file and update the progress
   for (var i = 0; i < files.length; i++) {
     this.onInstallProgressChanged.emit((i+1)/(files.length+1));
     try{
