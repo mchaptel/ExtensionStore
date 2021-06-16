@@ -34,7 +34,7 @@ function test() {
  */
 function Store() {
   this.log = new Logger("Store");
-  this.log.info("init store");
+  this.log.debug("init store");
   this.onLoadProgressChanged = new Signal();
 }
 
@@ -755,8 +755,8 @@ Object.defineProperty(Extension.prototype, "package", {
 
 
 /**
- * The highest level folder on the repository that includes files included in this extension
- * Doesn't poll github, since it only looks at the files listed in the package
+ * The longest common path in the repository, which contains all files in the extension.
+ * Doesn't poll github, since it only looks at the files listed in the package.
  * @name Extension#rootFolder
  * @type {object}
  */
@@ -764,6 +764,7 @@ Object.defineProperty(Extension.prototype, "rootFolder", {
   get: function () {
     if (typeof this._rootFolder === 'undefined') {
       var files = this.package.files;
+      files = files.map(function(x) { return x.match(/^\/?(.*)/)[1] }); // Removing leading /'s.
       if (files.length == 1) {
         this._rootFolder = files[0].slice(0, files[0].lastIndexOf("/")+1);
       } else {
@@ -818,7 +819,8 @@ Object.defineProperty(Extension.prototype, "files", {
 
       for (var i in packageFiles) {
         this.log.debug("getting extension files matching : "+packageFiles[i])
-        var results = this.repository.getFiles("/"+ packageFiles[i]);
+        var filter = packageFiles[i].substring(0,1) === "/" ? packageFiles[i] : "/" + packageFiles[i];
+        var results = this.repository.getFiles(filter);
         if (results.length > 0) files = files.concat(results);
       }
 
@@ -1083,8 +1085,18 @@ LocalExtensionList.prototype.install = function (extension) {
     delete extension._installer;
   }
 
-  installer.onInstallFinished.connect(this, copyFiles)
-  installer.downloadFiles();
+  installer.onInstallFinished.connect(this, copyFiles);
+
+  // Try to download the extension files.
+  try {
+    installer.downloadFiles();
+    return true;
+  }
+  catch (error) {
+    this.log.debug("Unable to install extension: " + error);
+    delete extension._installer;
+    return false;
+  }
 }
 
 
@@ -1097,19 +1109,24 @@ LocalExtensionList.prototype.uninstall = function (extension) {
   if (!this.isInstalled(extension)) return true    // extension isn't installed
   var localExtension = this.extensions[extension.id];
 
-  // Remove packages recursively as they have a parent directory.
-  if (localExtension.isPackage) {
-    var folder = new Dir(this.installFolder + "/packages/" + localExtension.safeName);
-    this.log.debug("removing folder " + folder.path);
-    if (folder.exists) folder.rmdirs();
-  } else {
-    // Otherwise remove all script files (.js, .ui, .png etc.)
-    var files = localExtension.package.localFiles;
-    for (var i in files) {
-      this.log.debug("removing file " + files[i]);
-      var file = new File(files[i]);
-      if (file.exists) file.remove();
+  try {
+    // Remove packages recursively as they have a parent directory.
+    if (localExtension.isPackage) {
+      var folder = new Dir(this.installFolder + "/packages/" + localExtension.safeName);
+      this.log.debug("removing folder " + folder.path);
+      if (folder.exists) folder.rmdirs();
+    } else {
+      // Otherwise remove all script files (.js, .ui, .png etc.)
+      var files = localExtension.package.localFiles;
+      for (var i in files) {
+        this.log.debug("removing file " + files[i]);
+        var file = new File(files[i]);
+        if (file.exists) file.remove();
+      }
     }
+  }
+  catch (err) {
+    this.log.debug(err);
   }
 
   // Update the extension list accordingly.
@@ -1307,6 +1324,14 @@ ExtensionInstaller.prototype.downloadFiles = function () {
 
   this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
 
+  // If the file list is empty, there was likely an issue parsing the tbpackage and the operaiton
+  // should be aborted.
+  if (!files.length) {
+    this.onInstallFailed.emit("No files found to download.");
+    throw new Error("No files found to download");
+  };
+
+  // Download each file and update the progress
   for (var i = 0; i < files.length; i++) {
     this.onInstallProgressChanged.emit((i+1)/(files.length+1));
     try{
@@ -1322,6 +1347,7 @@ ExtensionInstaller.prototype.downloadFiles = function () {
       }
     }catch(error){
       this.onInstallFailed.emit(error);
+      throw error;
     }
   }
 

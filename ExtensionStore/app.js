@@ -34,12 +34,19 @@ function StoreUI() {
   this.ui.minimumHeight = UiLoader.dpiScale(200);
 
   // Set the global application stylesheet
-  this.ui.setStyleSheet(style.getSyleSheet());
+  this.ui.setStyleSheet(style.getStyleSheet());
 
   // Create Load Store Button
   this.loadStoreButton = new LoadButton();
   this.loadStoreButton.objectName = "loadStoreButton";
   style.addDropShadow(this.loadStoreButton, 10, 0, 8);
+
+  // Create Store Update Button
+  this.updateButton = new InstallButton();
+  this.updateButton.mode = "Update";
+  this.updateButton.objectName = "updateButton";
+  this.updateButton.text = "Update Store";
+  style.addDropShadow(this.updateButton, 10, 0, 8);
 
   // Create progressbar
   this.updateProgress = new ProgressBar();
@@ -63,18 +70,18 @@ function StoreUI() {
   // Add a light dropshadow to the about screen text - to shadow the bottom border.
   style.addDropShadow(this.aboutFrame.label_3, 5, 5, 5, 25);
 
-  // Add a dropshadow to the Update store button.
-  style.addDropShadow(this.aboutFrame.updateButton, 5, 5, 5, 50);
-
   // Insert the Loading button.
   this.aboutFrame.layout().insertWidget(6, this.loadStoreButton, 0, Qt.AlignCenter);
 
+  // Insert the Store Update button.
+  this.aboutFrame.layout().insertWidget(6, this.updateButton, 0, Qt.AlignCenter);
+
   // Insert the progress bar.
-  this.aboutFrame.layout().insertWidget(10, this.updateProgress, 0, 0);
+  this.aboutFrame.updateRibbon.layout().insertWidget(0, this.updateProgress, 0, Qt.AlignBottom);
 
   // Hide the store and the loading UI elements.
   this.storeFrame.hide();
-  this.setUpdateProgressUIState(false);
+  this.setStoreLoadUIState(false);
 
   if (!this.localList.getData("HUES_EULA_ACCEPTED", false)) {
     this.aboutFrame.hide();
@@ -225,12 +232,24 @@ StoreUI.prototype.show = function () {
 /**
  * Show widgets responsible for showing progress to the user when loading the
  * store and retrieving extensions.
- * @param {boolean} visible - Determine whether the progress state should be enabled or disabled.
+ * @param {boolean} enabled - Determine whether the progress state should be enabled or disabled.
  */
-StoreUI.prototype.setUpdateProgressUIState = function (visible) {
-  this.updateProgress.visible = visible;
-  this.aboutFrame.updateButton.visible = !visible;
-  this.aboutFrame.updateRibbon.storeVersion.visible = !visible;
+StoreUI.prototype.setStoreLoadUIState = function (enabled) {
+  if (enabled) {
+    // Hide elements during store load without removing them from the UI to avoid elements shifting.
+    this.updateButton.setStyleSheet(style.STYLESHEETS.InstallButtonInvisible);
+    this.updateButton.setGraphicsEffect(null);  
+    this.aboutFrame.updateRibbon.setStyleSheet(style.STYLESHEETS.defaultRibbon);
+    this.aboutFrame.updateRibbon.storeVersion.toolTip = this.aboutFrame.updateRibbon.storeVersion.text;
+    this.aboutFrame.updateRibbon.storeVersion.text = "";
+  }
+  else {
+    // Restore store text.
+    this.aboutFrame.updateRibbon.storeVersion.text = this.aboutFrame.updateRibbon.storeVersion.toolTip;
+    this.aboutFrame.updateRibbon.storeVersion.toolTip = "";
+  }
+
+  this.updateProgress.visible = enabled;
 }
 
 
@@ -247,14 +266,14 @@ StoreUI.prototype.loadStore = function () {
 
   // Show progress dialog to give user indication that the list of extensions is being
   // updated.
-  this.setUpdateProgressUIState(true);
+  this.setStoreLoadUIState(true);
 
   // Fetch the list of available extensions.
   try {
     this.storeExtensions = this.store.extensions;
   } catch (err) {
     log.error(err)
-    this.setUpdateProgressUIState(false);
+    this.setStoreLoadUIState(false);
     this.lockStore("Could not load Extensions list.")
     return
   }
@@ -328,9 +347,6 @@ StoreUI.prototype.getInstalledVersion = function () {
  */
 StoreUI.prototype.checkForUpdates = function () {
   var updateRibbon = this.updateRibbon
-
-  var defaultRibbonStyleSheet = style.STYLESHEETS.defaultRibbon;
-  var updateRibbonStyleSheet = style.STYLESHEETS.updateRibbon;
   var storeUi = this;
 
   try {
@@ -342,13 +358,13 @@ StoreUI.prototype.checkForUpdates = function () {
     // if a more recent version of the store exists on the repo, activate the update ribbon
     if (!storeExtension.currentVersionIsOlder(currentVersion) && (currentVersion != storeVersion)) {
       updateRibbon.storeVersion.setText("v" + currentVersion + "  ⓘ New version available: v" + storeVersion);
-      updateRibbon.setStyleSheet(updateRibbonStyleSheet);
-      this.aboutFrame.updateButton.toolTip = storeExtension.package.description;
-      this.aboutFrame.updateButton.clicked.connect(this, function () { storeUi.updateStore(currentVersion, storeVersion) });
+      updateRibbon.setStyleSheet(style.STYLESHEETS.updateRibbon);
+      this.updateButton.toolTip = storeExtension.package.description;
+      this.updateButton.clicked.connect(this, function () { storeUi.updateStore(currentVersion, storeVersion) });
     } else {
-      this.aboutFrame.updateButton.hide();
+      this.updateButton.hide();
       updateRibbon.storeVersion.setText("v" + currentVersion + " ✓ - Store is up to date.");
-      updateRibbon.setStyleSheet(defaultRibbonStyleSheet);
+      updateRibbon.setStyleSheet(style.STYLESHEETS.defaultRibbon);
     }
   } catch (err) {
     // couldn't check updates, probably we don't have an internet access.
@@ -364,10 +380,10 @@ StoreUI.prototype.checkForUpdates = function () {
  * @param {*} message
  */
 StoreUI.prototype.lockStore = function (message) {
-  var noConnexionRibbonStyleSheet = style.STYLESHEETS.noConnexionRibbon;
+  var noConnexionRibbonStyleSheet = style.STYLESHEETS.failureRibbon;
 
   this.ui.aboutFrame.loadStoreButton.enabled = false;
-  this.ui.aboutFrame.updateButton.hide();
+  this.updateButton.hide();
   this.updateRibbon.setStyleSheet(noConnexionRibbonStyleSheet);
   this.updateRibbon.storeVersion.setText(message);
 }
@@ -377,13 +393,57 @@ StoreUI.prototype.lockStore = function (message) {
  * installs the version of the store found on the repo.
  */
 StoreUI.prototype.updateStore = function (currentVersion, storeVersion) {
-  var success = this.localList.install(this.storeExtension, this.ui.aboutFrame.updateButton);
+  // Store shouldn't load after update until it's been reloaded.
+  this.loadStoreButton.setStyleSheet(style.STYLESHEETS.InstallButtonInvisible);
+  this.loadStoreButton.setGraphicsEffect(null);
+  this.loadStoreButton.enabled = false;
+  this.loadStoreButton.toolTip = "";
+
+  // set progress directly once to make the button feel more reponsive while thhe store fetches info
+  this.updateButton.setProgress(0.001);
+
+  log.info("installing extension : " + this.storeExtension.repository.name + this.storeExtension.name);
+  var installer = this.storeExtension.installer;
+
+  // Log store update error.
+  this.failure = function (err){
+    log.error(err);
+  }
+
+  // Connect the installer signals to the update button.
+  installer.onInstallProgressChanged.connect(this.updateButton, this.updateButton.setProgress);
+  installer.onInstallFailed.connect(this, this.failure);
+  installer.onInstallFailed.connect(this.updateButton, this.updateButton.setFailState);
+
+  // Remove existing files before updating the store.
+  try {
+    this.localList.uninstall(this.storeExtension);
+  }
+  catch (err) {
+    // Only log errors as it's not a crucial step in updating the extension.
+    log.debug("Unable to remove local files before updating store. " + err);
+  }
+
+  // Attempt the actual install.
+  var success = this.localList.install(this.storeExtension);
   if (success) {
-    MessageBox.information("Store succesfully updated to version v" + storeVersion + ".\n\nPlease restart Harmony for changes to take effect.");
+    // Updated successfully - Adjust UI to indicate update success without shifting the UI.
     this.updateRibbon.storeVersion.setText("v" + currentVersion);
-    this.updateRibbon.setStyleSheet("");
-    this.updateRibbon.updateButton.hide();
+    this.updateRibbon.setStyleSheet(style.STYLESHEETS.defaultRibbon);
+    this.updateButton.setStyleSheet(style.STYLESHEETS.updateButtonSuccess);
+    this.updateButton.maximumWidth = 500;
+    this.updateButton.text = "Please reload HUES to apply the update.";
+    this.updateButton.setGraphicsEffect(null);
+    this.updateButton.toolTip = "";
+    this.updateButton.enabled = false;
+
+    MessageBox.information("Store succesfully updated to version v" + storeVersion + ".\n\nPlease close and reopen HUES for changes to take effect.");
+
   } else {
+    // Update failed - set to the RED failure style.
+    this.updateRibbon.setStyleSheet(style.STYLESHEETS.failureRibbon);
+    this.updateButton.setFailState();
+    this.updateButton.enabled = false;
     MessageBox.information("There was a problem updating to v" + storeVersion + ".\n\n The update was not successful.");
   }
 }
@@ -555,24 +615,45 @@ StoreUI.prototype.performInstall = function () {
   log.info("installing extension : " + extension.repository.name + extension.name);
   var installer = extension.installer;
 
-  this.failure = function (){
+  // Log extension installation error.
+  this.failure = function (err){
     log.error(err);
-    MessageBox.information("There was an error while installing extension\n" + extension.name + " v" + extension.version + ":\n\n" + err);
   }
 
   installer.onInstallProgressChanged.connect(this.installButton, this.installButton.setProgress);
   installer.onInstallFailed.connect(this, this.failure);
+  installer.onInstallFailed.connect(this.installButton, this.installButton.setFailState);
 
-  this.localList.install(extension);
-  this.localList.refreshExtensions();
+  // If the extension is already installed, this is an update operation. Remove local files before continuing
+  // to clean up the filesystem.
+  if (this.localList.isInstalled(extension)) {
+    try {
+      this.localList.uninstall(extension);
+    }
+    catch (err) {
+      // Not a critical failure, log and continue.
+      log.debug("Unable to remove local files before updating extension. " + err);
+    }
+  }
+
+  // Attempt to install the extension.
+  var extensionInstalled = this.localList.install(extension);
+
+  // If extension install failed - alert user.
+  // Not in failure function to avoid being called for each failed proc, and to only appear after InstallButton has changed to a failed state.
+  if (!extensionInstalled) {
+    MessageBox.information("There was an error while installing extension\n" + extension.name + " v" + extension.version + ":\n\n");
+  }
 
   // delay refresh after install completes
   var timer = new QTimer();
   timer.singleShot = true;
   timer["timeout"].connect(this, function() {
     this.installing = false;
-
-    this.updateExtensionsList();
+    this.localList.refreshExtensions();
+    if (extensionInstalled) {
+      this.updateExtensionsList();
+    }
     this.updateDescriptionPanel();
   });
   timer.start(700);

@@ -7,34 +7,34 @@ Overall widget styling.
 
 /* Base widget of the entire UI */
 QWidget#Form {
-	background-color: @01DP;
+  background-color: @01DP;
 }
 
 /* Overall BG color */
 QFrame{
-	background-color: @01DP;
+  background-color: @01DP;
 }
 
 /* Set labels to transparent for text and logos */
 QLabel{
-	background-color: transparent;
+  background-color: transparent;
 }
 
 /* Loading/Installing progress bar */
 QProgressBar {
-    border: none;
-    padding: 0px;
-    background: @ACCENT_BG;
+  border: none;
+  padding: 0px;
+  background: @ACCENT_BG;
 }
 QProgressBar::chunk {
-    background-color: @ACCENT_PRIMARY;
+  background-color: @ACCENT_PRIMARY;
 }
 
 /* Scrollbars */
 QScrollBar {
-	image: none;
-    border: none;
-    background: @08DP;
+  image: none;
+  border: none;
+  background: @08DP;
 }
 
 QScrollBar::handle {
@@ -44,50 +44,50 @@ QScrollBar::handle {
   border-color: none;
 }
 QScrollBar::handle:hover{
-      background: @12DP;
+  background: @12DP;
 }
 
 /* Scroll bar background (above handle) */
 QScrollBar::add-page {
-	border: none;
-	background: @02DP;
+  border: none;
+  background: @02DP;
 }
 
 /* Scroll bar background (below handle) */
 QScrollBar::sub-page {
-	border: none;
-	background: @02DP;
+  border: none;
+  background: @02DP;
 }
 
 /* Up arrow */
 QScrollBar::add-line {
-	border: none;
-	background: none;
-	image: none;
+  border: none;
+  background: none;
+  image: none;
 }
 
 /* Down arrow */
 QScrollBar::sub-line {
-	border: none;
-	background: none;
-	image: none;
+  border: none;
+  background: none;
+  image: none;
 }
 
 /* Line Edits */
 QLineEdit {
-	color: lightGrey;
-	margin: 1px;
-	border-color: @16DP;
-	border-width: 2px;
+  color: lightGrey;
+  margin: 1px;
+  border-color: @16DP;
+  border-width: 2px;
   border-radius: 5px;
   background: @03DP;
-	selection-background-color: @ACCENT_LIGHT;
+  selection-background-color: @ACCENT_LIGHT;
 }
 
 /* Tooltips */
 QToolTip {
-	color: lightGrey;
-	background-color: @06DP;
+  color: lightGrey;
+  background-color: @06DP;
 }
 
 /*
@@ -98,46 +98,46 @@ EULA Frame
 
 /* Exterior frame */
 QFrame#eulaFrame {
-	background-color: @01DP;
+  background-color: @01DP;
 }
 
 /* Elevated inner frame */
 QFrame#innerFrame {
-	background-color: @03DP;
-	border-radius:8px;
+  background-color: @03DP;
+  border-radius:8px;
 }
 
 /* Elevated EULA Text container */
 QFrame#textFrame {
-	background-color: @06DP;
-	border-radius:8px;
+  background-color: @06DP;
+  border-radius:8px;
 }
 
 /* Scrollable EULA text region base widget */
 QScrollArea#scrollArea_2 {
-	background-color: transparent;
+  background-color: transparent;
 
 }
 
 /* EULA screen scrollable region (text background). */
 QWidget#scrollAreaWidgetContents_2 {
-	background-color: transparent;
+  background-color: transparent;
 }
 
 /* EULA Screen text */
 QLabel#eulaText {
-	background-color: transparent;
-	margin: 5px;
-	font-family: Arial;
-	font-size: 10pt;
+  background-color: transparent;
+  margin: 5px;
+  font-family: Arial;
+  font-size: 10pt;
 }
 
 /* EULA agreement checkbox */
 QCheckBox#eulaCB {
-	font-family: Arial;
-	font-size: 13pt;
-	border-color: @ACCENT_PRIMARY;
-	background-color: transparent;
+  font-family: Arial;
+  font-size: 13pt;
+  border-color: @ACCENT_PRIMARY;
+  background-color: transparent;
 }
 
 /*
@@ -148,88 +148,90 @@ About Frame
 
 /* About Screen text */
 QLabel#label_3 {
-	background-color: transparent;
-	font-family: Palatino;
-	font-size: 12pt;
-	padding-bottom: 7px;
-	border-width: 2px;
-	border-style: solid;
-	border-color: transparent transparent @04DP transparent;
+  background-color: transparent;
+  font-family: Palatino;
+  font-size: 12pt;
+  padding-bottom: 7px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: transparent transparent @04DP transparent;
 }
 
 /* Social Media */
 /* Twitter */
 QToolButton#twitterButton {
-	background-color: transparent;
+  background-color: transparent;
 }
 QToolButton:hover#twitterButton {
-	border-width: 2px;
-	border-radius: 4px;
-	border-style: solid;
-	border-color: @ACCENT_LIGHT;
+  border-width: 2px;
+  border-radius: 4px;
+  border-style: solid;
+  border-color: @ACCENT_LIGHT;
 }
 
 /* Github */
 QToolButton#githubButton {
-	background-color: transparent;
+  background-color: transparent;
 }
 QToolButton:hover#githubButton {
-	border-width: 2px;
-	border-radius: 4px;
-	border-style: solid;
-	border-color: @ACCENT_LIGHT;
+  border-width: 2px;
+  border-radius: 4px;
+  border-style: solid;
+  border-color: @ACCENT_LIGHT;
 }
 
 /* Discord */
 QToolButton#discordButton {
-	background-color: transparent;
+  background-color: transparent;
 }
 QToolButton:hover#discordButton {
-	border-width: 2px;
-	border-radius: 4px;
-	border-style: solid;
-	border-color: @ACCENT_LIGHT;
+  border-width: 2px;
+  border-radius: 4px;
+  border-style: solid;
+  border-color: @ACCENT_LIGHT;
 }
 
 /* Load Store Button */
 QToolButton#loadStoreButton {
-	background: @08DP;
-	border-width: 2px;
-	border-style: solid;
-	border-color: transparent transparent @ACCENT_LIGHT transparent;
-	border-radius: 7px;
+  background: @08DP;
+  border-width: 2px;
+  border-style: solid;
+  border-color: transparent transparent @ACCENT_LIGHT transparent;
+  border-radius: 7px;
 }
 
 QToolButton:hover#loadStoreButton {
-	border-color: @ACCENT_LIGHT;
-	background: @12DP;
+  border-color: @ACCENT_LIGHT;
+  background: @12DP;
 }
 QToolButton:pressed#loadStoreButton {
-	background: @02DP;
-	border-color: @ACCENT_PRIMARY;
+  background: @02DP;
+  border-color: @ACCENT_PRIMARY;
 }
 
 
 /* Update Ribbon store version text */
 QLabel#storeVersion {
-	font-family: Arial;
-	font-size: 10pt;
+  font-family: Palatino;
+  font-size: 9pt;
+  padding-left: 8px;
+  margin-bottom: -2px;
 }
 
 /* Update Store Button */
-QPushButton#updateButton {
-	padding: 5px;
-	color: black;
-	background-color: @YELLOW;
-	border-width: 2px;
-	border-style: solid;
-	border-color: transparent;
-	border-radius: 7px;
+QToolButton#updateButton {
+  padding: 5px;
+  color: black;
+  background-color: @YELLOW;
+  border-width: 2px;
+  border-style: solid;
+  border-color: transparent;
+  border-radius: 7px;
 
 }
 
 QPushButton:hover#updateButton {
-	border-color: @ORANGE;
+  border-color: @ORANGE;
 }
 
 /*
@@ -240,145 +242,146 @@ Store Frame
 
 /* Store Frame */
 QFrame#storeFrame {
-	background-color: @12DP;
+  background-color: @12DP;
 }
 
 /*
 ======================
-	Store Header
+  Store Header
 ======================
 */
 
 /* Store header */
 QFrame#storeHeader {
-	background-color: @08DP;
-	border-width: 3px;
-	border-style: solid;
-	border-color: transparent transparent @01DP transparent;
+  background-color: @08DP;
+  border-width: 3px;
+  border-style: solid;
+  border-color: transparent transparent @01DP transparent;
 }
 
 /* Top-left Store logo */
 QLabel#headerLogo {
-	margin-right: 5px;
+  margin-right: 5px;
 }
 
 /* Search store */
 QLineEdit#searchStore {
-	background-color: transparent;
-	border-radius: 0px;
-	border-width: 2px;
-	border-style: solid;
-	border-color: transparent transparent @ACCENT_LIGHT transparent;
+  background-color: transparent;
+  border-radius: 0px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: transparent transparent @ACCENT_LIGHT transparent;
 }
+
 QLineEdit:focus#searchStore {
-	background-color: @03DP;
-	border-radius: 10px;
- 	border-width: 2px;
-	border-color: transparent;
+  background-color: @03DP;
+  border-radius: 10px;
+   border-width: 2px;
+  border-color: transparent;
 }
 
 /* Store search box clear */
 QToolButton#storeClearSearch {
-	border: none;
-	padding: 0px;
-	margin: 0px;
-	background-color: transparent;
+  border: none;
+  padding: 0px;
+  margin: 0px;
+  background-color: transparent;
 }
 
 /* "show installed only" checkbox */
 QCheckBox#showInstalledCheckbox {
-	background-color: transparent;
+  background-color: transparent;
 }
 
 /* Sidebar Web View */
 QWebView {
-	background-color: lightGrey;
+  background-color: lightGrey;
 }
 
 /*
 ======================
-	Store Footer
+  Store Footer
 ======================
 */
 
 QFrame#storeFooter {
-	background-color: @02DP;
-	padding: 1px;
-	border-width: 3px;
-	border-style: solid;
-	border-color: @01DP transparent transparent transparent;
+  background-color: @02DP;
+  padding: 1px;
+  border-width: 3px;
+  border-style: solid;
+  border-color: @01DP transparent transparent transparent;
 }
 
 /* Register new extension button */
 QPushButton#registerButton {
-	border-radius: 2px;
-	border-width: 2px;
-	border-style: solid;
-	border-color: transparent transparent @ACCENT_LIGHT transparent;
-	background-color: @02DP;
+  border-radius: 2px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: transparent transparent @ACCENT_LIGHT transparent;
+  background-color: @02DP;
 }
 QPushButton:hover#registerButton {
-	background-color: @08DP;
+  background-color: @08DP;
 }
 
 /*
 ======================
-	Store Sellers
+  Store Sellers
 ======================
 */
 
 /* Sellers base tree widgert */
 QTreeView {
-	background-color: @01DP;
-	border: 0px;
-	outline: none;
+  background-color: @01DP;
+  border: 0px;
+  outline: none;
 }
 
 /* Item within the base sellers tree widget */
 QTreeView::item {
-	color: white;
-	background-color: @01DP;
-	margin: 3px;
-	border: none
+  color: white;
+  background-color: @01DP;
+  margin: 3px;
+  border: none
 }
 
 QTreeView::item:hover {
-	margin:3px;
-	border-radius: 3px;
-	background-color: @02DP;
+  margin:3px;
+  border-radius: 3px;
+  background-color: @02DP;
 }
 
 QTreeView::item:selected {
-	margin:3px;
-	border-radius: 3px;
-	border-color: none;
-	background-color: @04DP;
+  margin:3px;
+  border-radius: 3px;
+  border-color: none;
+  background-color: @04DP;
 }
 
 /*
 ======================
-	Store Sidepanel
+  Store Sidepanel
 ======================
 */
 
 /* Sliding description panel background */
 QFrame#sidepanelFrame {
-	background-color: @04DP;
+  background-color: @04DP;
 }
 
 /* Sliding description panel background */
 QFrame#authorSocialFrame {
-	background-color: @04DP;
+  background-color: @04DP;
 }
 
 QFrame#installButtonPlaceHolder {
-	background-color: @04DP;
+  background-color: @04DP;
 }
 
 /* Splitter selection handle */
 QSplitter::handle#storeSplitter {
     background-color: @04DP;
-	border: none;
+  border: none;
 }
 
 QSplitter::handle:hover#storeSplitter {
@@ -387,40 +390,40 @@ QSplitter::handle:hover#storeSplitter {
 
 /* Keywords */
 QGroupBox#storeKeywordsGroup {
-	border-color: @16DP;
-	border-style: solid;
-	border-width: 2px;
-	background-color: @06DP;
+  border-color: @16DP;
+  border-style: solid;
+  border-width: 2px;
+  background-color: @06DP;
 }
 
 QLineEdit#authorStoreLabel {
-	background-color: @06DP;
+  background-color: @06DP;
 }
 
 QLineEdit#versionStoreLabel {
-	background-color: @06DP;
+  background-color: @06DP;
 }
 
 /* Splitter selection handle */
 QSplitter::handle#storeSplitter {
-    background-color: @04DP;
-    border-left: 2px solid @01DP;
+  background-color: @04DP;
+  border-left: 2px solid @01DP;
 }
 
 /* Sidebar buttons */
 QToolButton {
-	background-color: @12DP;
-	border-radius: 3px;
-	padding: 5px;
+  background-color: @12DP;
+  border-radius: 3px;
+  padding: 5px;
 }
 QToolButton:hover {
-	background-color: @16DP;
+  background-color: @16DP;
 }
 
 /* Install button */
 QToolButton#installButton {
-	border-radius: 4px;
-	border-width: 2px;
-	border-style: solid;
-	border-color: transparent transparent @ACCENT_LIGHT transparent;
+  border-radius: 4px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: transparent transparent @ACCENT_LIGHT transparent;
 }

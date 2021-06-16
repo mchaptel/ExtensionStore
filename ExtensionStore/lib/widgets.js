@@ -62,7 +62,7 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
 
   }else{
     // fallback to local icon
-    var extensionIcon = new StyledImage(style.ICONS.defaultExtension);
+    var extensionIcon = new StyledImage(style.ICONS.defaultExtension, 20, 20);
     extensionIcon.setAsIcon(this, 0);
   }
 
@@ -89,6 +89,7 @@ function ProgressButton(color, text, progressText, finishedText){
   this.defaultText = text;
   this.progressText = progressText;
   this.finishedText = finishedText;
+  this.hasFailed = false;
 }
 ProgressButton.prototype = Object.create(QToolButton.prototype);
 
@@ -113,6 +114,12 @@ Object.defineProperty(ProgressButton.prototype, "accentColor", {
  * @param {Int} progress - Value from 0 to 1 that the operation is currently at.
  */
 ProgressButton.prototype.setProgress = function (progress) {
+
+  // Disable progress updates if the button has failed. hasFailed is Implemented in child classes.
+  if (this.hasFailed) {
+    return;
+  }
+
   var accentColor = this.accentColor;
   var backgroundColor = this.backgroundColor;
 
@@ -177,6 +184,11 @@ function InstallButton() {
       "progressText": "Updating...",
       "accentColor": style.COLORS.YELLOW,
     },
+    "FAIL": {
+      "action": new QAction("Failed", this),
+      "progressText": "Failed",
+      "accentColor": style.COLORS.RED,
+    }
   }
 
   this.mode = "INSTALL";
@@ -204,9 +216,27 @@ Object.defineProperty(InstallButton.prototype, "mode", {
       this.progressText = modeDetails.progressText;
       this.removeAction(this.defaultAction());
       this.setDefaultAction(modeDetails.action);
+      this.hasFailed = false;
     }
   }
 });
+
+
+/**
+ * Disable progress updates on the button, and set the button mode/stylesheet to indicate failure of
+ * an extension install.
+ */
+ InstallButton.prototype.setFailState = function() {
+   // Only needs to run once.
+   if (this.hasFailed) {
+     return;
+   }
+
+  this.hasFailed = true;
+  this.mode = "FAIL";
+  this.text = "Failed";
+  this.setStyleSheet("QToolButton { background-color: " + style.COLORS.RED + "; border-color: transparent; color: white}");
+}
 
 
 /**
@@ -250,7 +280,7 @@ SocialButton.prototype = Object.create(QToolButton.prototype)
  * A Qt like custom signal that can be defined, connected and emitted.
  * As this signal is not actually threaded, the connected callbacks will be executed
  * directly when the signal is emited, and the rest of the code will execute after.
- * @param {type} type the type of value accepted as argument when calling emit()
+ * @param {type} type - The type of value accepted as argument when calling emit()
  */
  function Signal(type){
   // this.emitType = type;
@@ -351,8 +381,9 @@ ProgressBar.prototype = Object.create(QProgressBar.prototype);
 
 
 /**
- * Transform the input value and update the progress bar.
- * @param {number} value - Progress as a percentage with a range of 0 => 1 .
+ * Transform the input value from the input range (0=>1) to the range expected 
+ * by the QProgressBar (0=>100). Set the progressbar value with the remapped value..
+ * @param {number} value - Progress as a percentage with a range of 0 => 1.
  */
 ProgressBar.prototype.setProgress = function(value) {
   this.setValue(value * 100);

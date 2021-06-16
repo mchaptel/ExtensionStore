@@ -29,7 +29,7 @@ NetworkConnexionHandler.prototype.get = function (command) {
         return null;
       }
       if (json.message == "Moved Permanently") {
-        log.error("Repository " + command + " has moved to : " + json.url);
+        log.debug("Repository " + command + " has moved to : " + json.url);
         return json;
       }
       if (json.message == "400: Invalid request") {
@@ -176,7 +176,10 @@ WebIcon.prototype.setToWidget = function (widget) {
  * @private
  */
 WebIcon.prototype.setIcon = function () {
-  var icon = new QIcon(this.dlPath);
+  var icon = new QIcon();
+  var iconPixmap = new QPixmap(this.dlPath);
+  icon.addPixmap(iconPixmap, QIcon.Normal);
+  icon.addPixmap(iconPixmap, QIcon.Selected);
   var size = UiLoader.dpiScale(32)
   icon.size = new QSize(size, size);
 
