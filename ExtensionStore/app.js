@@ -417,12 +417,7 @@ StoreUI.prototype.updateStore = function (currentVersion, storeVersion) {
 
   // Remove existing files before updating the store.
   try {
-    this.localList.uninstall(this.storeExtension);
-  }
-  catch (err) {
-    // Only log errors as it's not a crucial step in updating the extension.
-    log.debug("Unable to remove local files before updating store. " + err);
-  }
+    this.localList.update(this.storeExtension);
 
   // Attempt the actual install.
   var success = this.localList.install(this.storeExtension);

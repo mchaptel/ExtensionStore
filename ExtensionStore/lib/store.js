@@ -1144,6 +1144,21 @@ LocalExtensionList.prototype.uninstall = function (extension) {
   throw new Error("Unable to delete one or more local extension files during uninstall.");
 }
 
+/**
+ * Updates the installation by removing then reinstalling the extension
+ * @param {Extension} extension - The extension to be removed locally.
+ * @returns {boolean} the success of the uninstallation.
+ */
+ LocalExtensionList.prototype.update = function (extension) {
+  this.log.debug("updating extension "+ extension.name);
+  if (this.isInstalled(extension)){
+    // uninstall first to clear any parasitic files
+    this.uninstall(extension);
+  }
+  this.install(extension);
+}
+
+
 
 /**
  * Adds an extension to the installed list
