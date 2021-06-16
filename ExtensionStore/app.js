@@ -620,26 +620,24 @@ StoreUI.prototype.performInstall = function () {
   installer.onInstallFailed.connect(this, this.failure);
 
   // Attempt to install the extension.
-  var extensionInstalled = this.localList.install(extension);
+  try{
+    this.localList.install(extension);
 
-  // If extension install failed - alert user.
-  // Not in failure function to avoid being called for each failed proc, and to only appear after InstallButton has changed to a failed state.
-  if (!extensionInstalled) {
-    MessageBox.information("There was an error while installing extension\n" + extension.name + " v" + extension.version + ":\n\n");
-  }
-
-  // delay refresh after install completes
-  var timer = new QTimer();
-  timer.singleShot = true;
-  timer["timeout"].connect(this, function() {
-    this.installing = false;
-    this.localList.refreshExtensions();
-    if (extensionInstalled) {
+    // delay refresh after install completes
+    var timer = new QTimer();
+    timer.singleShot = true;
+    timer["timeout"].connect(this, function() {
+      this.installing = false;
+      this.localList.refreshExtensions();
       this.updateExtensionsList();
-    }
-    this.updateDescriptionPanel();
-  });
-  timer.start(700);
+      this.updateDescriptionPanel();
+    });
+    timer.start(1000);
+  }catch(error) {
+    // If extension install failed - alert user.
+    // Not in failure function to avoid being called for each failed proc, and to only appear after InstallButton has changed to a failed state.
+    MessageBox.information("There was an error while installing extension\n" + extension.name + " v" + extension.version + ":\n\n" + error);
+  }
 }
 
 

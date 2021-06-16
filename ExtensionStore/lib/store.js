@@ -1325,25 +1325,27 @@ ExtensionInstaller.prototype.downloadFiles = function () {
   this.log.info("starting download of files from extension " + this.extension.name);
   var destFolder = this.destFolder;
 
-  // get the files list (heavy operations)
-  this.onInstallProgressChanged.emit(0.1);  // show the progress bar starting
-  var destPaths = this.extension.localPaths.map(function (x) { return destFolder + x });
-  var dlFiles = [this.destFolder];
-  var files = this.extension.files;
+  // wrap in a try catch to forward the error as a signal to be handled by the ui
+  try{
+    // get the files list (heavy operations)
+    this.onInstallProgressChanged.emit(0.1);  // show the progress bar starting
+    var destPaths = this.extension.localPaths.map(function (x) { return destFolder + x });
+    var dlFiles = [this.destFolder];
+    var files = this.extension.files;
 
-  this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
 
-  // If the file list is empty, there was likely an issue parsing the tbpackage and the operaiton
-  // should be aborted.
-  if (!files.length) {
-    this.onInstallFailed.emit("No files found to download.");
-    throw new Error("No files found to download");
-  };
+    this.log.debug("downloading files : "+files.map(function(x){return x.path}).join("\n"))
 
-  // Download each file and update the progress
-  for (var i = 0; i < files.length; i++) {
-    this.onInstallProgressChanged.emit((i+1)/(files.length+1));
-    try{
+    // If the file list is empty, there was likely an issue parsing the tbpackage and the operaiton
+    // should be aborted.
+    if (!files.length) {
+      this.onInstallFailed.emit("No files found to download.");
+      throw new Error("No files found to download");
+    };
+
+    // Download each file and update the progress
+    for (var i = 0; i < files.length; i++) {
+      this.onInstallProgressChanged.emit((i+1)/(files.length+1));
       webQuery.download(this.getDownloadUrl(files[i].path), destPaths[i]);
       var dlFile = new File(destPaths[i]);
 
@@ -1355,10 +1357,10 @@ ExtensionInstaller.prototype.downloadFiles = function () {
         var error = new Error("Downloaded file " + destPaths[i] + " size does not match expected size : \n" + dlFile.size + " bytes (expected : " + files[i].size+" bytes)");
         throw error;
       }
-    }catch(error){
-      this.onInstallFailed.emit(error);
-      throw error;
     }
+  }catch(error){
+    this.onInstallFailed.emit(error);
+    throw error;
   }
 
   this.onInstallProgressChanged.emit(1);
