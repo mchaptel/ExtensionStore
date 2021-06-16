@@ -1085,18 +1085,16 @@ LocalExtensionList.prototype.install = function (extension) {
     delete extension._installer;
   }
 
-  installer.onInstallFinished.connect(this, copyFiles);
-
-  // Try to download the extension files.
-  try {
-    installer.downloadFiles();
-    return true;
-  }
-  catch (error) {
+  function handleFailed(error){
     this.log.debug("Unable to install extension: " + error);
     delete extension._installer;
-    return false;
   }
+
+  // Try to download the extension files.
+  installer.onInstallFinished.connect(this, copyFiles);
+  installer.onInstallFailed.connect(this, handleFailed);
+
+  installer.downloadFiles();
 }
 
 
@@ -1108,25 +1106,21 @@ LocalExtensionList.prototype.install = function (extension) {
 LocalExtensionList.prototype.uninstall = function (extension) {
   if (!this.isInstalled(extension)) return true    // extension isn't installed
   var localExtension = this.extensions[extension.id];
+  this.log.debug("uninstalling extension "+extension.name)
 
-  try {
-    // Remove packages recursively as they have a parent directory.
-    if (localExtension.isPackage) {
-      var folder = new Dir(this.installFolder + "/packages/" + localExtension.safeName);
-      this.log.debug("removing folder " + folder.path);
-      if (folder.exists) folder.rmdirs();
-    } else {
-      // Otherwise remove all script files (.js, .ui, .png etc.)
-      var files = localExtension.package.localFiles;
-      for (var i in files) {
-        this.log.debug("removing file " + files[i]);
-        var file = new File(files[i]);
-        if (file.exists) file.remove();
-      }
+  // Remove packages recursively as they have a parent directory.
+  if (localExtension.isPackage) {
+    var folder = new Dir(this.installFolder + "/packages/" + localExtension.safeName);
+    this.log.debug("removing folder " + folder.path);
+    if (folder.exists) folder.rmdirs();
+  } else {
+    // Otherwise remove all script files (.js, .ui, .png etc.)
+    var files = localExtension.package.localFiles;
+    for (var i in files) {
+      this.log.debug("removing file " + files[i]);
+      var file = new File(files[i]);
+      if (file.exists) file.remove();
     }
-  }
-  catch (err) {
-    this.log.debug(err);
   }
 
   // Update the extension list accordingly.
@@ -1352,6 +1346,7 @@ ExtensionInstaller.prototype.downloadFiles = function () {
     try{
       webQuery.download(this.getDownloadUrl(files[i].path), destPaths[i]);
       var dlFile = new File(destPaths[i]);
+
       if (dlFile.size == files[i].size) {
         // download complete!
         this.log.debug("successfully downloaded " + files[i].path + " to location : " + destPaths[i]);

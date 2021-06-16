@@ -238,7 +238,7 @@ StoreUI.prototype.setStoreLoadUIState = function (enabled) {
   if (enabled) {
     // Hide elements during store load without removing them from the UI to avoid elements shifting.
     this.updateButton.setStyleSheet(style.STYLESHEETS.InstallButtonInvisible);
-    this.updateButton.setGraphicsEffect(null);  
+    this.updateButton.setGraphicsEffect(null);
     this.aboutFrame.updateRibbon.setStyleSheet(style.STYLESHEETS.defaultRibbon);
     this.aboutFrame.updateRibbon.storeVersion.toolTip = this.aboutFrame.updateRibbon.storeVersion.text;
     this.aboutFrame.updateRibbon.storeVersion.text = "";
@@ -419,9 +419,6 @@ StoreUI.prototype.updateStore = function (currentVersion, storeVersion) {
   try {
     this.localList.update(this.storeExtension);
 
-  // Attempt the actual install.
-  var success = this.localList.install(this.storeExtension);
-  if (success) {
     // Updated successfully - Adjust UI to indicate update success without shifting the UI.
     this.updateRibbon.storeVersion.setText("v" + currentVersion);
     this.updateRibbon.setStyleSheet(style.STYLESHEETS.defaultRibbon);
@@ -433,8 +430,10 @@ StoreUI.prototype.updateStore = function (currentVersion, storeVersion) {
     this.updateButton.enabled = false;
 
     MessageBox.information("Store succesfully updated to version v" + storeVersion + ".\n\nPlease close and reopen HUES for changes to take effect.");
-
-  } else {
+  }
+  catch (err) {
+    // Only log errors as it's not a crucial step in updating the extension.
+    log.debug("Unable to remove local files before updating store. " + err);
     // Update failed - set to the RED failure style.
     this.updateRibbon.setStyleSheet(style.STYLESHEETS.failureRibbon);
     this.updateButton.setFailState();
@@ -613,23 +612,12 @@ StoreUI.prototype.performInstall = function () {
   // Log extension installation error.
   this.failure = function (err){
     log.error(err);
+    this.installButton.setFailState()
+    this.installing = false;
   }
 
   installer.onInstallProgressChanged.connect(this.installButton, this.installButton.setProgress);
   installer.onInstallFailed.connect(this, this.failure);
-  installer.onInstallFailed.connect(this.installButton, this.installButton.setFailState);
-
-  // If the extension is already installed, this is an update operation. Remove local files before continuing
-  // to clean up the filesystem.
-  if (this.localList.isInstalled(extension)) {
-    try {
-      this.localList.uninstall(extension);
-    }
-    catch (err) {
-      // Not a critical failure, log and continue.
-      log.debug("Unable to remove local files before updating extension. " + err);
-    }
-  }
 
   // Attempt to install the extension.
   var extensionInstalled = this.localList.install(extension);
