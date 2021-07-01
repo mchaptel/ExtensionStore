@@ -904,7 +904,7 @@ Object.defineProperty(Extension.prototype, "isPackage", {
  */
 Object.defineProperty(Extension.prototype, "safeName", {
   get: function () {
-    return this.name.replace(/ /g, "_").replace(/[:\?\*\\\/"\|\<\>]/g, "")
+    return this.name.replace(/ /g, "").replace(/[:\?\*\\\/"\|\<\>]/g, "")
   }
 })
 
