@@ -278,6 +278,12 @@ StoreUI.prototype.loadStore = function () {
     return
   }
 
+  // Update UI as updating the extension list on first load can be time intensive.
+  this.loadStoreButton.maximumWidth = 500;
+  this.loadStoreButton.text = "Updating extension list...";
+  this.loadStoreButton.toolTip = "";
+  this.loadStoreButton.enabled = false;
+
   // saving the list of extensions so we can pinpoint the new ones at next startup and highlight them
   var oldExtensions = this.localList.getData("extensions", [])
   var newExtensions = this.localList.getData("newExtensions", [])
