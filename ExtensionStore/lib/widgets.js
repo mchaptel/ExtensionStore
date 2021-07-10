@@ -113,7 +113,8 @@ Object.defineProperty(ProgressButton.prototype, "accentColor", {
  * Use the background stylesheet of the widget to act as a progress bar.
  * @param {Int} progress - Value from 0 to 1 that the operation is currently at.
  */
-ProgressButton.prototype.setProgress = function (progress) {
+ProgressButton.prototype.setProgress = function (progress, message) {
+  if (typeof message === 'undefined') var message = this.progressText;
 
   // Disable progress updates if the button has failed. hasFailed is Implemented in child classes.
   if (this.hasFailed) {
@@ -149,7 +150,7 @@ ProgressButton.prototype.setProgress = function (progress) {
     this.setStyleSheet(progressStyleSheet);
 
     // Update text with progress
-    this.text = this.progressText + " " + Math.round((progressStopR * 100)) + "%";
+    this.text = message + " " + Math.round((progressStopR * 100)) + "%";
 
   } else {
     // Configure widget to indicate the operation is complete.
