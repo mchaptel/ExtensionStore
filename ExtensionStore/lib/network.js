@@ -244,6 +244,22 @@ function CURLProcess(command, bin) {
 CURLProcess.prototype.asyncRead = function (readCallback, finishedCallback, asText) {
   this.log.debug("Executing Process with arguments : " + this.app + " " + this.command.join(" "));
 
+  // keep track of the number of times we access the github api
+  // only useful for testing as this gets reset if harmony is closed.
+  if (!CURLProcess.__proto__.githubApiCounter) CURLProcess.__proto__.githubApiCounter = [];
+  var apiCounter = CURLProcess.__proto__.githubApiCounter;
+  var now = (new Date()).getTime();
+
+  // remove counters older than an hour
+  for (var i=apiCounter.length; i>=0; i--){
+    if (apiCounter[i] + 3600000 < now ) apiCounter.splice(i,1);
+  }
+
+  if (this.command.join("").indexOf("api.github.com") != -1){
+    apiCounter.push(now);
+    log.debug(apiCounter.length+" attempts to connect to github api within the last hour.");
+  }
+
   this.process.start(this.app, this.command);
   if (typeof readCallback !== 'undefined' && readCallback) {
     var onRead = function () {
