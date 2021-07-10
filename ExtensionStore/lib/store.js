@@ -47,7 +47,7 @@ Object.defineProperty(Store.prototype, "sellers", {
     if (typeof this._sellers === 'undefined') {
       this.log.debug("getting sellers");
       // set progress directly once to make the button feel more reponsive while thhe store fetches info
-      this.onLoadProgressChanged.emit(0.001);
+      this.onLoadProgressChanged.emit(0.001, "Loading...");
 
       // the sellers list can be overriden with an environment variable for local studio installs
       var sellersFile = System.getenv("HUES_SELLERS_PATH");
@@ -73,7 +73,7 @@ Object.defineProperty(Store.prototype, "sellers", {
           var seller = new Seller(sellersList[i]);
           var package = seller.package;
           validSellers.push(seller);
-          this.onLoadProgressChanged.emit((i+1) / (sellersList.length+1));
+          this.onLoadProgressChanged.emit((i+1) / (sellersList.length+1), "Loading...");
         } catch (error) {
           this.log.error("problem getting package for seller " + sellersList[i], error);
         }
@@ -131,7 +131,7 @@ Object.defineProperty(Store.prototype, "extensions", {
       for (var i in extensions) {
         this._extensions[extensions[i].id] = extensions[i];
       }
-      this.onLoadProgressChanged.emit(1);
+      this.onLoadProgressChanged.emit(1, "Done.");
     }
 
     return this._extensions;
@@ -517,6 +517,7 @@ Object.defineProperty(Repository.prototype, "contents", {
       }catch(error){
         // in case of bad query, we avoid pulling it over and over, and consider it empty
         this.log.error(error);
+        MessageBox.information(error);
         this._contents = [];
         return this._contents;
       }
@@ -573,20 +574,13 @@ Object.defineProperty(Repository.prototype, "masterBranchTree", {
   get: function () {
     if (typeof this._tree === 'undefined') {
       // Try to get the master branch.
-      var response = webQuery.get(this.apiUrl + "branches/master");
+      try{
+        var response = webQuery.get(this.apiUrl + "branches/master");
 
-      // Return doesn't contain a commit - indicating it's likely an error
-      // or a redirect.
-      if (response && response.message === "Moved Permanently") {
-        // Redirect provided, so get from the provided url instead.
-        response = webQuery.get(response.url.replace("repositories", "repos"));
-      }
-
-      // Assign url or throw error if no valid branch could be detected.
-      if (response && response.commit) {
+        // Assign url or throw error if no valid branch could be detected.
         this._tree = response.commit.commit.tree.url;   // the query returns a big object in which this is the address of the contents tree
-      } else {
-        throw new Error("Unable to find a valid branch.");
+      } catch (err) {
+        throw new Error("Unable to get files on repository "+this.name+":\n\n"+err);
       }
     }
     return this._tree
@@ -613,17 +607,17 @@ Repository.prototype.getFiles = function (filter) {
   if (typeof filter === 'undefined') var filter = /.*/;
 
   var contents = this.contents;
-  var paths = this.contents.map(function(x){return x.path})
+  var paths = this.contents.map(function(x){return x.path});
 
   // this.log.debug(paths.join("\n"))
-  var search = this.searchToRe(filter)
+  var search = this.searchToRe(filter);
 
-  this.log.debug("getting files in repository that match search " + search)
+  this.log.debug("getting files in repository that match search " + search);
 
-  var results = []
+  var results = [];
   for (var i in paths) {
     // add files that match the filter but not folders
-    if (paths[i].match(search) && paths[i].slice(-1)!="/") results.push(contents[i])
+    if (paths[i].match(search) && paths[i].slice(-1)!="/") results.push(contents[i]);
   }
 
   return results;
@@ -658,7 +652,7 @@ Repository.prototype.searchToRe = function (search) {
  */
 function Extension(repository, tbpackage) {
   this.log = new Logger("Extension")
-  this.repository = repository
+  this.repository = repository;
   this._name = tbpackage.name;
   this.version = tbpackage.version;
   this.package = tbpackage;
@@ -790,6 +784,7 @@ Object.defineProperty(Extension.prototype, "rootFolder", {
 
 /**
  * The complete list of files corresponding to this extension
+ * This costs one api.github.com call.
  * @name Extension#files
  * @type {object}
  * @example
