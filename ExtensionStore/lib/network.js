@@ -7,8 +7,6 @@ var readFile = require("io.js").readFile
  * @constructor
  * @classdesc
  * The NetworkConnexionHandler class handles web queries and downloads. It uses curl for communicating with the remote apis. <br>
- * This class extends QObject so it can broadcast signals and be threaded.
- * @extends QObject
  */
 function NetworkConnexionHandler() {
 }
@@ -21,28 +19,32 @@ NetworkConnexionHandler.prototype.get = function (command) {
   // handle errors
   var curl = new CURLProcess(command)
   var result = curl.get();
-  try {
-    json = JSON.parse(result);
-    if (json.hasOwnProperty("message")) {
-      if (json.message == "Not Found") {
-        log.error("File not present in repository : " + command);
-        return null;
-      }
-      if (json.message == "Moved Permanently") {
-        log.debug("Repository " + command + " has moved to : " + json.url);
-        return json;
-      }
-      if (json.message == "400: Invalid request") {
-        log.error("Couldn't reach repository : " + command + ". Make sure it is a valid github address.")
-        return null;
-      }
-    }
-    return json;
-  } catch (error) {
-    var message = ("command " + command + " did not return a valid JSON : " + result);
-    log.error(message, error);
-    throw new Error(message);
+  try{
+    var json = JSON.parse(result);
+  }catch(err){
+    throw new Error ("command " + command + " did not return a valid JSON :\n" + result);
   }
+  if (json.hasOwnProperty("message")) {
+    if (json.message == "Not Found") {
+      throw new Error ("File not present in repository : " + command);
+    }
+    // if api limit reached, throw an error
+    if (json.message.indexOf("API rate limit exceeded") != -1) {
+      var limitInfo = this.get("https://api.github.com/rate_limit");
+      var wait = Math.round((parseInt(limitInfo.rate.reset+"000", 10) - (new Date()).getTime())/60000);
+      throw new Error ("Github api is limited to 60 calls within one hour.\nPlease try again after "+wait+" minutes.")
+    }
+    // handle falty redirection in github response
+    if (json.message == "Moved Permanently") {
+      log.debug("Repository " + command + " has moved to : " + json.url);
+      var result = this.get(json.url.replace("repositories", "repos"));
+      return result;
+    }
+    if (json.message == "400: Invalid request") {
+      throw new Error ("Couldn't reach repository : " + command + ". Make sure it is a valid github address.")
+    }
+  }
+  return json;
 }
 
 
