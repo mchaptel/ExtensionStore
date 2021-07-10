@@ -87,13 +87,17 @@ Object.defineProperty(WebIcon.prototype, "dlPath", {
         return this._dlPath;
       }
 
-      var fileName = this.url.split("/").pop();
+      // get the name from the domain of the url...
+      var url = this.url.split("/");
+      var fileName = url.shift();
+      while (!fileName || fileName.indexOf("http")!=-1) fileName = url.shift();
 
-      var userNameRe = /https:\/\/github.com\/([\w\d]+\.png)/
-      var matches = userNameRe.exec(this.url);
+      //... except for images coming from github (avatars/icons)
+      var githubIconsRe = /https:\/\/.*github.*\.com\/.*?([^\/]+\.png)$/
+      var matches = githubIconsRe.exec(this.url);
 
       if (matches){
-        // we have a github avatar url
+        // we have a github avatar/icon url
         fileName = matches[1];
       } else if (this.url.indexOf(".png") == -1) {
         // dealing with a website, we'll get the favicon
