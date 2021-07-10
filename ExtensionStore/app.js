@@ -139,6 +139,7 @@ function StoreUI() {
 
   this.store.onLoadProgressChanged.connect(this.updateProgress, this.updateProgress.setProgress);
   this.store.onLoadProgressChanged.connect(this.loadStoreButton, this.loadStoreButton.setProgress);
+  this.localList.extensionsDetectionProgressChanged.connect(this.loadStoreButton, this.loadStoreButton.setProgress);
 
   // filter the store list --------------------------------------------
   this.storeHeader.searchStore.textChanged.connect(this, this.updateExtensionsList)
@@ -280,7 +281,7 @@ StoreUI.prototype.loadStore = function () {
 
   // Update UI as updating the extension list on first load can be time intensive.
   this.loadStoreButton.maximumWidth = 500;
-  this.loadStoreButton.text = "Updating extension list...";
+  this.loadStoreButton.text = "Detecting installed extensions...";
   this.loadStoreButton.toolTip = "";
   this.loadStoreButton.enabled = false;
 
@@ -453,8 +454,13 @@ StoreUI.prototype.updateStore = function (currentVersion, storeVersion) {
  * Updates the list widget displaying the extensions
  */
 StoreUI.prototype.updateExtensionsList = function () {
-  if (this.localList.list.length == 0) this.localList.createListFile(this.store);
-
+  if (this.localList.list.length == 0){
+    try{
+      this.localList.createListFile(this.store);
+    }catch(err){
+      MessageBox.trace("Error during detection of existing extensions : "+err.message)
+    }
+  }
   log.debug("updating extensions list")
 
   function nameSort(a, b) {

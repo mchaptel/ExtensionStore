@@ -964,6 +964,7 @@ function LocalExtensionList(store) {
   this._installFolder = specialFolders.userScripts;             // default install folder, can be modified with installFolder property
   this._listFile = specialFolders.userConfig + "/.extensionsList";
   this._ini = specialFolders.userConfig + "/.extensionStorePrefs"
+  this.extensionsDetectionProgressChanged = new Signal();
 }
 
 
@@ -1213,18 +1214,34 @@ LocalExtensionList.prototype.refreshExtensions = function () {
  */
 LocalExtensionList.prototype.findInstalledExtensions = function (store) {
   var installedExtensions = [];
+
+  var progressMessage = "Detecting installed extensions..."
+  this.extensionsDetectionProgressChanged.emit(0.001, progressMessage);
+
+  var count = 0;
+  var length = Object.keys(store.extensions).length;
+
   for (var i in store.extensions) {
-    var extension = store.extensions[i];
-    var destPath = this.installLocation(extension);
-    var extensionFiles = extension.localPaths.map(function (x) { return destPath + x });
-    for (var i in extensionFiles) {
-      if (new File(extensionFiles[i]).exists) {
-        // found an extension, we add it to the list
-        installedExtensions.push(extension);
-        continue;
+    try{
+      // this may fail in case of reaching api limit.
+      this.extensionsDetectionProgressChanged.emit(count++/(length+1), progressMessage);
+
+      var extension = store.extensions[i];
+      var destPath = this.installLocation(extension);
+      var extensionFiles = extension.localPaths.map(function (x) { return destPath + x });
+      for (var i in extensionFiles) {
+        if (new File(extensionFiles[i]).exists) {
+          // found an extension, we add it to the list
+          installedExtensions.push(extension);
+          continue;
+        }
       }
+    }catch(err){
+      throw new Error ("error during detection of installed extensions: " + err);
     }
   }
+  this.extensionsDetectionProgressChanged.emit(1, progressMessage);
+
   return installedExtensions;
 }
 
