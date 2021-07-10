@@ -6,7 +6,7 @@ var log = new Logger("Widgets");
  * A QWebView to display the description
  * @param {QWidget} parent
  */
- function DescriptionView(parent){
+function DescriptionView(parent){
   var webPreviewsFontFamily = "Arial";
   var webPreviewsFontSize = UiLoader.dpiScale(12);
 
@@ -28,7 +28,7 @@ DescriptionView.prototype = Object.create(QWebView.prototype)
  * @param {storelib.LocalExtensionList} localList  the list of extensions installed on this machine
  * @param {QTreeWidget} parent                     the parent widget for this item
  */
- function ExtensionItem(extension, localList, parent) {
+function ExtensionItem(extension, localList, parent) {
   this._parent = parent // this is the QTreeWidget
   var newExtensions = localList.getData("newExtensions", []);
   var extensionLabel = extension.name;
@@ -226,7 +226,7 @@ Object.defineProperty(InstallButton.prototype, "mode", {
  * Disable progress updates on the button, and set the button mode/stylesheet to indicate failure of
  * an extension install.
  */
- InstallButton.prototype.setFailState = function() {
+InstallButton.prototype.setFailState = function() {
    // Only needs to run once.
    if (this.hasFailed) {
      return;
@@ -234,8 +234,8 @@ Object.defineProperty(InstallButton.prototype, "mode", {
 
   this.hasFailed = true;
   this.mode = "FAIL";
+  this.setProgress(100);
   this.text = "Failed";
-  this.setStyleSheet("QToolButton { background-color: " + style.COLORS.RED + "; border-color: transparent; color: white}");
 }
 
 
@@ -381,7 +381,7 @@ ProgressBar.prototype = Object.create(QProgressBar.prototype);
 
 
 /**
- * Transform the input value from the input range (0=>1) to the range expected 
+ * Transform the input value from the input range (0=>1) to the range expected
  * by the QProgressBar (0=>100). Set the progressbar value with the remapped value..
  * @param {number} value - Progress as a percentage with a range of 0 => 1.
  */
