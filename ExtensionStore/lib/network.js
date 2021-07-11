@@ -17,8 +17,13 @@ function NetworkConnexionHandler() {
  */
 NetworkConnexionHandler.prototype.get = function (command) {
   // handle errors
+  // throw new Error("no connection");
   var curl = new CURLProcess(command)
-  var result = curl.get();
+  try{
+    var result = curl.get();
+  }catch(err){
+     throw new Error ("Couldn't reach "+ command + ". Check connection.");
+  }
   try{
     var json = JSON.parse(result);
   }catch(err){
@@ -501,12 +506,12 @@ Object.defineProperty(CURL.prototype, "bin", {
             return bin;
           } catch (err) {
             log.error(err);
-            var message = "ExtensionStore: Couldn't establish a connexion.\nCheck that " + bin + " has internet access.";
+            var message = "Couldn't establish a connexion.\nCheck that " + bin + " has internet access.";
             log.error(message);
           }
         }
       }
-      var error = "ExtensionStore: a valid CURL install wasn't found. Install CURL first.";
+      var error = "A valid CURL install wasn't found. Install CURL first.";
       log.error(error)
       throw new Error(error)
     } else {
