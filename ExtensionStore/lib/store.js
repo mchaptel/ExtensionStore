@@ -515,11 +515,9 @@ Object.defineProperty(Repository.prototype, "contents", {
       try{
         var contents = webQuery.get(this.masterBranchTree + "?recursive=true");
       }catch(error){
-        // in case of bad query, we avoid pulling it over and over, and consider it empty
-        this.log.error(error);
-        MessageBox.information(error);
+        // in case of bad query, we avoid pulling it over and over, and save a cache before throwing the error
         this._contents = [];
-        return this._contents;
+        throw new Error (error)
       }
 
       var tree = contents.tree;
@@ -1069,7 +1067,12 @@ LocalExtensionList.prototype.checkFiles = function (extension) {
  */
 LocalExtensionList.prototype.install = function (extension) {
   var installer = extension.installer;  // dedicated object to implement threaded download later
-  var installLocation = this.installLocation(extension)
+  try{
+    var installLocation = this.installLocation(extension)
+  }catch(err){
+    installer.onInstallFailed.emit(err)
+    throw err;
+  }
 
   function copyFiles (files){
     this.log.debug("downloaded files :\n" + files.join("\n"));
@@ -1221,8 +1224,8 @@ LocalExtensionList.prototype.findInstalledExtensions = function (store) {
   var count = 0;
   var length = Object.keys(store.extensions).length;
 
-  for (var i in store.extensions) {
-    try{
+  try{
+    for (var i in store.extensions) {
       // this may fail in case of reaching api limit.
       this.extensionsDetectionProgressChanged.emit(count++/(length+1), progressMessage);
 
@@ -1236,10 +1239,11 @@ LocalExtensionList.prototype.findInstalledExtensions = function (store) {
           continue;
         }
       }
-    }catch(err){
-      throw new Error ("error during detection of installed extensions: " + err);
     }
+  }catch(err){
+    throw new Error ("error during detection of installed extensions: " + err);
   }
+
   this.extensionsDetectionProgressChanged.emit(1, progressMessage);
 
   return installedExtensions;
