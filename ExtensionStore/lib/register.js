@@ -1,4 +1,8 @@
 var Logger = require("./logger.js").Logger;
+var DescriptionView = require("./widgets.js").DescriptionView;
+var appFolder = require("./io.js").appFolder;
+
+log = new Logger("Register")
 
 /**
  * The custom dialog to register a new extension
@@ -7,7 +11,6 @@ var Logger = require("./logger.js").Logger;
  */
 function RegisterExtensionDialog(store, localList){
 
-  var appFolder = storelib.appFolder;
   this.ui = UiLoader.load(appFolder + "/resources/register.ui");
 
   this.store = store;
@@ -392,7 +395,7 @@ function FilesPicker(url, includedFiles){
   this.includedFileBackground = new QBrush(new QColor(Qt.darkRed), Qt.SolidPattern);
 
   // load and setup the dialog
-  this.ui = UiLoader.load(storelib.appFolder + "/resources/pickFiles.ui");
+  this.ui = UiLoader.load(appFolder + "/resources/pickFiles.ui");
   this.filesPanel = this.ui.filesSplitter.widget(0);
   this.fileList = this.filesPanel.repoContents;
   this.filterField = this.filesPanel.filterField;

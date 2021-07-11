@@ -76,12 +76,18 @@ function recursiveFileCopy(folder, destination) {
 
     return output;
   } catch (err) {
-    log.error("error on line "+err.lineNumber+" of file "+err.fileName+": \n"+err);
+    log.error(err);
     return null;
   }
 }
+
+
+// returns the folder of this file
+var appFolder = __file__.split("/").slice(0, -2).join("/");
+
 
 exports.listFiles = listFiles
 exports.writeFile = writeFile
 exports.readFile = readFile
 exports.recursiveFileCopy = recursiveFileCopy
+exports.appFolder = appFolder
