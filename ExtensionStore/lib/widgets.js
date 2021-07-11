@@ -114,7 +114,6 @@ Object.defineProperty(ProgressButton.prototype, "accentColor", {
  * @param {Int} progress - Value from 0 to 1 that the operation is currently at.
  */
 ProgressButton.prototype.setProgress = function (progress, message) {
-  if (typeof message === 'undefined') var message = this.progressText;
 
   // Disable progress updates if the button has failed. hasFailed is Implemented in child classes.
   if (this.hasFailed) {
@@ -130,7 +129,6 @@ ProgressButton.prototype.setProgress = function (progress, message) {
   // Operation in progress
   if (progress < 1) {
     this.enabled = false;
-    this.text = this.progressText;
 
     // Set stylesheet to act as a progressbar.
     var progressStopR = progress;
@@ -150,13 +148,13 @@ ProgressButton.prototype.setProgress = function (progress, message) {
     this.setStyleSheet(progressStyleSheet);
 
     // Update text with progress
-    this.text = message + " " + Math.round((progressStopR * 100)) + "%";
+    this.text = message?message:this.progressText + " " + Math.round((progressStopR * 100)) + "%";
 
   } else {
     // Configure widget to indicate the operation is complete.
     this.setStyleSheet("QToolButton { border: none; background-color: " + accentColor + "; color: white}");
     this.enabled = true;
-    this.text = this.finishedText;
+    this.text = message?message:this.finishedText;
   }
 }
 
