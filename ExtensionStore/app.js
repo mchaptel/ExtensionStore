@@ -18,15 +18,8 @@ var log = new Logger("UI");
  * The main extension store widget class
  */
 function StoreUI() {
-  this.store = new storelib.Store();
+
   log.debug("loading UI");
-
-  // the list of installed extensions
-  this.localList = new storelib.LocalExtensionList(this.store);
-
-  // the extension representing the store on the remote repository
-  this.storeExtension = this.store.storeExtension;
-
   // setting up UI ---------------------------------------------------
   var packageView = ScriptManager.getView("Extension Store");
   this.ui = ScriptManager.loadViewUI(packageView, "./resources/store.ui");
@@ -83,22 +76,6 @@ function StoreUI() {
   this.storeFrame.hide();
   this.setStoreLoadUIState(false);
 
-  if (!this.localList.getData("HUES_EULA_ACCEPTED", false)) {
-    this.aboutFrame.hide();
-
-    // EULA logo
-    var eulaLogo = new StyledImage(appFolder + "/resources/logo.png", 380, 120);
-    this.eulaFrame.innerFrame.eulaLogo.setPixmap(eulaLogo.pixmap);
-
-    this.eulaFrame.innerFrame.eulaCB.stateChanged.connect(this, function () {
-      this.localList.saveData("HUES_EULA_ACCEPTED", true);
-      this.eulaFrame.hide();
-      this.aboutFrame.show();
-    });
-  }
-  else {
-    this.eulaFrame.hide();
-  }
 
   // About logo
   var logo = new StyledImage(appFolder + "/resources/logo.png", 380, 120);
@@ -121,7 +98,38 @@ function StoreUI() {
   var headerLogo = new StyledImage(style.ICONS.headerLogo, 22, 22);
   this.storeHeader.headerLogo.setPixmap(headerLogo.pixmap);
 
-  this.checkForUpdates()
+  try{
+    log.debug("loading Store");
+    this.store = new storelib.Store();
+
+    // the list of installed extensions
+    this.localList = new storelib.LocalExtensionList(this.store);
+
+    // the extension representing the store on the remote repository
+    this.storeExtension = this.store.storeExtension;
+    this.checkForUpdates();
+
+  }catch(err){
+    log.error(err)
+    this.lockStore(err)
+  }
+
+  if (!this.localList.getData("HUES_EULA_ACCEPTED", false)) {
+    this.aboutFrame.hide();
+
+    // EULA logo
+    var eulaLogo = new StyledImage(appFolder + "/resources/logo.png", 380, 120);
+    this.eulaFrame.innerFrame.eulaLogo.setPixmap(eulaLogo.pixmap);
+
+    this.eulaFrame.innerFrame.eulaCB.stateChanged.connect(this, function () {
+      this.localList.saveData("HUES_EULA_ACCEPTED", true);
+      this.eulaFrame.hide();
+      this.aboutFrame.show();
+    });
+  }
+  else {
+    this.eulaFrame.hide();
+  }
 
   // connect UI signals
   this.loadStoreButton.released.connect(this, this.loadStore);
@@ -356,29 +364,26 @@ StoreUI.prototype.checkForUpdates = function () {
   var updateRibbon = this.updateRibbon
   var storeUi = this;
 
-  try {
-    var storeExtension = this.storeExtension;
-    var storeVersion = storeExtension.version;
-    var currentVersion = this.getInstalledVersion();
-    this.storeFooter.storeVersionLabel.setText("v" + currentVersion);
+  var storeExtension = this.storeExtension;
+  var storeVersion = storeExtension.version;
+  var currentVersion = this.getInstalledVersion();
+  this.storeFooter.storeVersionLabel.setText("v" + currentVersion);
 
-    // if a more recent version of the store exists on the repo, activate the update ribbon
-    if (!storeExtension.currentVersionIsOlder(currentVersion) && (currentVersion != storeVersion)) {
-      updateRibbon.storeVersion.setText("v" + currentVersion + "  ⓘ New version available: v" + storeVersion);
-      updateRibbon.setStyleSheet(style.STYLESHEETS.updateRibbon);
-      this.updateButton.toolTip = storeExtension.package.description;
-      this.updateButton.clicked.connect(this, function () { storeUi.updateStore(currentVersion, storeVersion) });
-    } else {
-      this.updateButton.hide();
-      updateRibbon.storeVersion.setText("v" + currentVersion + " ✓ - Store is up to date.");
-      updateRibbon.setStyleSheet(style.STYLESHEETS.defaultRibbon);
-    }
-  } catch (err) {
-    // couldn't check updates, probably we don't have an internet access.
-    // We set up an error message and disable load button.
-    log.error(err)
-    this.lockStore("Could not connect to GitHub. Store disabled, check internet access.");
+  // if a more recent version of the store exists on the repo, activate the update ribbon
+  if (!storeExtension.currentVersionIsOlder(currentVersion) && (currentVersion != storeVersion)) {
+    updateRibbon.storeVersion.setText("v" + currentVersion + "  ⓘ New version available: v" + storeVersion);
+    updateRibbon.setStyleSheet(style.STYLESHEETS.updateRibbon);
+    this.updateButton.toolTip = storeExtension.package.description;
+    this.updateButton.clicked.connect(this, function () { storeUi.updateStore(currentVersion, storeVersion) });
+  } else {
+    this.updateButton.hide();
+    updateRibbon.storeVersion.setText("v" + currentVersion + " ✓ - Store is up to date.");
+    updateRibbon.setStyleSheet(style.STYLESHEETS.defaultRibbon);
   }
+    // // couldn't check updates, probably we don't have an internet access.
+    // // We set up an error message and disable load button.
+    // log.error(err)
+    // this.lockStore("Could not connect to GitHub. Store disabled, check internet access.");
 }
 
 
@@ -458,7 +463,8 @@ StoreUI.prototype.updateExtensionsList = function () {
     try{
       this.localList.createListFile(this.store);
     }catch(err){
-      MessageBox.trace("Error during detection of existing extensions : "+err.message)
+      this.loadStoreButton.setProgress(1, "Detection Failed.")
+      MessageBox.information("Error during detection of existing extensions: "+err.message + "\n\nThe list of installed extensions might not be accurate.")
     }
   }
   log.debug("updating extensions list")
