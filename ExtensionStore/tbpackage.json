@@ -1,8 +1,8 @@
 {
   "name": "ExtensionStore",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "compatibility": "Harmony Premium 16",
-  "description": "Changelog: UI Overhaul.",
+  "description": "Changelog: Fix for low bandwidths with longer timeouts during connexion testing.",
   "isPackage": "true",
   "repository": "https://github.com/mchaptel/ExtensionStore/",
   "files": [
