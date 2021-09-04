@@ -492,28 +492,46 @@ Object.defineProperty(CURL.prototype, "bin", {
           specialFolders.bin + "/bin_3rdParty/curl"];
       }
 
-      for (var i in curl) {
-        if ((new File(curl[i])).exists) {
-          // testing connection
-          var bin = curl[i];
-          try {
-            log.info("testing connexion by connecting to github.com")
-            var p = new CURLProcess("https://github.com/", bin)
-            var response = p.get(500);
-            if (!response) throw new Error ("https://github.com/ unreachable.")
-            log.info("CURL bin found, using: " + curl[i])
+      var timeouts = [500, 1500, 3000];
+
+      for (var i=curl.length-1; i>=0; i--) {
+        // checking presence of bin file
+        var bin = curl[i];
+        log.info(bin);
+        if (!(new File(bin)).exists) {
+          curl.splice(i);
+          continue;
+        }
+
+        // testing connection
+        try {
+          for (var j in timeouts){
+            var timeout = timeouts[j];
+            log.info("Testing connexion by connecting to github.com with timeout "+timeout+"ms.");
+
+            var p = new CURLProcess("https://github.com/", bin);
+            var response = p.get(timeout);
+            if (!response) continue;
+
+            log.info("CURL bin found, using: " + bin);
             CURL.__proto__.bin = bin;
             return bin;
-          } catch (err) {
-            log.error(err);
-            var message = "Couldn't establish a connexion.\nCheck that " + bin + " has internet access.";
-            log.error(message);
           }
+        } catch (err) {
+          log.error(err);
+          var message = "Couldn't establish a connexion.\nCheck that " + bin + " has internet access.";
+          log.error(message);
         }
       }
-      var error = "A valid CURL install wasn't found. Install CURL first.";
+
+      if (!curl.length){
+        var error = "A valid CURL install wasn't found. Install CURL first.";
+      }else{
+        var error = "Couldn't reach https://github.com. Check the internet connection."
+      }
       log.error(error)
       throw new Error(error)
+
     } else {
       return CURL.__proto__.bin;
     }
